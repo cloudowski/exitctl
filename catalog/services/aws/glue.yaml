@@ -1,0 +1,76 @@
+schema: '1.0'
+kind: service
+id: aws.glue
+provider: aws
+name: AWS Glue
+category: analytics
+resource_types:
+  terraform: [aws_glue_catalog_database, aws_glue_catalog_table, aws_glue_catalog_table_optimizer, aws_glue_partition, aws_glue_partition_index, aws_glue_crawler, aws_glue_job, aws_glue_trigger, aws_glue_workflow, aws_glue_connection, aws_glue_classifier, aws_glue_security_configuration, aws_glue_dev_endpoint, aws_glue_ml_transform, aws_glue_registry, aws_glue_schema, aws_glue_data_catalog_encryption_settings, aws_glue_resource_policy, aws_glue_user_defined_function, aws_glue_data_quality_ruleset, aws_lakeformation_resource, aws_lakeformation_permissions, aws_lakeformation_data_lake_settings, aws_lakeformation_lf_tag, aws_lakeformation_resource_lf_tags]
+  cloudformation: ['AWS::Glue::Database', 'AWS::Glue::Table', 'AWS::Glue::Partition', 'AWS::Glue::Crawler', 'AWS::Glue::Job', 'AWS::Glue::Trigger', 'AWS::Glue::Workflow', 'AWS::Glue::Connection', 'AWS::Glue::Classifier', 'AWS::Glue::SecurityConfiguration', 'AWS::Glue::DevEndpoint', 'AWS::Glue::MLTransform', 'AWS::Glue::Registry', 'AWS::Glue::Schema', 'AWS::Glue::SchemaVersion', 'AWS::Glue::DataCatalogEncryptionSettings', 'AWS::Glue::DataQualityRuleset', 'AWS::LakeFormation::Resource', 'AWS::LakeFormation::Permissions', 'AWS::LakeFormation::PrincipalPermissions', 'AWS::LakeFormation::DataLakeSettings', 'AWS::LakeFormation::Tag', 'AWS::LakeFormation::TagAssociation']
+traits:
+- {id: operational-tooling-coupling, level: medium, reason: 'Jobs, crawlers, triggers and the Data Catalog are Glue-specific; jobs are Spark or Python underneath.'}
+- {id: proprietary-sdk, level: medium, reason: 'Glue ETL scripts import awsglue (GlueContext, DynamicFrame), which only runs on Glue.'}
+rules:
+- id: aws.glue.lake-formation
+  match:
+    resource_type: [aws_lakeformation_permissions, aws_lakeformation_lf_tag]
+  then: {add_trait: proprietary-iam-model, level: medium, evidence: permissions}
+- id: aws.glue.schema-registry
+  match:
+    resource_type: [aws_glue_schema]
+  then: {add_trait: proprietary-api, level: low, evidence: data_format}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-glue', '@aws-sdk/client-lakeformation']
+  imports: ['[''"]@aws-sdk/client-(glue|lakeformation)[''"/]']
+  usage: ['\bAWS\.Glue\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  packages: [aws-glue-libs, aws-glue-sessions]
+  imports: ['^\s*(from|import)\s+awsglue\b']
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["''](glue|lakeformation)["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/glue, github.com/aws/aws-sdk-go-v2/service/lakeformation]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/(glue|lakeformation)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:glue', 'software.amazon.awssdk:lakeformation', 'software.amazon.glue:schema-registry-serde', 'com.amazonaws:AWSGlueETL']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.(glue|lakeformation)\.', '^\s*import\s+(static\s+)?com\.amazonaws\.services\.(glue|schemaregistry)\.']
+- ecosystem: nuget
+  packages: [AWSSDK.Glue, AWSSDK.LakeFormation]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.(Glue|LakeFormation)\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-glue, aws-sdk-lakeformation]
+  imports: ['^\s*require\s+["'']aws-sdk-(glue|lakeformation)["'']']
+  usage: ['(?i)\bAws::(glue|lakeformation)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-glue, aws-sdk-lakeformation]
+  imports: ['\baws_sdk_(glue|lakeformation)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(glue|lakeformation)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_glue_catalog_table, attribute: database_name, edge_kind: containment}
+- {resource_type: aws_glue_partition, attribute: table_name, edge_kind: containment}
+- {resource_type: aws_glue_crawler, attribute: database_name, edge_kind: data-flow}
+- {resource_type: aws_glue_crawler, attribute: s3_target.path, edge_kind: data-flow}
+- {resource_type: aws_glue_crawler, attribute: role, edge_kind: binding}
+- {resource_type: aws_glue_job, attribute: role_arn, edge_kind: binding}
+- {resource_type: aws_glue_job, attribute: command.script_location, edge_kind: reference}
+- {resource_type: aws_glue_job, attribute: connections, edge_kind: reference}
+- {resource_type: aws_glue_trigger, attribute: actions.job_name, edge_kind: reference}
+- {resource_type: aws_glue_trigger, attribute: workflow_name, edge_kind: containment}
+- {resource_type: aws_glue_schema, attribute: registry_arn, edge_kind: containment}
+alternatives:
+- {ref: apache-spark, difficulty: medium, compatibility: conceptual, notes: 'Glue jobs are Spark jobs; DynamicFrame code is rewritten as DataFrames and scheduled elsewhere.', approved_by: cloudowski}
+- {ref: trino, difficulty: medium, compatibility: conceptual, notes: Trino with a Hive Metastore or Iceberg REST catalog replaces the Data Catalog for querying., approved_by: cloudowski}
+- {ref: argo-workflows, difficulty: medium, compatibility: conceptual, notes: Argo Workflows orchestrates ETL steps that replace Glue triggers and workflows., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/glue/latest/dg/what-is-glue.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/glue_job']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

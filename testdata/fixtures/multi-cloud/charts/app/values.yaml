@@ -1,0 +1,5 @@
+replicaCount: 2
+bucketName: shop-assets
+image:
+  repository: registry.example.com/shop/app
+  tag: "1.0.0"

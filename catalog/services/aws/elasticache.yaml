@@ -1,0 +1,84 @@
+schema: '1.0'
+kind: service
+id: aws.elasticache
+provider: aws
+name: Amazon ElastiCache
+category: database.cache
+resource_types:
+  terraform: [aws_elasticache_cluster, aws_elasticache_replication_group, aws_elasticache_parameter_group, aws_elasticache_subnet_group, aws_elasticache_user, aws_elasticache_user_group, aws_elasticache_user_group_association, aws_elasticache_global_replication_group, aws_elasticache_serverless_cache, aws_elasticache_reserved_cache_node]
+  cloudformation: ['AWS::ElastiCache::CacheCluster', 'AWS::ElastiCache::ReplicationGroup', 'AWS::ElastiCache::ParameterGroup', 'AWS::ElastiCache::SubnetGroup', 'AWS::ElastiCache::SecurityGroup', 'AWS::ElastiCache::SecurityGroupIngress', 'AWS::ElastiCache::User', 'AWS::ElastiCache::UserGroup', 'AWS::ElastiCache::GlobalReplicationGroup', 'AWS::ElastiCache::ServerlessCache']
+  kubernetes:
+  - {group: elasticache.services.k8s.aws, kind: ReplicationGroup}
+  - {group: elasticache.services.k8s.aws, kind: CacheCluster}
+  - {group: elasticache.services.k8s.aws, kind: CacheParameterGroup}
+  - {group: elasticache.services.k8s.aws, kind: CacheSubnetGroup}
+  - {group: elasticache.services.k8s.aws, kind: User}
+  - {group: elasticache.services.k8s.aws, kind: UserGroup}
+  - {group: elasticache.services.k8s.aws, kind: ServerlessCache}
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'Engines are Valkey, Redis OSS or Memcached with standard protocols; cluster management uses ElastiCache tooling.'}
+rules:
+- id: aws.elasticache.serverless
+  match:
+    resource_type: [aws_elasticache_serverless_cache]
+  then: {add_trait: managed-only-feature, level: low, evidence: engine}
+- id: aws.elasticache.global-datastore
+  match:
+    resource_type: [aws_elasticache_global_replication_group]
+  then: {add_trait: managed-only-feature, level: medium, evidence: primary_replication_group_id}
+- id: aws.elasticache.iam-auth
+  match:
+    resource_type: [aws_elasticache_user]
+  when: {attr: authentication_mode.type, equals: iam}
+  then: {add_trait: proprietary-iam-model, level: low, evidence: authentication_mode}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-elasticache']
+  imports: ['[''"]@aws-sdk/client-elasticache[''"/]']
+  usage: ['\bAWS\.ElastiCache\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["'']elasticache["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/elasticache]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/elasticache(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:elasticache', 'com.amazonaws:aws-java-sdk-elasticache', 'com.amazonaws:elasticache-java-cluster-client']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.elasticache\.', '^\s*import\s+(static\s+)?com\.amazonaws\.services\.elasticache\.']
+- ecosystem: nuget
+  packages: [AWSSDK.ElastiCache]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.ElastiCache\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-elasticache]
+  imports: ['^\s*require\s+["'']aws-sdk-(elasticache)["'']']
+  usage: ['(?i)\bAws::(elasticache)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-elasticache]
+  imports: ['\baws_sdk_(elasticache)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(elasticache)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_elasticache_replication_group, attribute: subnet_group_name, edge_kind: containment}
+- {resource_type: aws_elasticache_replication_group, attribute: security_group_ids, edge_kind: containment}
+- {resource_type: aws_elasticache_replication_group, attribute: user_group_ids, edge_kind: binding}
+- {resource_type: aws_elasticache_cluster, attribute: replication_group_id, edge_kind: containment}
+- {resource_type: aws_elasticache_cluster, attribute: subnet_group_name, edge_kind: containment}
+- {resource_type: aws_elasticache_serverless_cache, attribute: subnet_ids, edge_kind: containment}
+- {resource_type: aws_elasticache_user_group_association, attribute: user_group_id, edge_kind: binding}
+- {resource_type: aws_elasticache_global_replication_group, attribute: primary_replication_group_id, edge_kind: data-flow}
+alternatives:
+- {ref: valkey, difficulty: low, compatibility: api-compatible, notes: ElastiCache for Valkey runs upstream Valkey; Redis OSS clients work unchanged., approved_by: cloudowski}
+- {ref: redis-oss, difficulty: low, compatibility: api-compatible, notes: Self-hosted Redis speaks the same protocol; check licensing of recent Redis versions., approved_by: cloudowski}
+- {ref: scaleway, difficulty: low, compatibility: api-compatible, notes: Scaleway Managed Database for Redis offers a managed Redis-protocol cache., approved_by: cloudowski}
+- {ref: ovhcloud, difficulty: low, compatibility: api-compatible, notes: OVHcloud Public Cloud Databases include a managed Valkey/Redis-protocol cache., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/WhatIs.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elasticache_replication_group']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

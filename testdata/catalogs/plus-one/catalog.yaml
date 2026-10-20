@@ -1,0 +1,13 @@
+# plus-one: a catalog that adds the provider "acme" purely as data (US8, SC-007).
+#   acme.widget  verified, Terraform type acme_widget, one trait, one alternative
+#   acme.gadget  draft, LLM-generated (evals not passed), Terraform type acme_gadget
+# The directory is a valid catalog on its own (exitctl catalog validate / scan --catalog).
+# Its file names do not collide with the built-in catalog, so tests overlay it on top of
+# the built-in catalog to get "built-in plus one service" without copying built-in files
+# (only this manifest replaces the built-in one).
+schema: "1.0"
+kind: catalog
+catalog_version: 2026.10.2
+title: exitctl built-in catalog plus one (test)
+maintainers: [cloudowski]
+neutrality: NEUTRALITY.md

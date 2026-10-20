@@ -1,0 +1,92 @@
+schema: '1.0'
+kind: service
+id: aws.ec2
+provider: aws
+name: Amazon Elastic Compute Cloud (EC2)
+category: compute
+resource_types:
+  terraform: [aws_instance, aws_ec2_instance_state, aws_ec2_instance_metadata_defaults, aws_launch_template, aws_launch_configuration, aws_autoscaling_group, aws_autoscaling_group_tag, aws_autoscaling_policy, aws_autoscaling_schedule, aws_autoscaling_lifecycle_hook, aws_autoscaling_notification, aws_autoscaling_attachment, aws_autoscaling_traffic_source_attachment, aws_ami, aws_ami_copy, aws_ami_from_instance, aws_ami_launch_permission, aws_key_pair, aws_placement_group, aws_spot_instance_request, aws_spot_fleet_request, aws_spot_datafeed_subscription, aws_ec2_fleet, aws_ec2_capacity_reservation, aws_ec2_host, aws_ec2_serial_console_access, aws_ec2_tag, aws_instances, aws_ami_ids, aws_autoscaling_groups]
+  cloudformation: ['AWS::EC2::Instance', 'AWS::EC2::LaunchTemplate', 'AWS::EC2::KeyPair', 'AWS::EC2::PlacementGroup', 'AWS::EC2::SpotFleet', 'AWS::EC2::EC2Fleet', 'AWS::EC2::CapacityReservation', 'AWS::EC2::Host', 'AWS::AutoScaling::AutoScalingGroup', 'AWS::AutoScaling::LaunchConfiguration', 'AWS::AutoScaling::ScalingPolicy', 'AWS::AutoScaling::ScheduledAction', 'AWS::AutoScaling::LifecycleHook', 'AWS::AutoScaling::WarmPool']
+  kubernetes:
+  - {group: ec2.services.k8s.aws, kind: Instance}
+  - {group: ec2.services.k8s.aws, kind: LaunchTemplate}
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'Virtual machines run standard operating systems; AMIs, instance types and Auto Scaling are AWS-specific tooling.'}
+rules:
+- id: aws.ec2.autoscaling
+  match:
+    resource_type: [aws_autoscaling_group]
+  then: {add_trait: operational-tooling-coupling, level: medium, evidence: launch_template}
+- id: aws.ec2.custom-ami
+  match:
+    resource_type: [aws_ami, aws_ami_copy, aws_ami_from_instance]
+  then: {add_trait: proprietary-data-format, level: low, evidence: name}
+- id: aws.ec2.instance-metadata-user-data
+  match:
+    resource_type: [aws_instance, aws_launch_template]
+  when:
+    any:
+    - {attr: user_data, exists: true}
+    - {attr: user_data_base64, exists: true}
+  then: {add_trait: operational-tooling-coupling, level: low, evidence: user_data}
+- id: aws.ec2.neuron-accelerator
+  match:
+    resource_type: [aws_instance, aws_launch_template, aws_launch_configuration]
+  when: {attr: instance_type, matches: '^(inf|trn)[0-9]'}
+  then: {add_trait: provider-accelerator, level: medium, evidence: instance_type}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-ec2', '@aws-sdk/client-auto-scaling', '@aws-sdk/ec2-metadata-service']
+  imports: ['[''"]@aws-sdk/(client-ec2|client-auto-scaling|ec2-metadata-service)[''"/]']
+  usage: ['\bAWS\.(EC2|AutoScaling|MetadataService)\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["''](ec2|autoscaling)["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/ec2, github.com/aws/aws-sdk-go-v2/service/autoscaling, github.com/aws/aws-sdk-go-v2/feature/ec2/imds]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/(ec2|autoscaling)(/[^"]*)?"', '"github\.com/aws/aws-sdk-go-v2/feature/ec2/imds"', '"github\.com/aws/aws-sdk-go/aws/ec2metadata"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:ec2', 'software.amazon.awssdk:autoscaling', 'software.amazon.awssdk:imds', 'com.amazonaws:aws-java-sdk-ec2', 'com.amazonaws:aws-java-sdk-autoscaling']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.(services\.(ec2|autoscaling)|imds)\.', '^\s*import\s+(static\s+)?com\.amazonaws\.services\.(ec2|autoscaling)\.']
+- ecosystem: nuget
+  packages: [AWSSDK.EC2, AWSSDK.AutoScaling]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.(EC2|AutoScaling)\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-ec2, aws-sdk-autoscaling]
+  imports: ['^\s*require\s+["'']aws-sdk-(ec2|autoscaling)["'']']
+  usage: ['(?i)\bAws::(ec2|autoscaling)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-ec2, aws-sdk-autoscaling]
+  imports: ['\baws_sdk_(ec2|autoscaling)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(ec2|autoscaling)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_instance, attribute: iam_instance_profile, edge_kind: binding}
+- {resource_type: aws_instance, attribute: ami, edge_kind: reference}
+- {resource_type: aws_instance, attribute: key_name, edge_kind: reference}
+- {resource_type: aws_instance, attribute: launch_template.id, edge_kind: reference}
+- {resource_type: aws_launch_template, attribute: image_id, edge_kind: reference}
+- {resource_type: aws_launch_template, attribute: iam_instance_profile.arn, edge_kind: binding}
+- {resource_type: aws_launch_template, attribute: network_interfaces.subnet_id, edge_kind: containment}
+- {resource_type: aws_autoscaling_group, attribute: launch_template.id, edge_kind: reference}
+- {resource_type: aws_autoscaling_group, attribute: target_group_arns, edge_kind: binding}
+- {resource_type: aws_autoscaling_attachment, attribute: autoscaling_group_name, edge_kind: binding}
+- {resource_type: aws_autoscaling_attachment, attribute: lb_target_group_arn, edge_kind: binding}
+- {resource_type: aws_autoscaling_policy, attribute: autoscaling_group_name, edge_kind: containment}
+- {resource_type: aws_ami_from_instance, attribute: source_instance_id, edge_kind: reference}
+alternatives:
+- {ref: hetzner, difficulty: low, compatibility: conceptual, notes: 'Hetzner Cloud servers run the same OS images; AMIs are rebuilt (e.g. with Packer) and autoscaling needs other tooling.', approved_by: cloudowski}
+- {ref: ovhcloud, difficulty: low, compatibility: conceptual, notes: OVHcloud Public Cloud instances are OpenStack-based VMs; images and scaling groups are recreated., approved_by: cloudowski}
+- {ref: scaleway, difficulty: low, compatibility: conceptual, notes: Scaleway Instances provide VMs with similar sizing; images are rebuilt and user data reused via cloud-init., approved_by: cloudowski}
+- {ref: upcloud, difficulty: low, compatibility: conceptual, notes: UpCloud Cloud Servers provide VMs with cloud-init; AMIs are rebuilt as templates., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/concepts.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

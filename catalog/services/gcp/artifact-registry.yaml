@@ -1,0 +1,42 @@
+schema: '1.0'
+kind: service
+id: gcp.artifact-registry
+provider: gcp
+name: Artifact Registry
+category: devops.registry
+resource_types:
+  terraform: [google_artifact_registry_repository, google_artifact_registry_repository_iam_binding, google_artifact_registry_repository_iam_member, google_artifact_registry_repository_iam_policy, google_artifact_registry_vpcsc_config, google_container_registry]
+  kubernetes:
+  - {group: artifactregistry.cnrm.cloud.google.com, kind: ArtifactRegistryRepository}
+  container_registry: ['*-docker.pkg.dev', gcr.io, '*.gcr.io']
+traits:
+- {id: provider-registry, level: low, reason: 'Images and packages use standard OCI, npm, Maven and PyPI formats; access uses Google IAM.'}
+sdk:
+- ecosystem: npm
+  packages: ['@google-cloud/artifact-registry']
+  imports: ['[''"]@google-cloud/(artifact-registry)[''"/]']
+- ecosystem: pypi
+  packages: [google-cloud-artifact-registry]
+  imports: [^\s*from\s+google\.cloud\s+import\s+.*\b(artifactregistry\w*)\b, ^\s*(from|import)\s+google\.cloud\.(artifactregistry\w*)\b]
+- ecosystem: go
+  packages: [cloud.google.com/go/artifactregistry]
+  imports: ['"cloud\.google\.com/go/(artifactregistry)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.google.cloud:google-cloud-artifact-registry']
+  imports: ['^\s*import\s+(static\s+)?com\.google\.(devtools\.artifactregistry)\b']
+- ecosystem: nuget
+  packages: [Google.Cloud.ArtifactRegistry.V1]
+  imports: ['^\s*using\s+(static\s+)?Google\.Cloud\.(ArtifactRegistry)\b']
+alternatives:
+- {ref: harbor, difficulty: low, compatibility: api-compatible, notes: OCI registry with replication; copy images with skopeo or crane and update image references., approved_by: cloudowski}
+- {ref: forgejo, difficulty: low, compatibility: api-compatible, notes: 'Built-in package registry supports OCI, npm, Maven and PyPI.', approved_by: cloudowski}
+- {ref: ovhcloud, difficulty: low, compatibility: api-compatible, notes: OVHcloud Managed Private Registry is a Harbor-based OCI registry., approved_by: cloudowski}
+- {ref: scaleway, difficulty: low, compatibility: api-compatible, notes: Scaleway Container Registry stores OCI images., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/artifact-registry/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/artifact_registry_repository']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

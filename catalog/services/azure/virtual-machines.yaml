@@ -1,0 +1,75 @@
+schema: '1.0'
+kind: service
+id: azure.virtual-machines
+provider: azure
+name: Azure Virtual Machines
+category: compute
+resource_types:
+  terraform:
+  - azurerm_linux_virtual_machine
+  - azurerm_windows_virtual_machine
+  - azurerm_virtual_machine
+  - azurerm_linux_virtual_machine_scale_set
+  - azurerm_windows_virtual_machine_scale_set
+  - azurerm_orchestrated_virtual_machine_scale_set
+  - azurerm_virtual_machine_scale_set
+  - azurerm_virtual_machine_extension
+  - azurerm_virtual_machine_scale_set_extension
+  - azurerm_availability_set
+  - azurerm_proximity_placement_group
+  - azurerm_capacity_reservation_group
+  - azurerm_capacity_reservation
+  - azurerm_image
+  - azurerm_shared_image_gallery
+  - azurerm_shared_image
+  - azurerm_shared_image_version
+  - azurerm_dedicated_host
+  - azurerm_dedicated_host_group
+  - azurerm_ssh_public_key
+  - azurerm_dev_test_global_vm_shutdown_schedule
+  kubernetes:
+  - {group: compute.azure.com, kind: VirtualMachine}
+  - {group: compute.azure.com, kind: VirtualMachineScaleSet}
+  - {group: compute.azure.com, kind: Image}
+traits:
+- {id: provider-network-construct, level: low, reason: 'VMs attach to Azure NICs, VNets and availability constructs.'}
+- {id: operational-tooling-coupling, level: low, reason: VM extensions and images from the Azure gallery tie provisioning to Azure tooling.}
+edge_hints:
+- {resource_type: azurerm_linux_virtual_machine, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_windows_virtual_machine, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_linux_virtual_machine_scale_set, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_windows_virtual_machine_scale_set, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_linux_virtual_machine_scale_set, attribute: network_interface.ip_configuration.subnet_id, edge_kind: containment}
+- {resource_type: azurerm_windows_virtual_machine_scale_set, attribute: network_interface.ip_configuration.subnet_id, edge_kind: containment}
+- {resource_type: azurerm_virtual_machine_extension, attribute: virtual_machine_id, edge_kind: containment}
+alternatives:
+- ref: hetzner
+  difficulty: low
+  compatibility: conceptual
+  notes: Cloud servers with images built by Packer or cloud-init replace VMs; extensions become config management.
+  approved_by: cloudowski
+- ref: ovhcloud
+  difficulty: low
+  compatibility: conceptual
+  notes: Public Cloud instances in the EU; rebuild images and replace VM extensions.
+  approved_by: cloudowski
+- ref: scaleway
+  difficulty: low
+  compatibility: conceptual
+  notes: Instances in the EU; rebuild images and replace VM extensions.
+  approved_by: cloudowski
+- ref: upcloud
+  difficulty: low
+  compatibility: conceptual
+  notes: Cloud servers in the EU; rebuild images and replace VM extensions.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/virtual-machines/overview
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

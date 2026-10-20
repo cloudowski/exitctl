@@ -1,0 +1,82 @@
+schema: '1.0'
+kind: service
+id: azure.postgresql-flexible
+provider: azure
+name: Azure Database for PostgreSQL
+category: database.relational
+resource_types:
+  terraform:
+  - azurerm_postgresql_flexible_server
+  - azurerm_postgresql_flexible_server_database
+  - azurerm_postgresql_flexible_server_configuration
+  - azurerm_postgresql_flexible_server_firewall_rule
+  - azurerm_postgresql_flexible_server_active_directory_administrator
+  - azurerm_postgresql_flexible_server_virtual_endpoint
+  - azurerm_postgresql_flexible_server_backup
+  - azurerm_postgresql_server
+  - azurerm_postgresql_database
+  - azurerm_postgresql_configuration
+  - azurerm_postgresql_firewall_rule
+  - azurerm_postgresql_virtual_network_rule
+  - azurerm_postgresql_active_directory_administrator
+  - azurerm_postgresql_server_key
+  - azurerm_cosmosdb_postgresql_cluster
+  - azurerm_cosmosdb_postgresql_coordinator_configuration
+  - azurerm_cosmosdb_postgresql_node_configuration
+  - azurerm_cosmosdb_postgresql_firewall_rule
+  - azurerm_cosmosdb_postgresql_role
+  kubernetes:
+  - {group: dbforpostgresql.azure.com, kind: FlexibleServer}
+  - {group: dbforpostgresql.azure.com, kind: FlexibleServersDatabase}
+  - {group: dbforpostgresql.azure.com, kind: FlexibleServersFirewallRule}
+  - {group: dbforpostgresql.azure.com, kind: FlexibleServersConfiguration}
+  - {group: dbforpostgresql.azure.com, kind: FlexibleServersAdministrator}
+traits:
+- {id: proprietary-api, level: low, reason: 'Standard PostgreSQL wire protocol and SQL; only management, HA and Entra authentication are Azure specific.'}
+- {id: data-gravity, level: medium, reason: 'pg_dump or logical replication moves the data with a planned cutover; managed backups restore only on Azure.'}
+rules:
+- id: azure.postgresql-flexible.entra-auth
+  match: {resource_type: [azurerm_postgresql_flexible_server]}
+  when: {attr: authentication.active_directory_auth_enabled, equals: true}
+  then: {add_trait: proprietary-iam-model, level: low, evidence: authentication.active_directory_auth_enabled}
+edge_hints:
+- {resource_type: azurerm_postgresql_flexible_server, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_postgresql_server, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_cosmosdb_postgresql_cluster, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_postgresql_flexible_server, attribute: delegated_subnet_id, edge_kind: containment}
+- {resource_type: azurerm_postgresql_flexible_server_database, attribute: server_id, edge_kind: containment}
+- {resource_type: azurerm_postgresql_flexible_server_configuration, attribute: server_id, edge_kind: containment}
+- {resource_type: azurerm_postgresql_flexible_server_firewall_rule, attribute: server_id, edge_kind: containment}
+- {resource_type: azurerm_postgresql_database, attribute: server_name, edge_kind: containment}
+alternatives:
+- ref: postgresql
+  difficulty: low
+  compatibility: api-compatible
+  notes: Same engine; migrate with pg_dump or logical replication. Check Azure-only extensions such as azure_ai or pg_azure_storage.
+  approved_by: cloudowski
+- ref: ovhcloud
+  difficulty: low
+  compatibility: api-compatible
+  notes: Managed PostgreSQL in the EU; migrate with pg_dump or logical replication.
+  approved_by: cloudowski
+- ref: scaleway
+  difficulty: low
+  compatibility: api-compatible
+  notes: Managed PostgreSQL in the EU; migrate with pg_dump or logical replication.
+  approved_by: cloudowski
+- ref: stackit
+  difficulty: low
+  compatibility: api-compatible
+  notes: Managed PostgreSQL (PostgreSQL Flex) in the EU; migrate with pg_dump or logical replication.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/overview
+  - https://learn.microsoft.com/en-us/azure/cosmos-db/postgresql/introduction
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/postgresql_flexible_server
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

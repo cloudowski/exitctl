@@ -1,0 +1,92 @@
+schema: '1.0'
+kind: service
+id: aws.dynamodb
+provider: aws
+name: Amazon DynamoDB
+category: database.nosql.key-value
+resource_types:
+  terraform: [aws_dynamodb_table, aws_dynamodb_table_item, aws_dynamodb_global_table, aws_dynamodb_table_replica, aws_dynamodb_kinesis_streaming_destination, aws_dynamodb_contributor_insights, aws_dynamodb_resource_policy, aws_dynamodb_tag, aws_dynamodb_table_export, aws_dax_cluster, aws_dax_parameter_group, aws_dax_subnet_group]
+  cloudformation: ['AWS::DynamoDB::Table', 'AWS::DynamoDB::GlobalTable', 'AWS::Serverless::SimpleTable', 'AWS::DAX::Cluster', 'AWS::DAX::ParameterGroup', 'AWS::DAX::SubnetGroup']
+  kubernetes:
+  - {group: dynamodb.services.k8s.aws, kind: Table}
+  - {group: dynamodb.services.k8s.aws, kind: GlobalTable}
+  - {group: dynamodb.services.k8s.aws, kind: Backup}
+  - {group: dynamodb.aws.upbound.io, kind: '*'}
+traits:
+- {id: proprietary-api, level: high, reason: 'DynamoDB has its own wire API; only ScyllaDB Alternator implements a compatible subset.'}
+- {id: proprietary-data-model, level: high, reason: 'Partition/sort keys, GSIs, LSIs and single-table design shape the application around DynamoDB access patterns.'}
+- {id: proprietary-sdk}
+rules:
+- id: aws.dynamodb.streams
+  match:
+    resource_type: [aws_dynamodb_table]
+  when: {attr: stream_enabled, equals: true}
+  then: {add_trait: managed-change-stream, level: high, evidence: stream_enabled}
+- id: aws.dynamodb.kinesis-streaming
+  match:
+    resource_type: [aws_dynamodb_kinesis_streaming_destination]
+  then: {add_trait: managed-change-stream, level: high, evidence: stream_arn}
+- id: aws.dynamodb.global-tables
+  match:
+    resource_type: [aws_dynamodb_table, aws_dynamodb_global_table]
+  when: {attr: replica, exists: true}
+  then: {add_trait: data-gravity, level: high, evidence: replica}
+- id: aws.dynamodb.table-replica
+  match:
+    resource_type: [aws_dynamodb_table_replica]
+  then: {add_trait: data-gravity, level: high, evidence: global_table_arn}
+- id: aws.dynamodb.dax
+  match:
+    resource_type: [aws_dax_cluster]
+  then: {add_trait: managed-only-feature, level: medium, evidence: cluster_name}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-dynamodb', '@aws-sdk/lib-dynamodb', '@aws-sdk/client-dynamodb-streams', '@aws-sdk/util-dynamodb', '@aws-sdk/client-dax', 'dynamoose', 'electrodb']
+  imports: ['[''"]@aws-sdk/(client-dynamodb|lib-dynamodb|client-dynamodb-streams|util-dynamodb|client-dax)[''"/]', '[''"](dynamoose|electrodb)[''"]']
+  usage: ['\bAWS\.(DynamoDB|DynamoDBStreams)\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  packages: [pynamodb, amazon-dax-client]
+  imports: ['^\s*(from|import)\s+(pynamodb|amazondax)\b']
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["''](dynamodb|dynamodbstreams|dax)["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/dynamodb, github.com/aws/aws-sdk-go-v2/service/dynamodbstreams, github.com/aws/aws-sdk-go-v2/service/dax, github.com/aws/aws-sdk-go-v2/feature/dynamodb/*, github.com/guregu/dynamo]
+  imports: ['"github\.com/aws/aws-sdk-go-v2/(service/(dynamodb|dynamodbstreams|dax)|feature/dynamodb/[^"/]+)(/[^"]*)?"', '"github\.com/aws/aws-sdk-go/service/(dynamodb|dynamodbstreams|dax)(/[^"]*)?"', '"github\.com/guregu/dynamo(/v2)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:dynamodb', 'software.amazon.awssdk:dynamodb-enhanced', 'software.amazon.awssdk:dax', 'com.amazonaws:aws-java-sdk-dynamodb']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.(services|enhanced)\.dynamodb\.', '^\s*import\s+(static\s+)?com\.amazonaws\.services\.dynamodbv2\.']
+- ecosystem: nuget
+  packages: [AWSSDK.DynamoDBv2, AWSSDK.DAX]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.(DynamoDBv2|DAX)\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-dynamodb, aws-sdk-dynamodbstreams, aws-sdk-dax]
+  imports: ['^\s*require\s+["'']aws-sdk-(dynamodb|dynamodbstreams|dax)["'']']
+  usage: ['(?i)\bAws::(dynamodb|dynamodbstreams|dax)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-dynamodb, aws-sdk-dynamodbstreams, aws-sdk-dax]
+  imports: ['\baws_sdk_(dynamodb|dynamodbstreams|dax)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(dynamodb|dynamodbstreams|dax)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_dynamodb_table_replica, attribute: global_table_arn, edge_kind: containment}
+- {resource_type: aws_dynamodb_table_item, attribute: table_name, edge_kind: containment}
+- {resource_type: aws_dynamodb_kinesis_streaming_destination, attribute: stream_arn, edge_kind: data-flow}
+- {resource_type: aws_dynamodb_kinesis_streaming_destination, attribute: table_name, edge_kind: data-flow}
+- {resource_type: aws_dynamodb_contributor_insights, attribute: table_name, edge_kind: reference}
+- {resource_type: aws_dax_cluster, attribute: subnet_group_name, edge_kind: containment}
+alternatives:
+- {ref: scylladb, difficulty: medium, compatibility: api-compatible, notes: 'ScyllaDB Alternator implements the DynamoDB API; streams, transactions and some expressions differ, so test coverage matters.', approved_by: cloudowski}
+- {ref: cassandra, difficulty: high, compatibility: conceptual, notes: 'Wide-column model fits key-based access; data model and queries must be redesigned in CQL.', approved_by: cloudowski}
+- {ref: mongodb, difficulty: high, compatibility: conceptual, notes: Document model covers items and secondary indexes; access code and change streams need a rewrite., approved_by: cloudowski}
+- {ref: postgresql, difficulty: high, compatibility: conceptual, notes: 'JSONB tables with composite keys can host single-table designs; queries and streams are rewritten.', approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dynamodb_table', 'https://aws-controllers-k8s.github.io/community/reference/']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

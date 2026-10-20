@@ -1,0 +1,75 @@
+schema: '1.0'
+kind: service
+id: aws.eventbridge
+provider: aws
+name: Amazon EventBridge
+category: integration
+resource_types:
+  terraform: [aws_cloudwatch_event_rule, aws_cloudwatch_event_target, aws_cloudwatch_event_bus, aws_cloudwatch_event_bus_policy, aws_cloudwatch_event_permission, aws_cloudwatch_event_archive, aws_cloudwatch_event_connection, aws_cloudwatch_event_api_destination, aws_cloudwatch_event_endpoint, aws_scheduler_schedule, aws_scheduler_schedule_group, aws_pipes_pipe, aws_schemas_registry, aws_schemas_schema, aws_schemas_discoverer, aws_schemas_registry_policy]
+  cloudformation: ['AWS::Events::Rule', 'AWS::Events::EventBus', 'AWS::Events::EventBusPolicy', 'AWS::Events::Archive', 'AWS::Events::Connection', 'AWS::Events::ApiDestination', 'AWS::Events::Endpoint', 'AWS::Scheduler::Schedule', 'AWS::Scheduler::ScheduleGroup', 'AWS::Pipes::Pipe', 'AWS::EventSchemas::Registry', 'AWS::EventSchemas::Schema', 'AWS::EventSchemas::Discoverer', 'AWS::EventSchemas::RegistryPolicy']
+  kubernetes:
+  - {group: eventbridge.services.k8s.aws, kind: EventBus}
+  - {group: eventbridge.services.k8s.aws, kind: Rule}
+  - {group: pipes.services.k8s.aws, kind: Pipe}
+traits:
+- {id: proprietary-event-model, level: medium, reason: 'Event patterns, buses and the AWS event envelope are EventBridge-specific; CloudEvents brokers cover the routing concept.'}
+- {id: proprietary-api}
+rules:
+- id: aws.eventbridge.pipes
+  match:
+    resource_type: [aws_pipes_pipe]
+  then: {add_trait: managed-only-feature, level: medium, evidence: source}
+- id: aws.eventbridge.archive
+  match:
+    resource_type: [aws_cloudwatch_event_archive]
+  then: {add_trait: managed-only-feature, level: low, evidence: event_source_arn}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-eventbridge', '@aws-sdk/client-cloudwatch-events', '@aws-sdk/client-scheduler', '@aws-sdk/client-pipes', '@aws-sdk/client-schemas']
+  imports: ['[''"]@aws-sdk/client-(eventbridge|cloudwatch-events|scheduler|pipes|schemas)[''"/]']
+  usage: ['\bAWS\.(EventBridge|CloudWatchEvents)\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["''](events|scheduler|pipes|schemas)["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/eventbridge, github.com/aws/aws-sdk-go-v2/service/cloudwatchevents, github.com/aws/aws-sdk-go-v2/service/scheduler, github.com/aws/aws-sdk-go-v2/service/pipes]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/(eventbridge|cloudwatchevents|scheduler|pipes|schemas)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:eventbridge', 'software.amazon.awssdk:cloudwatchevents', 'software.amazon.awssdk:scheduler', 'software.amazon.awssdk:pipes', 'com.amazonaws:aws-java-sdk-eventbridge']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.(eventbridge|cloudwatchevents|scheduler|pipes|schemas)\.', '^\s*import\s+(static\s+)?com\.amazonaws\.services\.(eventbridge|cloudwatchevents)\.']
+- ecosystem: nuget
+  packages: [AWSSDK.EventBridge, AWSSDK.CloudWatchEvents, AWSSDK.Scheduler, AWSSDK.Pipes]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.(EventBridge|CloudWatchEvents|Scheduler|Pipes)\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-eventbridge, aws-sdk-cloudwatchevents, aws-sdk-scheduler, aws-sdk-pipes]
+  imports: ['^\s*require\s+["'']aws-sdk-(eventbridge|cloudwatchevents|scheduler|pipes)["'']']
+  usage: ['(?i)\bAws::(eventbridge|cloudwatchevents|scheduler|pipes)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-eventbridge, aws-sdk-cloudwatchevents, aws-sdk-scheduler, aws-sdk-pipes]
+  imports: ['\baws_sdk_(eventbridge|cloudwatchevents|scheduler|pipes)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(eventbridge|cloudwatchevents|scheduler|pipes)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_cloudwatch_event_target, attribute: rule, edge_kind: containment}
+- {resource_type: aws_cloudwatch_event_target, attribute: arn, edge_kind: data-flow}
+- {resource_type: aws_cloudwatch_event_rule, attribute: event_bus_name, edge_kind: containment}
+- {resource_type: aws_cloudwatch_event_api_destination, attribute: connection_arn, edge_kind: reference}
+- {resource_type: aws_scheduler_schedule, attribute: target.arn, edge_kind: data-flow}
+- {resource_type: aws_pipes_pipe, attribute: source, edge_kind: data-flow}
+- {resource_type: aws_pipes_pipe, attribute: target, edge_kind: data-flow}
+alternatives:
+- {ref: knative, difficulty: medium, compatibility: conceptual, notes: 'Knative Eventing brokers and triggers route CloudEvents with attribute filters; event patterns are rewritten.', approved_by: cloudowski}
+- {ref: nats, difficulty: medium, compatibility: conceptual, notes: Subject-based routing replaces buses and rules; content-based filters move into consumers., approved_by: cloudowski}
+- {ref: rabbitmq, difficulty: medium, compatibility: conceptual, notes: Topic and headers exchanges route events; schedules and API destinations need other tools., approved_by: cloudowski}
+- {ref: apache-kafka, difficulty: medium, compatibility: conceptual, notes: Topics plus stream processing or connectors replace buses and pipes; archive maps to retention., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-what-is.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_rule']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

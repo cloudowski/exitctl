@@ -1,0 +1,40 @@
+schema: '1.0'
+kind: service
+id: aws.vpc-lattice
+provider: aws
+name: Amazon VPC Lattice
+category: network
+resource_types:
+  terraform: [aws_vpclattice_service_network, aws_vpclattice_service, aws_vpclattice_listener, aws_vpclattice_listener_rule, aws_vpclattice_target_group, aws_vpclattice_target_group_attachment, aws_vpclattice_service_network_vpc_association, aws_vpclattice_service_network_service_association, aws_vpclattice_auth_policy, aws_vpclattice_resource_policy, aws_vpclattice_access_log_subscription]
+  cloudformation: ['AWS::VpcLattice::ServiceNetwork', 'AWS::VpcLattice::Service', 'AWS::VpcLattice::Listener', 'AWS::VpcLattice::Rule', 'AWS::VpcLattice::TargetGroup', 'AWS::VpcLattice::ServiceNetworkVpcAssociation', 'AWS::VpcLattice::ServiceNetworkServiceAssociation', 'AWS::VpcLattice::AuthPolicy', 'AWS::VpcLattice::ResourcePolicy', 'AWS::VpcLattice::AccessLogSubscription']
+  kubernetes:
+  - {group: application-networking.k8s.aws, kind: '*'}
+traits:
+- {id: provider-network-construct, level: medium, reason: 'Service networks, VPC associations and target groups are VPC Lattice constructs; Gateway API routes stay portable.'}
+- {id: proprietary-iam-model, level: low, reason: 'Service-to-service authorization uses IAM auth policies and SigV4-signed requests.'}
+kubernetes_bindings:
+- match: {kind: GatewayClass, field: spec.controllerName, equals: application-networking.k8s.aws/gateway-api-controller}
+rules:
+- id: aws.vpc-lattice.iam-auth
+  match:
+    resource_type: [aws_vpclattice_service_network, aws_vpclattice_service]
+  when: {attr: auth_type, equals: AWS_IAM}
+  then: {add_trait: proprietary-iam-model, level: medium, evidence: auth_type}
+edge_hints:
+- {resource_type: aws_vpclattice_listener, attribute: service_identifier, edge_kind: containment}
+- {resource_type: aws_vpclattice_listener_rule, attribute: listener_identifier, edge_kind: containment}
+- {resource_type: aws_vpclattice_target_group_attachment, attribute: target_group_identifier, edge_kind: containment}
+- {resource_type: aws_vpclattice_service_network_vpc_association, attribute: vpc_identifier, edge_kind: binding}
+alternatives:
+- {ref: envoy, difficulty: medium, compatibility: conceptual, notes: 'Envoy Gateway or an Envoy-based service mesh implements the same Gateway API routes; IAM auth policies become mTLS and mesh policies.', approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.aws.amazon.com/vpc-lattice/latest/ug/what-is-vpc-lattice.html
+  - https://www.gateway-api-controller.eks.aws.dev/
+  - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpclattice_service_network
+  llm: {batch: 2026-10-07-eks-workshop, model: claude-opus-5-5, prompt_version: catalog-coverage-v1, eval_passed: true}

@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="generator" content="exitctl">
+<title>Lock-in report{{if .Repos}}: {{.Repos}}{{end}}</title>
+<style>
+{{.CSS}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <div class="brand">exitctl <span>lock-in report</span></div>
+    <nav aria-label="Sections">
+      <a href="#summary">Summary</a>
+      <a href="#dimensions">Dimensions</a>
+      <a href="#anchors">Anchors</a>
+      <a href="#graph">Graph</a>
+      <a href="#coverage">Coverage</a>
+      <a href="#exceptions">Exceptions</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<section id="summary" aria-labelledby="summary-title">
+  <div class="card hero band-{{.Band}}">
+    <div class="grade-block">
+      <div class="grade-letter" id="grade" role="img" aria-label="{{.GradeCaption}} {{.GradeLetter}}">{{.GradeLetter}}</div>
+      <div class="grade-caption">{{.GradeCaption}}</div>
+    </div>
+    <div>
+      <h1 id="summary-title">{{if .Repos}}{{.Repos}}: {{end}}Executive summary</h1>
+      {{- if .NothingScored}}
+      <div class="index-line"><span class="index-value">Nothing to score</span></div>
+      {{- else}}
+      <div class="index-line">
+        <span class="index-value">{{.Index}}<small>/100 lock-in index</small></span>
+        {{- if .Range}}<span class="pill">{{.Range}}</span>{{end}}
+        {{- range .Pills}}<span class="pill band">{{.}}</span>{{end}}
+      </div>
+      {{- end}}
+      <p class="summary-text">{{.Paragraph}}</p>
+      <div class="facts">
+        <div class="fact"><div class="k">Top anchor</div><div class="v mono">{{.TopAnchor}}</div>{{if .TopAnchorSub}}<div class="s">{{.TopAnchorSub}}</div>{{end}}</div>
+        <div class="fact"><div class="k">Biggest lever</div><div class="v">{{.LeverFact}}</div>{{if .LeverFactSub}}<div class="s">{{.LeverFactSub}}</div>{{end}}</div>
+        <div class="fact"><div class="k">Coverage</div><div class="v">{{.CoverageFact}}</div><div class="s">{{.CoverageSub}}</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="dimensions" aria-labelledby="dimensions-title">
+  <h2 id="dimensions-title">Dimensions</h2>
+  <div class="card">
+    <div class="dims">
+      {{- range .Dimensions}}
+      {{- if .Assessed}}
+      <div class="dim band-{{.Band}}">
+        <div class="name">{{.Name}}</div>
+        <div class="bar" role="img" aria-label="{{.Name}} {{.Value}} of 100, band {{.Letter}}"><span style="width: {{.Value}}%"></span></div>
+        <div class="val">{{.Value}}<span class="letter">{{.Letter}}</span></div>
+      </div>
+      {{- else}}
+      <div class="dim na">
+        <div class="name">{{.Name}}</div>
+        <div class="bar" aria-hidden="true"></div>
+        <div class="val">not assessed</div>
+      </div>
+      {{- end}}
+      {{- end}}
+    </div>
+    <p class="faint small" style="margin: 16px 0 0">Each dimension is scored 0-100; lower means easier to move. Letters follow the grade bands A 0-9, B 10-24, C 25-39, D 40-54, E 55-100.</p>
+  </div>
+</section>
+
+<section id="lever" aria-labelledby="lever-title">
+  <h2 id="lever-title">Biggest lever</h2>
+  <div class="card">
+    {{- with .Lever}}
+    <div class="lever">
+      <div class="delta">-{{.Delta}}<small>index {{.Unit}}</small></div>
+      <div>
+        <div class="swap"><span>{{.Service}}</span><span class="arrow">-&gt;</span><span>{{.Alternative}}</span></div>
+        <p class="muted" style="margin: 6px 0 0">{{.Text}}</p>
+      </div>
+    </div>
+    {{- else}}
+    <p class="muted" style="margin: 0">No single replacement changes the index.</p>
+    {{- end}}
+  </div>
+</section>
+
+<section id="anchors" aria-labelledby="anchors-title">
+  <h2 id="anchors-title">Anchors</h2>
+  {{- if .Anchors}}
+  <div class="anchors">
+    {{- range .Anchors}}
+    <article class="card anchor band-{{.Band}}">
+      <div class="anchor-head">
+        <div class="rank" aria-label="rank {{.Rank}}">{{.Rank}}</div>
+        <div class="anchor-title">
+          <h3>{{.Address}}</h3>
+          {{- if .Sub}}<div class="sub">{{.Sub}}</div>{{end}}
+        </div>
+        <div class="anchor-stats">
+          <div class="stat"><div class="n">{{.Dependents}}</div><div class="l">dependents</div></div>
+          <div class="stat"><div class="n">{{.Contribution}}</div><div class="l">contribution</div></div>
+        </div>
+      </div>
+      {{- if or .Reason .SDK}}
+      <div class="reason">{{if .Reason}}Why this is an anchor: {{.Reason}}{{end}}{{if and .Reason .SDK}}. {{end}}{{if .SDK}}Code: {{.SDK}}.{{end}}</div>
+      {{- end}}
+      <div class="anchor-body">
+        <div>
+          <h4>Findings</h4>
+          {{- if .Findings}}
+          <ul class="plain findings">
+            {{- range .Findings}}
+            <li class="band-{{.Band}}"><span class="lvl">{{.Level}}</span><span>{{.Name}}</span>{{if .Dimensions}}<span class="dims-list">{{.Dimensions}}</span>{{end}}{{if .Accepted}}<span class="tag ok">accepted{{if .Exception}}: {{.Exception}}{{end}}</span>{{end}}</li>
+            {{- end}}
+          </ul>
+          {{- else}}
+          <p class="faint small">No findings.</p>
+          {{- end}}
+          <h4 style="margin-top: 16px">Evidence</h4>
+          <ul class="plain evidence">
+            {{- range .Evidence}}
+            <li><span class="loc">{{.Loc}}</span>  <span class="ex">{{.Excerpt}}</span></li>
+            {{- else}}
+            <li class="faint">No evidence recorded.</li>
+            {{- end}}
+            {{- if .MoreEvidence}}
+            <li class="faint">... {{.MoreEvidence}} more</li>
+            {{- end}}
+          </ul>
+        </div>
+        <div>
+          <h4>Alternatives</h4>
+          {{- if .Alternatives}}
+          <div class="alts">
+            {{- range .Alternatives}}
+            <div class="alt{{if .Recommended}} rec{{end}}">
+              <div class="top">{{if .Recommended}}<span class="rec-mark">Recommended</span>{{end}}<span class="nm">{{.Name}}</span>{{if .Kind}}<span class="tag">{{.Kind}}</span>{{end}}</div>
+              <div class="small muted">difficulty {{.Difficulty}}, {{.Compatibility}}</div>
+              {{- if .Notes}}<div class="notes">{{.Notes}}</div>{{end}}
+            </div>
+            {{- end}}
+          </div>
+          {{- else}}
+          <p class="faint small">None in the catalog yet.</p>
+          {{- end}}
+        </div>
+      </div>
+    </article>
+    {{- end}}
+  </div>
+  {{- if .MoreAnch}}
+  <div class="card table-wrap" style="margin-top: 16px">
+    <table>
+      <thead><tr><th class="num">#</th><th>Anchor</th><th class="num">Dependents</th><th class="num">Contribution</th><th>Alternatives</th></tr></thead>
+      <tbody>
+        {{- range .MoreAnch}}
+        <tr><td class="num">{{.Rank}}</td><td class="mono">{{.Address}}</td><td class="num">{{.Dependents}}</td><td class="num">{{.Contribution}}</td><td>{{.Alternatives}}</td></tr>
+        {{- end}}
+      </tbody>
+    </table>
+  </div>
+  {{- end}}
+  {{- else}}
+  <div class="card"><p class="muted" style="margin: 0">No anchors: no scored resource has lock-in findings.</p></div>
+  {{- end}}
+</section>
+
+<section id="graph" aria-labelledby="graph-title">
+  <h2 id="graph-title">Dependency graph</h2>
+  <div class="card graph-card">
+    <div class="graph-toolbar">
+      <span class="small muted">{{.GraphSummary}}</span>
+      <span class="spacer"></span>
+      <button type="button" class="btn" id="btn-waves" aria-pressed="false">Waves</button>
+      <button type="button" class="btn" id="btn-expand">Expand groups</button>
+      <button type="button" class="btn" id="btn-fit">Fit</button>
+      <button type="button" class="btn" id="btn-reset">Reset</button>
+    </div>
+    <div class="graph-main">
+      <div id="cy" role="img" aria-label="Interactive dependency graph"><noscript><div class="noscript">The interactive graph needs JavaScript.</div></noscript></div>
+      <aside class="graph-side" id="graph-side" aria-live="polite"></aside>
+    </div>
+    <div class="legend">
+      <span class="sw band-a"><span class="dot"></span>A low</span>
+      <span class="sw band-b"><span class="dot"></span>B</span>
+      <span class="sw band-c"><span class="dot"></span>C</span>
+      <span class="sw band-d"><span class="dot"></span>D</span>
+      <span class="sw band-e"><span class="dot"></span>E high</span>
+      <span class="sw"><span class="dot neutral"></span>no lock-in findings</span>
+      <span class="sw">Arrows point to what a resource depends on; dashed lines are data flows.</span>
+    </div>
+  </div>
+</section>
+
+<section id="coverage" aria-labelledby="coverage-title">
+  <h2 id="coverage-title">Coverage</h2>
+  <div class="card">
+    <div class="cov-stats">
+      <div><div class="n">{{.Coverage.Types}}</div><div class="l">of resource types recognized</div></div>
+      <div><div class="n">{{.Coverage.Resources}}</div><div class="l">of resources recognized</div></div>
+      <div><div class="n">{{.Coverage.Weighted}}</div><div class="l">weighted coverage</div></div>
+    </div>
+    {{- if .Coverage.UnknownTypes}}
+    <p class="muted">{{.Coverage.UnknownTypes}} resource {{if eq .Coverage.UnknownTypes 1}}type is{{else}}types are{{end}} not in the catalog yet; run <code>exitctl coverage</code> for the list.</p>
+    {{- end}}
+    {{- if .Coverage.Unverified}}
+    <p class="muted">{{.Coverage.Unverified}} {{if eq .Coverage.Unverified 1}}match comes{{else}}matches come{{end}} from draft catalog entries.</p>
+    {{- end}}
+    {{- if .Coverage.Sources}}
+    <h3 style="font-size: 15px; margin: 16px 0 6px">Inputs not fully read</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>File</th><th>Kind</th><th>Status</th></tr></thead>
+      <tbody>
+        {{- range .Coverage.Sources}}
+        <tr><td class="mono">{{.Path}}</td><td>{{.Kind}}</td><td>{{.Status}}</td></tr>
+        {{- end}}
+      </tbody>
+    </table></div>
+    {{- end}}
+    {{- if .Coverage.Gaps}}
+    <h3 style="font-size: 15px; margin: 16px 0 6px">Gaps</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Gap</th><th>Subject</th><th>Location</th><th class="num">Count</th></tr></thead>
+      <tbody>
+        {{- range .Coverage.Gaps}}
+        <tr><td>{{.Text}}</td><td class="mono">{{if .Subject}}{{.Subject}}{{else}}-{{end}}</td><td class="mono">{{if .Path}}{{.Path}}{{else}}-{{end}}</td><td class="num">{{if .Count}}{{.Count}}{{else}}1{{end}}</td></tr>
+        {{- end}}
+      </tbody>
+    </table></div>
+    {{- end}}
+    {{- if .Coverage.Clean}}
+    <p class="muted" style="margin: 0">All inputs were read and no gaps were recorded.</p>
+    {{- end}}
+    {{- if .Coverage.Notes}}
+    <h3 style="font-size: 15px; margin: 16px 0 6px">Notes</h3>
+    <ul class="notes-list">
+      {{- range .Coverage.Notes}}
+      <li>{{.}}</li>
+      {{- end}}
+    </ul>
+    {{- end}}
+  </div>
+</section>
+
+<section id="exceptions" aria-labelledby="exceptions-title">
+  <h2 id="exceptions-title">Exceptions</h2>
+  <div class="card">
+    {{- if .Exceptions}}
+    {{- if .ExcSummary}}<p class="muted" style="margin-top: 0">{{.ExcSummary}}</p>{{end}}
+    <div class="table-wrap"><table>
+      <thead><tr><th>Exception</th><th>State</th><th>Owner</th><th>Expires</th><th class="num">Findings</th><th>Reason</th></tr></thead>
+      <tbody>
+        {{- range .Exceptions}}
+        <tr><td class="mono">{{.ID}}</td><td>{{.State}}</td><td>{{.Owner}}</td><td>{{.Expires}}</td><td class="num">{{.Findings}}</td><td>{{.Reason}}</td></tr>
+        {{- end}}
+      </tbody>
+    </table></div>
+    {{- else}}
+    <p class="muted" style="margin: 0">None. No exceptions are configured.</p>
+    {{- end}}
+  </div>
+</section>
+
+<section class="card closing" aria-label="Next steps">
+  <p class="cta">{{.ExitLine}}</p>
+  {{- if .SupportEmail}}
+  <p class="support">Questions or feedback: <a href="mailto:{{.SupportEmail}}">{{.SupportEmail}}</a></p>
+  {{- end}}
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap mono">{{range $i, $f := .Footer}}{{if $i}} | {{end}}{{$f}}{{end}}</div>
+</footer>
+
+<script type="application/json" id="data">{{.Data}}</script>
+<script>
+{{.License}}
+{{.Cyto}}
+</script>
+<script>
+{{.Script}}
+</script>
+</body>
+</html>

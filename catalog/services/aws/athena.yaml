@@ -1,0 +1,67 @@
+schema: '1.0'
+kind: service
+id: aws.athena
+provider: aws
+name: Amazon Athena
+category: analytics
+resource_types:
+  terraform: [aws_athena_database, aws_athena_workgroup, aws_athena_named_query, aws_athena_data_catalog, aws_athena_prepared_statement, aws_athena_capacity_reservation]
+  cloudformation: ['AWS::Athena::WorkGroup', 'AWS::Athena::NamedQuery', 'AWS::Athena::DataCatalog', 'AWS::Athena::PreparedStatement', 'AWS::Athena::CapacityReservation']
+traits:
+- {id: proprietary-api, level: low, reason: 'Queries are Trino/Presto SQL over open formats in S3; the query execution API and workgroups are AWS-specific.'}
+- {id: operational-tooling-coupling, level: medium, reason: 'Table definitions live in the Glue Data Catalog and workgroups; both must be recreated in a Hive or Iceberg catalog for another engine.'}
+rules:
+- id: aws.athena.federated-catalog
+  match:
+    resource_type: [aws_athena_data_catalog]
+  when: {attr: type, equals: LAMBDA}
+  then: {add_trait: proprietary-runtime, level: medium, evidence: parameters}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-athena', 'athena-express']
+  imports: ['[''"]@aws-sdk/client-athena[''"/]', '[''"]athena-express[''"]']
+  usage: ['\bAWS\.Athena\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  packages: [pyathena, awswrangler]
+  imports: ['^\s*(from|import)\s+pyathena\b', '^\s*(from\s+awswrangler\s+import\s+.*\bathena\b|import\s+awswrangler)']
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["'']athena["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/athena, github.com/uber/athenadriver]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/athena(/[^"]*)?"', '"github\.com/uber/athenadriver/[^"]+"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:athena', 'com.amazonaws:aws-java-sdk-athena', 'com.amazon.athena:athena-jdbc']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.athena\.', '^\s*import\s+(static\s+)?com\.amazonaws\.services\.athena\.', '^\s*import\s+(static\s+)?com\.amazon\.athena\.']
+- ecosystem: nuget
+  packages: [AWSSDK.Athena]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.Athena\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-athena]
+  imports: ['^\s*require\s+["'']aws-sdk-(athena)["'']']
+  usage: ['(?i)\bAws::(athena)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-athena]
+  imports: ['\baws_sdk_(athena)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(athena)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_athena_workgroup, attribute: configuration.result_configuration.output_location, edge_kind: data-flow}
+- {resource_type: aws_athena_named_query, attribute: workgroup, edge_kind: containment}
+- {resource_type: aws_athena_named_query, attribute: database, edge_kind: reference}
+- {resource_type: aws_athena_database, attribute: bucket, edge_kind: data-flow}
+- {resource_type: aws_athena_prepared_statement, attribute: workgroup, edge_kind: containment}
+alternatives:
+- {ref: trino, difficulty: low, compatibility: api-compatible, notes: 'Athena engine versions are based on Trino; most SQL ports directly, with Glue catalog replaced by Hive or Iceberg catalogs.', approved_by: cloudowski}
+- {ref: clickhouse, difficulty: medium, compatibility: conceptual, notes: ClickHouse queries Parquet in object storage via the S3 table function; SQL dialect differs., approved_by: cloudowski}
+- {ref: apache-spark, difficulty: medium, compatibility: conceptual, notes: Spark SQL over the same Parquet or Iceberg data replaces batch queries., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/athena/latest/ug/what-is.html', 'https://docs.aws.amazon.com/athena/latest/ug/engine-versions-reference-0003.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/athena_workgroup']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

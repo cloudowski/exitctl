@@ -1,0 +1,65 @@
+schema: '1.0'
+kind: service
+id: aws.sqs
+provider: aws
+name: Amazon Simple Queue Service (SQS)
+category: messaging.queue
+resource_types:
+  terraform: [aws_sqs_queue, aws_sqs_queue_policy, aws_sqs_queue_redrive_policy, aws_sqs_queue_redrive_allow_policy]
+  cloudformation: ['AWS::SQS::Queue', 'AWS::SQS::QueuePolicy', 'AWS::SQS::QueueInlinePolicy']
+  kubernetes:
+  - {group: sqs.services.k8s.aws, kind: Queue}
+traits:
+- {id: proprietary-api, level: medium, reason: 'SQS uses its own HTTP API; queue semantics (visibility timeout, DLQ) map well to RabbitMQ or NATS.'}
+- {id: proprietary-sdk}
+rules:
+- id: aws.sqs.fifo
+  match:
+    resource_type: [aws_sqs_queue]
+  when: {attr: fifo_queue, equals: true}
+  then: {add_trait: managed-only-feature, level: low, evidence: fifo_queue}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-sqs', 'sqs-consumer', 'sqs-producer']
+  imports: ['[''"]@aws-sdk/client-sqs[''"/]', '[''"]sqs-(consumer|producer)[''"]']
+  usage: ['\bAWS\.SQS\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["'']sqs["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/sqs]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/sqs(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:sqs', 'com.amazonaws:aws-java-sdk-sqs', 'com.amazonaws:amazon-sqs-java-messaging-lib', 'io.awspring.cloud:spring-cloud-aws-starter-sqs']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.sqs\.', '^\s*import\s+(static\s+)?com\.amazonaws\.services\.sqs\.', '^\s*import\s+(static\s+)?io\.awspring\.cloud\.sqs\.']
+- ecosystem: nuget
+  packages: [AWSSDK.SQS]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.SQS\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-sqs]
+  imports: ['^\s*require\s+["'']aws-sdk-(sqs)["'']']
+  usage: ['(?i)\bAws::(sqs)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-sqs]
+  imports: ['\baws_sdk_(sqs)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(sqs)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_sqs_queue_policy, attribute: queue_url, edge_kind: binding}
+- {resource_type: aws_sqs_queue_redrive_policy, attribute: queue_url, edge_kind: reference}
+- {resource_type: aws_sqs_queue_redrive_allow_policy, attribute: queue_url, edge_kind: reference}
+alternatives:
+- {ref: rabbitmq, difficulty: medium, compatibility: conceptual, notes: 'Queues, acknowledgements and dead-letter exchanges cover SQS patterns; client code changes to AMQP.', approved_by: cloudowski}
+- {ref: nats, difficulty: medium, compatibility: conceptual, notes: JetStream work-queue streams with ack and redelivery replace SQS queues; producers and consumers are rewritten., approved_by: cloudowski}
+- {ref: apache-kafka, difficulty: medium, compatibility: conceptual, notes: Fits when queues carry event streams; per-message visibility and delays have no direct equivalent., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/welcome.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

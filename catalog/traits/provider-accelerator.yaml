@@ -1,0 +1,21 @@
+schema: '1.0'
+kind: trait
+id: provider-accelerator
+name: Provider accelerator
+level: medium
+dimensions:
+- technical
+- skills
+explanation: Workloads are compiled and tuned for accelerators that only one provider offers (AWS Inferentia and Trainium, Google TPU), so they need porting and retuning.
+exit_hint: Keep models in framework-native formats, test them on GPUs early, and budget for recompilation and performance tuning.
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-08'
+  status: verified
+  sources:
+  - https://awsdocs-neuron.readthedocs-hosted.com/en/latest/
+  - https://cloud.google.com/tpu/docs/intro-to-tpu
+  - https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/tpu_v2_vm
+  llm: {batch: 2026-10-08-v02, model: claude-opus-5-5, prompt_version: catalog-levels-v1, eval_passed: true}

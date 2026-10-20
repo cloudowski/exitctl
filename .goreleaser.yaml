@@ -1,0 +1,117 @@
+# GoReleaser config. Releases are created by .github/workflows/release.yml when a
+# tag "vX.Y.Z" is pushed. Local dry run: goreleaser release --snapshot --clean
+version: 2
+
+project_name: exitctl
+
+before:
+  hooks:
+    - go mod tidy -diff
+
+builds:
+  - id: exitctl
+    main: ./cmd/exitctl
+    binary: exitctl
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin]
+    goarch: [amd64, arm64]
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X github.com/cloudowski/exitctl/internal/version.Tool={{ .Version }}
+      # Support address shown at the bottom of HTML and Markdown reports (FR-074).
+      - -X github.com/cloudowski/exitctl/internal/version.SupportEmail=tomasz@cloudowski.com
+    # Reproducible binaries: the timestamp comes from the commit, not the build.
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: exitctl
+    formats: [tar.gz]
+    # No version in the name, so releases/latest/download/<name> is a stable URL.
+    name_template: "exitctl_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - NOTICE
+      - README.md
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - "^chore:"
+      - "^docs:"
+      - "^test:"
+      - "Merge pull request"
+      - "Merge branch"
+  groups:
+    - title: Features
+      regexp: '^feat(\(.*\))?:'
+      order: 0
+    - title: Fixes
+      regexp: '^fix(\(.*\))?:'
+      order: 1
+    - title: Other
+      order: 999
+
+release:
+  github:
+    owner: cloudowski
+    name: exitctl
+  # v0.x and tags with a suffix (v1.0.0-rc.1) are marked as pre-releases.
+  prerelease: auto
+
+# Keyless signing with cosign (Sigstore). The signature is tied to the GitHub Actions
+# identity of the release workflow, no private key is stored. It signs checksums.txt, which
+# covers every archive. Needs "id-token: write" in the workflow. Local dry runs: --skip=sign.
+# Verify: see "Verifying a release" in the README.
+signs:
+  - cmd: cosign
+    signature: "${artifact}.sigstore.json"
+    args: ["sign-blob", "--yes", "--bundle=${signature}", "${artifact}"]
+    artifacts: checksum
+    output: true
+
+# SBOM (SPDX JSON) for every archive. Needs syft on the PATH, installed in the release
+# workflow. Local dry runs: add --skip=sbom (and --skip=publish).
+sboms:
+  - id: archive
+    artifacts: archive
+    documents:
+      - "{{ .ArtifactName }}.sbom.spdx.json"
+    cmd: syft
+    args: ["$artifact", "--output", "spdx-json=$document"]
+
+# Homebrew cask (the replacement for the deprecated "brews" formulas), pushed to
+# cloudowski/homebrew-tap (Casks/exitctl.rb).
+# Install: brew install cloudowski/tap/exitctl
+# Needs the repository secret HOMEBREW_TAP_TOKEN (see release workflow).
+homebrew_casks:
+  - name: exitctl
+    repository:
+      owner: cloudowski
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    directory: Casks
+    homepage: https://github.com/cloudowski/exitctl
+    description: "Measure cloud infrastructure vendor lock-in from your repositories"
+    license: Apache-2.0
+    binaries: [exitctl]
+    # Pre-releases (tags with a suffix) do not update the cask.
+    skip_upload: auto
+    commit_author:
+      name: Tomasz Cholewa
+      email: tomasz@cloudowski.com
+    # The binaries are not notarized by Apple; drop the quarantine flag on install.
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr",
+                           args: ["-dr", "com.apple.quarantine", "#{staged_path}/exitctl"]
+          end

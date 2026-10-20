@@ -1,0 +1,83 @@
+schema: '1.0'
+kind: service
+id: aws.cloudwatch
+provider: aws
+name: Amazon CloudWatch
+category: observability
+resource_types:
+  terraform: [aws_cloudwatch_metric_alarm, aws_cloudwatch_composite_alarm, aws_cloudwatch_dashboard, aws_cloudwatch_metric_stream, aws_cloudwatch_log_group, aws_cloudwatch_log_stream, aws_cloudwatch_log_subscription_filter, aws_cloudwatch_log_metric_filter, aws_cloudwatch_log_resource_policy, aws_cloudwatch_log_destination, aws_cloudwatch_log_destination_policy, aws_cloudwatch_query_definition, aws_cloudwatch_log_data_protection_policy, aws_cloudwatch_log_account_policy, aws_cloudwatch_log_anomaly_detector, aws_cloudwatch_log_delivery, aws_cloudwatch_log_delivery_source, aws_cloudwatch_log_delivery_destination, aws_cloudwatch_log_delivery_destination_policy, aws_cloudwatch_log_index_policy, aws_synthetics_canary, aws_synthetics_group, aws_synthetics_group_association, aws_rum_app_monitor, aws_rum_metrics_destination, aws_oam_link, aws_oam_sink, aws_oam_sink_policy]
+  cloudformation: ['AWS::CloudWatch::Alarm', 'AWS::CloudWatch::CompositeAlarm', 'AWS::CloudWatch::Dashboard', 'AWS::CloudWatch::MetricStream', 'AWS::CloudWatch::AnomalyDetector', 'AWS::CloudWatch::InsightRule', 'AWS::Logs::LogGroup', 'AWS::Logs::LogStream', 'AWS::Logs::SubscriptionFilter', 'AWS::Logs::MetricFilter', 'AWS::Logs::ResourcePolicy', 'AWS::Logs::Destination', 'AWS::Logs::QueryDefinition', 'AWS::Logs::AccountPolicy', 'AWS::Logs::LogAnomalyDetector', 'AWS::Logs::Delivery', 'AWS::Logs::DeliverySource', 'AWS::Logs::DeliveryDestination', 'AWS::Synthetics::Canary', 'AWS::Synthetics::Group', 'AWS::RUM::AppMonitor', 'AWS::Oam::Link', 'AWS::Oam::Sink']
+  kubernetes:
+  - {group: cloudwatch.services.k8s.aws, kind: MetricAlarm}
+  - {group: cloudwatchlogs.services.k8s.aws, kind: LogGroup}
+traits:
+- {id: operational-tooling-coupling, level: medium, reason: 'Alarms, dashboards and log groups are built on CloudWatch metrics namespaces and AWS-only integrations.'}
+- {id: proprietary-query-language, level: low, reason: Logs Insights queries and metric math use CloudWatch-specific syntax.}
+rules:
+- id: aws.cloudwatch.metric-filters
+  match:
+    resource_type: [aws_cloudwatch_log_metric_filter, aws_cloudwatch_query_definition]
+  then: {add_trait: proprietary-query-language, level: medium, evidence: pattern}
+- id: aws.cloudwatch.subscription-filter
+  match:
+    resource_type: [aws_cloudwatch_log_subscription_filter]
+  then: {add_trait: managed-change-stream, level: low, evidence: destination_arn}
+- id: aws.cloudwatch.synthetics
+  match:
+    resource_type: [aws_synthetics_canary]
+  then: {add_trait: proprietary-runtime, level: low, evidence: runtime_version}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-cloudwatch', '@aws-sdk/client-cloudwatch-logs', 'aws-embedded-metrics', 'winston-cloudwatch']
+  imports: ['[''"]@aws-sdk/client-cloudwatch(-logs)?[''"/]', '[''"](aws-embedded-metrics|winston-cloudwatch)[''"]']
+  usage: ['\bAWS\.(CloudWatch|CloudWatchLogs)\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  packages: [watchtower, aws-embedded-metrics]
+  imports: ['^\s*(from|import)\s+(watchtower|aws_embedded_metrics)\b']
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["''](cloudwatch|logs|synthetics|rum)["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/cloudwatch, github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/(cloudwatch|cloudwatchlogs|synthetics)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:cloudwatch', 'software.amazon.awssdk:cloudwatchlogs', 'software.amazon.cloudwatchlogs:aws-embedded-metrics', 'com.amazonaws:aws-java-sdk-cloudwatch', 'com.amazonaws:aws-java-sdk-logs', 'io.micrometer:micrometer-registry-cloudwatch2']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.(cloudwatch|cloudwatchlogs)\.', '^\s*import\s+(static\s+)?software\.amazon\.cloudwatchlogs\.emf\.', '^\s*import\s+(static\s+)?com\.amazonaws\.services\.(cloudwatch|logs)\.']
+- ecosystem: nuget
+  packages: [AWSSDK.CloudWatch, AWSSDK.CloudWatchLogs, Amazon.CloudWatch.EMF, 'AWS.Logger.*']
+  imports: ['^\s*using\s+(static\s+)?Amazon\.(CloudWatch|CloudWatchLogs)\b', '^\s*using\s+(static\s+)?AWS\.Logger\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-cloudwatch, aws-sdk-cloudwatchlogs]
+  imports: ['^\s*require\s+["'']aws-sdk-(cloudwatch|cloudwatchlogs)["'']']
+  usage: ['(?i)\bAws::(cloudwatch|cloudwatchlogs)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-cloudwatch, aws-sdk-cloudwatchlogs]
+  imports: ['\baws_sdk_(cloudwatch|cloudwatchlogs)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(cloudwatch|cloudwatchlogs)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_cloudwatch_metric_alarm, attribute: alarm_actions, edge_kind: data-flow}
+- {resource_type: aws_cloudwatch_metric_alarm, attribute: ok_actions, edge_kind: data-flow}
+- {resource_type: aws_cloudwatch_composite_alarm, attribute: alarm_actions, edge_kind: data-flow}
+- {resource_type: aws_cloudwatch_log_stream, attribute: log_group_name, edge_kind: containment}
+- {resource_type: aws_cloudwatch_log_subscription_filter, attribute: log_group_name, edge_kind: data-flow}
+- {resource_type: aws_cloudwatch_log_subscription_filter, attribute: destination_arn, edge_kind: data-flow}
+- {resource_type: aws_cloudwatch_log_metric_filter, attribute: log_group_name, edge_kind: data-flow}
+- {resource_type: aws_cloudwatch_metric_stream, attribute: firehose_arn, edge_kind: data-flow}
+- {resource_type: aws_cloudwatch_log_group, attribute: kms_key_id, edge_kind: reference}
+- {resource_type: aws_synthetics_canary, attribute: artifact_s3_location, edge_kind: data-flow}
+alternatives:
+- {ref: prometheus, difficulty: medium, compatibility: conceptual, notes: 'Metrics and alerting rules move to PromQL; AWS service metrics need an exporter such as YACE.', approved_by: cloudowski}
+- {ref: grafana, difficulty: medium, compatibility: conceptual, notes: Dashboards are rebuilt in Grafana; Loki covers log storage and LogQL replaces Logs Insights., approved_by: cloudowski}
+- {ref: opentelemetry, difficulty: medium, compatibility: conceptual, notes: Vendor-neutral instrumentation and collectors decouple apps from CloudWatch agents and EMF., approved_by: cloudowski}
+- {ref: opensearch, difficulty: medium, compatibility: conceptual, notes: Centralised log search with dashboards replaces log groups and Logs Insights queries., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/WhatIsCloudWatch.html', 'https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

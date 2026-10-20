@@ -1,0 +1,101 @@
+schema: '1.0'
+kind: service
+id: azure.api-management
+provider: azure
+name: Azure API Management
+category: integration
+resource_types:
+  terraform:
+  - azurerm_api_management
+  - azurerm_api_management_api
+  - azurerm_api_management_api_operation
+  - azurerm_api_management_api_policy
+  - azurerm_api_management_api_operation_policy
+  - azurerm_api_management_api_schema
+  - azurerm_api_management_api_version_set
+  - azurerm_api_management_api_diagnostic
+  - azurerm_api_management_api_release
+  - azurerm_api_management_api_tag
+  - azurerm_api_management_product
+  - azurerm_api_management_product_api
+  - azurerm_api_management_product_policy
+  - azurerm_api_management_product_group
+  - azurerm_api_management_subscription
+  - azurerm_api_management_backend
+  - azurerm_api_management_named_value
+  - azurerm_api_management_logger
+  - azurerm_api_management_diagnostic
+  - azurerm_api_management_custom_domain
+  - azurerm_api_management_gateway
+  - azurerm_api_management_gateway_api
+  - azurerm_api_management_policy
+  - azurerm_api_management_policy_fragment
+  - azurerm_api_management_global_schema
+  - azurerm_api_management_user
+  - azurerm_api_management_group
+  - azurerm_api_management_group_user
+  - azurerm_api_management_certificate
+  - azurerm_api_management_authorization_server
+  - azurerm_api_management_identity_provider_aad
+  - azurerm_api_management_openid_connect_provider
+  - azurerm_api_management_tag
+  - azurerm_api_management_redis_cache
+  kubernetes:
+  - {group: apimanagement.azure.com, kind: Service}
+  - {group: apimanagement.azure.com, kind: Api}
+  - {group: apimanagement.azure.com, kind: ApiVersionSet}
+  - {group: apimanagement.azure.com, kind: Backend}
+  - {group: apimanagement.azure.com, kind: NamedValue}
+  - {group: apimanagement.azure.com, kind: Policy}
+  - {group: apimanagement.azure.com, kind: PolicyFragment}
+  - {group: apimanagement.azure.com, kind: Product}
+  - {group: apimanagement.azure.com, kind: ProductApi}
+  - {group: apimanagement.azure.com, kind: ProductPolicy}
+  - {group: apimanagement.azure.com, kind: Subscription}
+  - {group: apimanagement.azure.com, kind: AuthorizationProvider}
+  - {group: apimanagement.azure.com, kind: AuthorizationProvidersAuthorization}
+  - {group: apimanagement.azure.com, kind: AuthorizationProvidersAuthorizationsAccessPolicy}
+traits:
+- {id: proprietary-workflow-definition, level: medium, reason: Gateway behaviour is expressed in APIM XML policies with C# policy expressions.}
+- {id: operational-tooling-coupling, level: medium, reason: 'Developer portal, products and subscriptions are APIM concepts.'}
+- {id: proprietary-api, level: low, reason: 'Imports standard OpenAPI definitions, so API contracts stay portable.'}
+rules:
+- id: azure.api-management.policies
+  match: {resource_type: [azurerm_api_management_policy, azurerm_api_management_api_policy, azurerm_api_management_api_operation_policy, azurerm_api_management_product_policy, azurerm_api_management_policy_fragment]}
+  then: {set_level: {trait: proprietary-workflow-definition, level: high}, evidence: xml_content}
+edge_hints:
+- {resource_type: azurerm_api_management, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_api_management_api, attribute: api_management_name, edge_kind: containment}
+- {resource_type: azurerm_api_management_api_operation, attribute: api_name, edge_kind: containment}
+- {resource_type: azurerm_api_management_api_policy, attribute: api_name, edge_kind: containment}
+- {resource_type: azurerm_api_management_product, attribute: api_management_name, edge_kind: containment}
+- {resource_type: azurerm_api_management_backend, attribute: api_management_name, edge_kind: containment}
+- {resource_type: azurerm_api_management_named_value, attribute: api_management_name, edge_kind: containment}
+- {resource_type: azurerm_api_management, attribute: virtual_network_configuration.subnet_id, edge_kind: containment}
+alternatives:
+- ref: kong
+  difficulty: medium
+  compatibility: conceptual
+  notes: OpenAPI specs import into Kong; policies become plugins, products and keys become consumers.
+  approved_by: cloudowski
+- ref: envoy
+  difficulty: high
+  compatibility: conceptual
+  notes: Envoy-based gateways route the same APIs; policies need filter configuration or Wasm.
+  approved_by: cloudowski
+- ref: traefik
+  difficulty: medium
+  compatibility: conceptual
+  notes: Routing and middleware cover common policies; developer portal not included.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/api-management/api-management-key-concepts
+  - https://learn.microsoft.com/en-us/azure/api-management/api-management-policies
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/api_management
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

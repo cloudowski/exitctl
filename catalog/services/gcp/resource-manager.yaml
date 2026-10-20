@@ -1,0 +1,24 @@
+schema: '1.0'
+kind: service
+id: gcp.resource-manager
+provider: gcp
+name: Resource Manager and organization governance
+category: devops.iac
+resource_types:
+  terraform: [google_project, google_project_service, google_folder, google_organization, google_tags_tag_key, google_tags_tag_value, google_tags_tag_binding, google_org_policy_policy, google_organization_policy, google_folder_organization_policy, google_project_organization_policy, google_resource_manager_lien, google_essential_contacts_contact, google_billing_budget, google_billing_account_iam_member, google_assured_workloads_workload, google_cloud_quotas_quota_preference, google_compute_project_default_network_tier]
+  kubernetes:
+  - {group: resourcemanager.cnrm.cloud.google.com, kind: Project}
+  - {group: resourcemanager.cnrm.cloud.google.com, kind: Folder}
+  - {group: serviceusage.cnrm.cloud.google.com, kind: Service}
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'Projects, folders, tags and org policies model the Google resource hierarchy; they hold no workload data but organise how the rest is deployed.'}
+alternatives:
+- {ref: opentofu, difficulty: low, compatibility: conceptual, notes: 'Hierarchy, tags and policies are modelled per cloud; OpenTofu keeps the code but the resources themselves have no direct equivalent elsewhere.', approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-08'
+  status: verified
+  sources: ['https://cloud.google.com/resource-manager/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/google_project']
+  llm: {batch: 2026-10-08-coverage, model: claude-sonnet-5-5, prompt_version: catalog-coverage-v1, eval_passed: true}

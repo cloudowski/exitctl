@@ -1,0 +1,17 @@
+schema: '1.0'
+kind: neutral
+id: generic-terraform-render
+provider: generic
+# Providers that render files or cloud-init data locally.
+resource_types:
+  terraform: [cloudinit_config, template_file, template_cloudinit_config, template_dir, kubectl_file_documents, kubectl_path_documents, kubectl_filename_list]
+scored: false
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://registry.terraform.io/providers/hashicorp/cloudinit/latest/docs/data-sources/config
+  llm: {batch: 2026-10-07-coverage, model: claude-opus-5-5, prompt_version: catalog-coverage-v1, eval_passed: true}

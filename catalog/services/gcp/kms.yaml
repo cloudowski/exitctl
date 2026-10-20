@@ -1,0 +1,53 @@
+schema: '1.0'
+kind: service
+id: gcp.kms
+provider: gcp
+name: Cloud Key Management Service (KMS)
+category: security.kms
+resource_types:
+  terraform: [google_kms_key_ring, google_kms_crypto_key, google_kms_crypto_key_version, google_kms_key_ring_import_job, google_kms_secret_ciphertext, google_kms_ekm_connection, google_kms_autokey_config, google_kms_key_handle, google_kms_key_ring_iam_binding, google_kms_key_ring_iam_member, google_kms_key_ring_iam_policy, google_kms_crypto_key_iam_binding, google_kms_crypto_key_iam_member, google_kms_crypto_key_iam_policy]
+  kubernetes:
+  - {group: kms.cnrm.cloud.google.com, kind: KMSKeyRing}
+  - {group: kms.cnrm.cloud.google.com, kind: KMSCryptoKey}
+traits:
+- {id: non-exportable-data, reason: Key material created in Cloud KMS or HSM cannot be exported; data encrypted with it must be re-encrypted.}
+- {id: proprietary-api, level: low, reason: 'Encrypt, decrypt and sign calls go through the Cloud KMS API.'}
+- {id: proprietary-sdk}
+rules:
+- id: gcp.kms.import-only-key
+  match:
+    resource_type: [google_kms_crypto_key]
+  when: {attr: import_only, equals: true}
+  then: {set_level: {trait: non-exportable-data, level: low}, evidence: import_only}
+sdk:
+- ecosystem: npm
+  packages: ['@google-cloud/kms']
+  imports: ['[''"]@google-cloud/(kms)[''"/]']
+- ecosystem: pypi
+  packages: [google-cloud-kms]
+  imports: [^\s*from\s+google\.cloud\s+import\s+.*\b(kms|kms_v\w+)\b, ^\s*(from|import)\s+google\.cloud\.(kms|kms_v\w+)\b]
+- ecosystem: go
+  packages: [cloud.google.com/go/kms]
+  imports: ['"cloud\.google\.com/go/(kms)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.google.cloud:google-cloud-kms']
+  imports: ['^\s*import\s+(static\s+)?com\.google\.(cloud\.kms)\b']
+- ecosystem: nuget
+  packages: [Google.Cloud.Kms.V1]
+  imports: ['^\s*using\s+(static\s+)?Google\.Cloud\.(Kms)\b']
+edge_hints:
+- {resource_type: google_kms_crypto_key, attribute: key_ring, edge_kind: containment}
+- {resource_type: google_kms_crypto_key_version, attribute: crypto_key, edge_kind: containment}
+- {resource_type: google_kms_key_ring_import_job, attribute: key_ring, edge_kind: containment}
+- {resource_type: google_kms_secret_ciphertext, attribute: crypto_key, edge_kind: reference}
+alternatives:
+- {ref: vault-openbao, difficulty: medium, compatibility: conceptual, notes: 'Transit secrets engine provides encrypt, decrypt and sign; data must be re-encrypted under new keys.', approved_by: cloudowski}
+- {ref: ovhcloud, difficulty: medium, compatibility: conceptual, notes: OVHcloud KMS offers managed keys with a KMIP and REST interface; re-encryption is required., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/kms/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/kms_crypto_key']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

@@ -1,0 +1,92 @@
+schema: '1.0'
+kind: service
+id: oci.oke
+provider: oci
+name: OCI Kubernetes Engine
+category: compute.container
+resource_types:
+  terraform:
+  - oci_containerengine_cluster
+  - oci_containerengine_node_pool
+  - oci_containerengine_virtual_node_pool
+  - oci_containerengine_addon
+  - oci_containerengine_cluster_workload_mapping
+  - oci_containerengine_cluster_start_credential_rotation_management
+  - oci_containerengine_cluster_complete_credential_rotation_management
+  ci_action: [oracle-actions/configure-kubectl-oke]
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'Conformant Kubernetes; node pools, virtual nodes, add-ons and upgrades use OCI tooling.'}
+- {id: provider-network-construct, level: low, reason: Clusters use VCN-native pod networking and OCI load balancer integration.}
+rules:
+- id: oci.oke.virtual-nodes
+  match: {resource_type: [oci_containerengine_virtual_node_pool]}
+  then: {add_trait: managed-only-feature, level: low, evidence: oci_containerengine_virtual_node_pool}
+- id: oci.oke.native-pod-networking
+  match: {resource_type: [oci_containerengine_cluster]}
+  when: {attr: cluster_pod_network_options.cni_type, equals: OCI_VCN_IP_NATIVE}
+  then: {set_level: {trait: provider-network-construct, level: medium}, evidence: cluster_pod_network_options.cni_type}
+sdk:
+- ecosystem: npm
+  packages: [oci-containerengine]
+  imports: ['[''"]oci-containerengine[''"]']
+  usage: ['\bcontainerengine\.ContainerEngineClient\b']
+  gate: [oci-sdk]
+- ecosystem: pypi
+  imports: ['^\s*from\s+oci\.container_engine\b', '^\s*from\s+oci\s+import\s+.*\bcontainer_engine\b']
+  usage: ['\boci\.container_engine\.ContainerEngineClient\b']
+  gate: [oci]
+- ecosystem: go
+  packages: [github.com/oracle/oci-go-sdk/v65/containerengine]
+  imports: ['"github\.com/oracle/oci-go-sdk/v[0-9]+/containerengine(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.oracle.oci.sdk:oci-java-sdk-containerengine']
+  imports: ['^\s*import\s+com\.oracle\.bmc\.containerengine\.']
+- ecosystem: nuget
+  packages: [OCI.DotNetSDK.Containerengine]
+  imports: ['^\s*using\s+Oci\.ContainerengineService\b']
+edge_hints:
+- {resource_type: oci_containerengine_cluster, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_containerengine_cluster, attribute: vcn_id, edge_kind: containment}
+- {resource_type: oci_containerengine_cluster, attribute: endpoint_config.subnet_id, edge_kind: containment}
+- {resource_type: oci_containerengine_cluster, attribute: endpoint_config.nsg_ids, edge_kind: binding}
+- {resource_type: oci_containerengine_cluster, attribute: options.service_lb_subnet_ids, edge_kind: binding}
+- {resource_type: oci_containerengine_cluster, attribute: kms_key_id, edge_kind: reference}
+- {resource_type: oci_containerengine_node_pool, attribute: cluster_id, edge_kind: containment}
+- {resource_type: oci_containerengine_node_pool, attribute: node_config_details.placement_configs.subnet_id, edge_kind: containment}
+- {resource_type: oci_containerengine_node_pool, attribute: node_config_details.nsg_ids, edge_kind: binding}
+- {resource_type: oci_containerengine_virtual_node_pool, attribute: cluster_id, edge_kind: containment}
+- {resource_type: oci_containerengine_virtual_node_pool, attribute: placement_configurations.subnet_id, edge_kind: containment}
+- {resource_type: oci_containerengine_addon, attribute: cluster_id, edge_kind: containment}
+- {resource_type: oci_containerengine_cluster_workload_mapping, attribute: cluster_id, edge_kind: containment}
+alternatives:
+- ref: kubernetes
+  difficulty: low
+  compatibility: api-compatible
+  notes: Workloads move to any conformant cluster; replace OCI CSI, load balancer annotations and OCIR pull secrets.
+  approved_by: cloudowski
+- ref: ovhcloud
+  difficulty: low
+  compatibility: api-compatible
+  notes: Managed Kubernetes Service; storage classes and load balancer annotations are remapped.
+  approved_by: cloudowski
+- ref: scaleway
+  difficulty: low
+  compatibility: api-compatible
+  notes: Kapsule managed Kubernetes; storage classes and load balancer annotations are remapped.
+  approved_by: cloudowski
+- ref: stackit
+  difficulty: low
+  compatibility: api-compatible
+  notes: STACKIT Kubernetes Engine (SKE) based on Gardener; storage and load balancer settings are remapped.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.oracle.com/en-us/iaas/Content/ContEng/home.htm
+  - https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/containerengine_cluster
+  - https://github.com/oracle-actions/configure-kubectl-oke
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

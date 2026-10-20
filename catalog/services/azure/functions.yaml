@@ -1,0 +1,86 @@
+schema: '1.0'
+kind: service
+id: azure.functions
+provider: azure
+name: Azure Functions
+category: compute.serverless
+resource_types:
+  terraform:
+  - azurerm_linux_function_app
+  - azurerm_windows_function_app
+  - azurerm_function_app
+  - azurerm_linux_function_app_slot
+  - azurerm_windows_function_app_slot
+  - azurerm_function_app_slot
+  - azurerm_function_app_function
+  - azurerm_function_app_flex_consumption
+  - azurerm_function_app_active_slot
+  - azurerm_function_app_hybrid_connection
+  ci_action:
+  - azure/functions-action
+traits:
+- {id: proprietary-runtime, level: medium, reason: Triggers and bindings are declared in the Functions programming model and host runtime.}
+- {id: proprietary-event-model, level: medium, reason: Trigger payloads follow Azure service event shapes.}
+- {id: proprietary-sdk}
+sdk:
+- ecosystem: npm
+  packages:
+  - '@azure/functions'
+  imports:
+  - '[''"]@azure/functions(/[^''"]*)?[''"]'
+- ecosystem: pypi
+  packages:
+  - azure-functions
+  imports:
+  - ^\s*(from|import)\s+azure\.functions\b
+- ecosystem: maven
+  packages:
+  - com.microsoft.azure.functions:azure-functions-java-library
+  imports:
+  - ^\s*import\s+(static\s+)?com\.microsoft\.azure\.functions\.
+- ecosystem: nuget
+  packages:
+  - Microsoft.Azure.Functions.Worker*
+  - Microsoft.Azure.WebJobs*
+  - Microsoft.NET.Sdk.Functions
+  imports:
+  - ^\s*using\s+(static\s+)?Microsoft\.Azure\.Functions\.Worker\b
+  - ^\s*using\s+(static\s+)?Microsoft\.Azure\.WebJobs\b
+edge_hints:
+- {resource_type: azurerm_linux_function_app, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_windows_function_app, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_linux_function_app, attribute: service_plan_id, edge_kind: containment}
+- {resource_type: azurerm_windows_function_app, attribute: service_plan_id, edge_kind: containment}
+- {resource_type: azurerm_linux_function_app, attribute: storage_account_name, edge_kind: binding}
+- {resource_type: azurerm_windows_function_app, attribute: storage_account_name, edge_kind: binding}
+- {resource_type: azurerm_linux_function_app, attribute: virtual_network_subnet_id, edge_kind: containment}
+- {resource_type: azurerm_function_app_function, attribute: function_app_id, edge_kind: containment}
+alternatives:
+- ref: knative
+  difficulty: medium
+  compatibility: conceptual
+  notes: Package functions as HTTP containers; replace bindings with explicit clients and Knative Eventing triggers.
+  approved_by: cloudowski
+- ref: openfaas
+  difficulty: medium
+  compatibility: conceptual
+  notes: Function handlers port with templates; Azure triggers and bindings need connectors or code.
+  approved_by: cloudowski
+- ref: kubernetes
+  difficulty: medium
+  compatibility: conceptual
+  notes: Functions host runs in containers with KEDA scaling, but bindings to Azure services remain.
+  residual_traits:
+  - {id: proprietary-runtime, level: low, reason: 'The Functions host is open source and runs in containers, the programming model stays.'}
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/azure-functions/functions-overview
+  - https://learn.microsoft.com/en-us/azure/azure-functions/functions-triggers-bindings
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_function_app
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

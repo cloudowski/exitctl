@@ -1,0 +1,15 @@
+schema: "1.0"
+kind: trait
+id: proprietary-sdk
+name: Proprietary SDK
+level: medium
+dimensions: [technical, skills]
+explanation: Application code calls a provider-specific SDK.
+exit_hint: Isolate SDK calls behind an adapter and port the adapter.
+provenance:
+  origin: maintainer
+  author: cloudowski
+  status: verified
+  reviewed_by: cloudowski
+  reviewed_on: 2026-10-06
+  sources: []

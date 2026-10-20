@@ -1,0 +1,49 @@
+schema: '1.0'
+kind: service
+id: gcp.dataproc
+provider: gcp
+name: Dataproc
+category: analytics
+resource_types:
+  terraform: [google_dataproc_cluster, google_dataproc_job, google_dataproc_workflow_template, google_dataproc_autoscaling_policy, google_dataproc_batch, google_dataproc_session_template, google_dataproc_metastore_service, google_dataproc_metastore_federation, google_dataproc_cluster_iam_binding, google_dataproc_cluster_iam_member, google_dataproc_cluster_iam_policy, google_dataproc_job_iam_binding, google_dataproc_job_iam_member, google_dataproc_job_iam_policy, google_dataproc_autoscaling_policy_iam_binding, google_dataproc_autoscaling_policy_iam_member, google_dataproc_autoscaling_policy_iam_policy, google_dataproc_metastore_service_iam_binding, google_dataproc_metastore_service_iam_member, google_dataproc_metastore_service_iam_policy]
+  kubernetes:
+  - {group: dataproc.cnrm.cloud.google.com, kind: DataprocCluster}
+  - {group: dataproc.cnrm.cloud.google.com, kind: DataprocWorkflowTemplate}
+  - {group: dataproc.cnrm.cloud.google.com, kind: DataprocAutoscalingPolicy}
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'Runs open source Spark, Hadoop and Hive; cluster lifecycle and job submission use Google tooling.'}
+- {id: managed-only-feature, level: low, reason: 'Dataproc Serverless batches, component gateway and GCS connector defaults are Google-specific.'}
+sdk:
+- ecosystem: npm
+  packages: ['@google-cloud/dataproc']
+  imports: ['[''"]@google-cloud/(dataproc)[''"/]']
+- ecosystem: pypi
+  packages: [google-cloud-dataproc, google-cloud-dataproc-metastore]
+  imports: [^\s*from\s+google\.cloud\s+import\s+.*\b(dataproc\w*)\b, ^\s*(from|import)\s+google\.cloud\.(dataproc\w*)\b]
+- ecosystem: go
+  packages: [cloud.google.com/go/dataproc, cloud.google.com/go/dataproc/v2, cloud.google.com/go/metastore]
+  imports: ['"cloud\.google\.com/go/(dataproc|metastore)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.google.cloud:google-cloud-dataproc', 'com.google.cloud:google-cloud-dataproc-metastore']
+  imports: ['^\s*import\s+(static\s+)?com\.google\.(cloud\.dataproc\w*|cloud\.metastore)\b']
+- ecosystem: nuget
+  packages: [Google.Cloud.Dataproc.V1, Google.Cloud.Metastore.V1]
+  imports: ['^\s*using\s+(static\s+)?Google\.Cloud\.(Dataproc|Metastore)\b']
+edge_hints:
+- {resource_type: google_dataproc_job, attribute: placement.cluster_name, edge_kind: containment}
+- {resource_type: google_dataproc_cluster, attribute: cluster_config.gce_cluster_config.subnetwork, edge_kind: containment}
+- {resource_type: google_dataproc_cluster, attribute: cluster_config.gce_cluster_config.network, edge_kind: containment}
+- {resource_type: google_dataproc_cluster, attribute: cluster_config.staging_bucket, edge_kind: reference}
+- {resource_type: google_dataproc_cluster, attribute: cluster_config.autoscaling_config.policy_uri, edge_kind: reference}
+- {resource_type: google_dataproc_batch, attribute: environment_config.execution_config.subnetwork_uri, edge_kind: containment}
+alternatives:
+- {ref: apache-spark, difficulty: low, compatibility: api-compatible, notes: 'Same Spark jobs on self-managed or Kubernetes-based Spark; replace gs:// paths and submission tooling.', approved_by: cloudowski}
+- {ref: trino, difficulty: medium, compatibility: conceptual, notes: Replaces Hive or Spark SQL workloads with federated SQL; ETL jobs need rework., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/dataproc/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dataproc_cluster']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

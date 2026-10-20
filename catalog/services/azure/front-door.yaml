@@ -1,0 +1,80 @@
+schema: '1.0'
+kind: service
+id: azure.front-door
+provider: azure
+name: Azure Front Door and Azure CDN
+category: network.cdn
+resource_types:
+  terraform:
+  - azurerm_cdn_frontdoor_profile
+  - azurerm_cdn_frontdoor_endpoint
+  - azurerm_cdn_frontdoor_origin_group
+  - azurerm_cdn_frontdoor_origin
+  - azurerm_cdn_frontdoor_route
+  - azurerm_cdn_frontdoor_rule_set
+  - azurerm_cdn_frontdoor_rule
+  - azurerm_cdn_frontdoor_custom_domain
+  - azurerm_cdn_frontdoor_custom_domain_association
+  - azurerm_cdn_frontdoor_firewall_policy
+  - azurerm_cdn_frontdoor_security_policy
+  - azurerm_cdn_frontdoor_secret
+  - azurerm_frontdoor
+  - azurerm_frontdoor_firewall_policy
+  - azurerm_frontdoor_custom_https_configuration
+  - azurerm_frontdoor_rules_engine
+  - azurerm_cdn_profile
+  - azurerm_cdn_endpoint
+  - azurerm_cdn_endpoint_custom_domain
+  kubernetes:
+  - {group: cdn.azure.com, kind: Profile}
+  - {group: cdn.azure.com, kind: AfdEndpoint}
+  - {group: cdn.azure.com, kind: AfdOriginGroup}
+  - {group: cdn.azure.com, kind: AfdOrigin}
+  - {group: cdn.azure.com, kind: AfdCustomDomain}
+  - {group: cdn.azure.com, kind: Route}
+  - {group: cdn.azure.com, kind: RuleSet}
+  - {group: cdn.azure.com, kind: Rule}
+  - {group: cdn.azure.com, kind: SecurityPolicy}
+  - {group: cdn.azure.com, kind: Secret}
+  - {group: network.frontdoor.azure.com, kind: WebApplicationFirewallPolicy}
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'Routing rules, rule sets and WAF policies use Front Door configuration models.'}
+- {id: managed-only-feature, level: medium, reason: 'Global anycast edge with integrated WAF has no self-hosted equivalent of the same reach.'}
+edge_hints:
+- {resource_type: azurerm_cdn_frontdoor_profile, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_cdn_frontdoor_endpoint, attribute: cdn_frontdoor_profile_id, edge_kind: containment}
+- {resource_type: azurerm_cdn_frontdoor_origin_group, attribute: cdn_frontdoor_profile_id, edge_kind: containment}
+- {resource_type: azurerm_cdn_frontdoor_rule_set, attribute: cdn_frontdoor_profile_id, edge_kind: containment}
+- {resource_type: azurerm_cdn_frontdoor_custom_domain, attribute: cdn_frontdoor_profile_id, edge_kind: containment}
+- {resource_type: azurerm_cdn_frontdoor_secret, attribute: cdn_frontdoor_profile_id, edge_kind: containment}
+- {resource_type: azurerm_cdn_frontdoor_security_policy, attribute: cdn_frontdoor_profile_id, edge_kind: containment}
+- {resource_type: azurerm_cdn_frontdoor_origin, attribute: cdn_frontdoor_origin_group_id, edge_kind: containment}
+- {resource_type: azurerm_cdn_frontdoor_route, attribute: cdn_frontdoor_endpoint_id, edge_kind: containment}
+- {resource_type: azurerm_cdn_frontdoor_rule, attribute: cdn_frontdoor_rule_set_id, edge_kind: containment}
+- {resource_type: azurerm_cdn_endpoint, attribute: profile_name, edge_kind: containment}
+alternatives:
+- ref: scaleway
+  difficulty: medium
+  compatibility: conceptual
+  notes: Edge Services provide CDN caching in front of origins; rules and WAF policies are rebuilt.
+  approved_by: cloudowski
+- ref: ovhcloud
+  difficulty: medium
+  compatibility: conceptual
+  notes: CDN offering in the EU; routing rules are rebuilt.
+  approved_by: cloudowski
+- ref: nginx
+  difficulty: high
+  compatibility: conceptual
+  notes: Self-hosted caching reverse proxies replace origin routing but not a global edge network.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/frontdoor/front-door-overview
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cdn_frontdoor_profile
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

@@ -1,0 +1,52 @@
+schema: '1.0'
+kind: service
+id: gcp.vertex-ai
+provider: gcp
+name: Vertex AI
+category: ai-ml
+resource_types:
+  terraform: [google_vertex_ai_dataset, google_vertex_ai_endpoint, google_vertex_ai_featurestore, google_vertex_ai_featurestore_entitytype, google_vertex_ai_featurestore_entitytype_feature, google_vertex_ai_feature_online_store, google_vertex_ai_feature_online_store_featureview, google_vertex_ai_feature_group, google_vertex_ai_feature_group_feature, google_vertex_ai_index, google_vertex_ai_index_endpoint, google_vertex_ai_index_endpoint_deployed_index, google_vertex_ai_tensorboard, google_vertex_ai_metadata_store, google_vertex_ai_deployment_resource_pool, google_notebooks_instance, google_workbench_instance, google_workbench_instance_iam_binding, google_workbench_instance_iam_member, google_workbench_instance_iam_policy]
+  kubernetes:
+  - {group: vertexai.cnrm.cloud.google.com, kind: VertexAIDataset}
+  - {group: vertexai.cnrm.cloud.google.com, kind: VertexAIEndpoint}
+  - {group: vertexai.cnrm.cloud.google.com, kind: VertexAIFeaturestore}
+  - {group: vertexai.cnrm.cloud.google.com, kind: VertexAIIndex}
+  - {group: vertexai.cnrm.cloud.google.com, kind: VertexAITensorboard}
+  - {group: vertexai.cnrm.cloud.google.com, kind: VertexAIMetadataStore}
+traits:
+- {id: proprietary-api, level: medium, reason: 'Training, prediction, pipelines and feature store are exposed through Vertex AI APIs and SDKs.'}
+- {id: managed-only-feature, level: high, reason: 'Gemini models and Google-hosted foundation models are available only through Google services.'}
+- {id: proprietary-sdk}
+sdk:
+- ecosystem: npm
+  packages: ['@google-cloud/aiplatform', '@google-cloud/vertexai']
+  imports: ['[''"]@google-cloud/(aiplatform|vertexai)[''"/]']
+- ecosystem: pypi
+  packages: [google-cloud-aiplatform, vertexai]
+  imports: [^\s*from\s+google\.cloud\s+import\s+.*\b(aiplatform\w*)\b, ^\s*(from|import)\s+google\.cloud\.(aiplatform\w*)\b, ^\s*(from|import)\s+vertexai\b]
+- ecosystem: go
+  packages: [cloud.google.com/go/aiplatform, cloud.google.com/go/vertexai]
+  imports: ['"cloud\.google\.com/go/(aiplatform|vertexai)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.google.cloud:google-cloud-aiplatform', 'com.google.cloud:google-cloud-vertexai']
+  imports: ['^\s*import\s+(static\s+)?com\.google\.(cloud\.aiplatform|cloud\.vertexai)\b']
+- ecosystem: nuget
+  packages: [Google.Cloud.AIPlatform.V1]
+  imports: ['^\s*using\s+(static\s+)?Google\.Cloud\.(AIPlatform)\b']
+edge_hints:
+- {resource_type: google_vertex_ai_endpoint, attribute: network, edge_kind: containment}
+- {resource_type: google_vertex_ai_index_endpoint_deployed_index, attribute: index_endpoint, edge_kind: containment}
+- {resource_type: google_vertex_ai_index_endpoint_deployed_index, attribute: index, edge_kind: reference}
+- {resource_type: google_vertex_ai_featurestore_entitytype, attribute: featurestore, edge_kind: containment}
+alternatives:
+- {ref: mlflow, difficulty: medium, compatibility: conceptual, notes: 'Experiment tracking, model registry and serving; training infrastructure is provided separately.', approved_by: cloudowski}
+- {ref: vllm, difficulty: medium, compatibility: conceptual, notes: Serves open-weight models with an OpenAI-compatible API; Gemini models have no self-hosted option., approved_by: cloudowski}
+- {ref: ollama, difficulty: medium, compatibility: conceptual, notes: Runs open-weight models locally or on servers; suits smaller inference workloads., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/vertex-ai/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/vertex_ai_endpoint']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

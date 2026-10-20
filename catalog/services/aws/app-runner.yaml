@@ -1,0 +1,66 @@
+schema: '1.0'
+kind: service
+id: aws.app-runner
+provider: aws
+name: AWS App Runner
+category: compute.serverless
+resource_types:
+  terraform: [aws_apprunner_service, aws_apprunner_auto_scaling_configuration_version, aws_apprunner_default_auto_scaling_configuration_version, aws_apprunner_connection, aws_apprunner_custom_domain_association, aws_apprunner_observability_configuration, aws_apprunner_vpc_connector, aws_apprunner_vpc_ingress_connection]
+  cloudformation: ['AWS::AppRunner::Service', 'AWS::AppRunner::AutoScalingConfiguration', 'AWS::AppRunner::ObservabilityConfiguration', 'AWS::AppRunner::VpcConnector', 'AWS::AppRunner::VpcIngressConnection']
+  kubernetes:
+  - {group: apprunner.services.k8s.aws, kind: Service}
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'Runs standard container images serving HTTP; service configuration and source-code builds are App Runner-specific.'}
+rules:
+- id: aws.app-runner.source-code-build
+  match:
+    resource_type: [aws_apprunner_service]
+  when: {attr: source_configuration.code_repository, exists: true}
+  then: {add_trait: proprietary-runtime, level: low, evidence: source_configuration.code_repository}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-apprunner']
+  imports: ['[''"]@aws-sdk/client-apprunner[''"/]']
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["'']apprunner["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/apprunner]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/apprunner(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:apprunner']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.apprunner\.']
+- ecosystem: nuget
+  packages: [AWSSDK.AppRunner]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.AppRunner\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-apprunner]
+  imports: ['^\s*require\s+["'']aws-sdk-(apprunner)["'']']
+  usage: ['(?i)\bAws::(apprunner)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-apprunner]
+  imports: ['\baws_sdk_(apprunner)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(apprunner)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_apprunner_service, attribute: source_configuration.image_repository.image_identifier, edge_kind: reference}
+- {resource_type: aws_apprunner_service, attribute: source_configuration.authentication_configuration.access_role_arn, edge_kind: binding}
+- {resource_type: aws_apprunner_service, attribute: instance_configuration.instance_role_arn, edge_kind: binding}
+- {resource_type: aws_apprunner_service, attribute: network_configuration.egress_configuration.vpc_connector_arn, edge_kind: reference}
+- {resource_type: aws_apprunner_service, attribute: auto_scaling_configuration_arn, edge_kind: reference}
+- {resource_type: aws_apprunner_vpc_connector, attribute: subnets, edge_kind: containment}
+- {resource_type: aws_apprunner_custom_domain_association, attribute: service_arn, edge_kind: binding}
+alternatives:
+- {ref: knative, difficulty: low, compatibility: conceptual, notes: 'Knative Serving runs the same HTTP container images with request-based autoscaling.', approved_by: cloudowski}
+- {ref: scaleway, difficulty: low, compatibility: conceptual, notes: Scaleway Serverless Containers deploy container images with autoscaling and custom domains., approved_by: cloudowski}
+- {ref: kubernetes, difficulty: low, compatibility: conceptual, notes: A Deployment with an Ingress and HPA replaces the service; images move unchanged., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/apprunner/latest/dg/what-is-apprunner.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apprunner_service']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

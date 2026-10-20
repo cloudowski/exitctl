@@ -1,0 +1,78 @@
+schema: '1.0'
+kind: service
+id: azure.sql-database
+provider: azure
+name: Azure SQL Database
+category: database.relational
+resource_types:
+  terraform:
+  - azurerm_mssql_server
+  - azurerm_mssql_database
+  - azurerm_mssql_elasticpool
+  - azurerm_mssql_firewall_rule
+  - azurerm_mssql_virtual_network_rule
+  - azurerm_mssql_failover_group
+  - azurerm_mssql_outbound_firewall_rule
+  - azurerm_mssql_server_transparent_data_encryption
+  - azurerm_mssql_server_extended_auditing_policy
+  - azurerm_mssql_database_extended_auditing_policy
+  - azurerm_mssql_server_security_alert_policy
+  - azurerm_mssql_server_vulnerability_assessment
+  - azurerm_mssql_server_microsoft_support_auditing_policy
+  - azurerm_mssql_job_agent
+  - azurerm_mssql_job_credential
+  - azurerm_mssql_managed_instance
+  - azurerm_mssql_managed_database
+  - azurerm_mssql_managed_instance_failover_group
+  - azurerm_mssql_managed_instance_active_directory_administrator
+  - azurerm_sql_server
+  - azurerm_sql_database
+  - azurerm_sql_firewall_rule
+  - azurerm_sql_elasticpool
+  kubernetes:
+  - {group: sql.azure.com, kind: Server}
+  - {group: sql.azure.com, kind: ServersDatabase}
+  - {group: sql.azure.com, kind: ServersElasticPool}
+  - {group: sql.azure.com, kind: ServersFirewallRule}
+  - {group: sql.azure.com, kind: ServersVirtualNetworkRule}
+  - {group: sql.azure.com, kind: ServersFailoverGroup}
+  - {group: sql.azure.com, kind: ServersAdministrator}
+traits:
+- {id: proprietary-query-language, level: medium, reason: 'T-SQL, stored procedures and SQL Server features run on Microsoft SQL Server engines only.'}
+- {id: data-gravity, level: medium, reason: Database exports (bacpac) or migration tooling are needed to move data.}
+- {id: skills-specialization, level: low, reason: SQL Server administration and tuning skills.}
+edge_hints:
+- {resource_type: azurerm_mssql_server, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_mssql_managed_instance, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_mssql_database, attribute: server_id, edge_kind: containment}
+- {resource_type: azurerm_mssql_elasticpool, attribute: server_name, edge_kind: containment}
+- {resource_type: azurerm_mssql_firewall_rule, attribute: server_id, edge_kind: containment}
+- {resource_type: azurerm_mssql_virtual_network_rule, attribute: server_id, edge_kind: containment}
+- {resource_type: azurerm_mssql_managed_instance, attribute: subnet_id, edge_kind: containment}
+- {resource_type: azurerm_mssql_managed_database, attribute: managed_instance_id, edge_kind: containment}
+alternatives:
+- ref: postgresql
+  difficulty: high
+  compatibility: conceptual
+  notes: Schema and data convert with tools like pgloader or Babelfish; T-SQL code needs rewriting.
+  approved_by: cloudowski
+- ref: mysql
+  difficulty: high
+  compatibility: conceptual
+  notes: Schema and data can be migrated; T-SQL procedures and features need rewriting.
+  approved_by: cloudowski
+- ref: ovhcloud
+  difficulty: medium
+  compatibility: conceptual
+  notes: SQL Server can run on self-managed EU VMs with own licences, keeping T-SQL compatibility.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mssql_database
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

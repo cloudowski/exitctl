@@ -1,0 +1,77 @@
+schema: '1.0'
+kind: service
+id: azure.machine-learning
+provider: azure
+name: Azure Machine Learning
+category: ai-ml
+resource_types:
+  terraform:
+  - azurerm_machine_learning_workspace
+  - azurerm_machine_learning_compute_cluster
+  - azurerm_machine_learning_compute_instance
+  - azurerm_machine_learning_inference_cluster
+  - azurerm_machine_learning_synapse_spark
+  - azurerm_machine_learning_datastore_blobstorage
+  - azurerm_machine_learning_datastore_datalake_gen2
+  - azurerm_machine_learning_datastore_fileshare
+  - azurerm_machine_learning_workspace_network_outbound_rule_fqdn
+  kubernetes:
+  - {group: machinelearningservices.azure.com, kind: Workspace}
+  - {group: machinelearningservices.azure.com, kind: WorkspacesCompute}
+  - {group: machinelearningservices.azure.com, kind: WorkspacesConnection}
+  - {group: machinelearningservices.azure.com, kind: Registry}
+traits:
+- {id: proprietary-workflow-definition, level: medium, reason: 'Jobs, pipelines and endpoints are defined with the Azure ML v2 YAML schema and SDK.'}
+- {id: proprietary-sdk}
+sdk:
+- ecosystem: pypi
+  packages:
+  - azure-ai-ml
+  - azureml-core
+  - azureml-*
+  imports:
+  - ^\s*(from|import)\s+azure\.ai\.ml\b
+  - ^\s*(from|import)\s+azureml\b
+- ecosystem: maven
+  packages:
+  - com.azure.resourcemanager:azure-resourcemanager-machinelearning
+  imports:
+  - ^\s*import\s+(static\s+)?com\.azure\.resourcemanager\.machinelearning\.
+- ecosystem: nuget
+  packages:
+  - Azure.ResourceManager.MachineLearning
+  imports:
+  - ^\s*using\s+(static\s+)?Azure\.ResourceManager\.MachineLearning\b
+edge_hints:
+- {resource_type: azurerm_machine_learning_workspace, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_machine_learning_compute_cluster, attribute: machine_learning_workspace_id, edge_kind: containment}
+- {resource_type: azurerm_machine_learning_compute_instance, attribute: machine_learning_workspace_id, edge_kind: containment}
+- {resource_type: azurerm_machine_learning_workspace, attribute: storage_account_id, edge_kind: binding}
+- {resource_type: azurerm_machine_learning_workspace, attribute: key_vault_id, edge_kind: binding}
+alternatives:
+- ref: mlflow
+  difficulty: low
+  compatibility: api-compatible
+  notes: Azure ML workspaces expose an MLflow tracking URI, so MLflow-logged runs and models export directly.
+  approved_by: cloudowski
+- ref: argo-workflows
+  difficulty: medium
+  compatibility: conceptual
+  notes: Training pipelines become container DAGs on Kubernetes.
+  approved_by: cloudowski
+- ref: vllm
+  difficulty: medium
+  compatibility: conceptual
+  notes: Online endpoints for LLMs can be replaced by self-hosted vLLM servers.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/machine-learning/overview-what-is-azure-machine-learning
+  - https://learn.microsoft.com/en-us/azure/machine-learning/concept-mlflow
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/machine_learning_workspace
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

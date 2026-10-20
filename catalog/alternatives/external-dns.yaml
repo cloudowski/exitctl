@@ -1,0 +1,18 @@
+schema: '1.0'
+kind: alternative
+id: external-dns
+name: ExternalDNS
+alternative_kind: oss-self-hosted
+license: Apache-2.0
+homepage: https://kubernetes-sigs.github.io/external-dns/
+vendor_contributed: false
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://kubernetes-sigs.github.io/external-dns/
+  - https://github.com/kubernetes-sigs/external-dns
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

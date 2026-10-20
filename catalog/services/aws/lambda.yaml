@@ -1,0 +1,93 @@
+schema: '1.0'
+kind: service
+id: aws.lambda
+provider: aws
+name: AWS Lambda
+category: compute.serverless
+resource_types:
+  terraform: [aws_lambda_function, aws_lambda_event_source_mapping, aws_lambda_permission, aws_lambda_layer_version, aws_lambda_layer_version_permission, aws_lambda_function_url, aws_lambda_alias, aws_lambda_function_event_invoke_config, aws_lambda_provisioned_concurrency_config, aws_lambda_code_signing_config, aws_lambda_invocation, aws_lambda_runtime_management_config, aws_lambda_function_recursion_config]
+  cloudformation: ['AWS::Lambda::Function', 'AWS::Lambda::EventSourceMapping', 'AWS::Lambda::Permission', 'AWS::Lambda::LayerVersion', 'AWS::Lambda::LayerVersionPermission', 'AWS::Lambda::Url', 'AWS::Lambda::Alias', 'AWS::Lambda::Version', 'AWS::Lambda::EventInvokeConfig', 'AWS::Lambda::CodeSigningConfig', 'AWS::Serverless::Function', 'AWS::Serverless::LayerVersion']
+  kubernetes:
+  - {group: lambda.services.k8s.aws, kind: Function}
+  - {group: lambda.services.k8s.aws, kind: Alias}
+  - {group: lambda.services.k8s.aws, kind: EventSourceMapping}
+  - {group: lambda.services.k8s.aws, kind: FunctionURLConfig}
+  - {group: lambda.services.k8s.aws, kind: LayerVersion}
+  - {group: lambda.services.k8s.aws, kind: CodeSigningConfig}
+traits:
+- {id: proprietary-runtime, level: high, reason: 'Handler signatures, event payloads, layers and the Lambda execution environment are AWS-specific; container images reduce but do not remove this.'}
+- {id: proprietary-event-model, level: medium, reason: 'Triggers deliver AWS-shaped event payloads (SQS, S3, API Gateway) that handler code parses directly.'}
+- {id: proprietary-sdk}
+rules:
+- id: aws.lambda.event-source-mapping
+  match:
+    resource_type: [aws_lambda_event_source_mapping]
+  then: {add_trait: managed-change-stream, level: medium, evidence: event_source_arn}
+- id: aws.lambda.layers
+  match:
+    resource_type: [aws_lambda_function]
+  when: {attr: layers, exists: true}
+  then: {add_trait: proprietary-runtime, level: high, evidence: layers}
+- id: aws.lambda.xray-active-tracing
+  match:
+    resource_type: [aws_lambda_function]
+  when: {attr: tracing_config.mode, equals: Active}
+  then: {add_trait: proprietary-data-format, level: low, evidence: tracing_config.mode}
+- id: aws.lambda.function-url
+  match:
+    resource_type: [aws_lambda_function_url]
+  then: {add_trait: managed-only-feature, level: low, evidence: authorization_type}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-lambda', '@types/aws-lambda', '@aws-lambda-powertools/*', '@middy/core', 'aws-lambda']
+  imports: ['[''"]@aws-sdk/client-lambda[''"/]', '[''"]aws-lambda[''"]', '[''"]@aws-lambda-powertools/[^''"]+[''"]', '[''"]@middy/core[''"/]']
+  usage: ['\bAWS\.Lambda\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  packages: [aws-lambda-powertools, awslambdaric, chalice, mangum]
+  imports: ['^\s*(from|import)\s+(aws_lambda_powertools|awslambdaric|chalice|mangum)\b']
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["'']lambda["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/lambda, github.com/aws/aws-lambda-go, github.com/aws/aws-lambda-go/*]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/lambda(/[^"]*)?"', '"github\.com/aws/aws-lambda-go/[^"]+"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:lambda', 'com.amazonaws:aws-java-sdk-lambda', 'com.amazonaws:aws-lambda-java-core', 'com.amazonaws:aws-lambda-java-events', 'software.amazon.lambda:powertools-*']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.lambda\.', '^\s*import\s+(static\s+)?com\.amazonaws\.services\.lambda\.', '^\s*import\s+(static\s+)?software\.amazon\.lambda\.powertools\.']
+- ecosystem: nuget
+  packages: [AWSSDK.Lambda, Amazon.Lambda.Core, Amazon.Lambda.RuntimeSupport, 'Amazon.Lambda.*Events', 'AWS.Lambda.Powertools.*']
+  imports: ['^\s*using\s+(static\s+)?Amazon\.Lambda\b', '^\s*using\s+(static\s+)?AWS\.Lambda\.Powertools\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-lambda]
+  imports: ['^\s*require\s+["'']aws-sdk-(lambda)["'']']
+  usage: ['(?i)\bAws::(lambda)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-lambda]
+  imports: ['\baws_sdk_(lambda)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(lambda)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_lambda_event_source_mapping, attribute: event_source_arn, edge_kind: data-flow}
+- {resource_type: aws_lambda_event_source_mapping, attribute: function_name, edge_kind: data-flow}
+- {resource_type: aws_lambda_permission, attribute: function_name, edge_kind: binding}
+- {resource_type: aws_lambda_permission, attribute: source_arn, edge_kind: binding}
+- {resource_type: aws_lambda_function, attribute: role, edge_kind: binding}
+- {resource_type: aws_lambda_function, attribute: layers, edge_kind: reference}
+- {resource_type: aws_lambda_function, attribute: dead_letter_config.target_arn, edge_kind: data-flow}
+- {resource_type: aws_lambda_alias, attribute: function_name, edge_kind: containment}
+- {resource_type: aws_lambda_function_url, attribute: function_name, edge_kind: containment}
+- {resource_type: aws_lambda_function_event_invoke_config, attribute: destination_config.on_failure.destination, edge_kind: data-flow}
+alternatives:
+- {ref: openfaas, difficulty: medium, compatibility: conceptual, notes: 'Functions run as containers on Kubernetes; handlers and event triggers (queues, cron, HTTP) need adaptation.', approved_by: cloudowski}
+- {ref: knative, difficulty: medium, compatibility: conceptual, notes: Knative Serving runs HTTP containers with scale to zero; Eventing replaces event source mappings., approved_by: cloudowski}
+- {ref: scaleway, difficulty: medium, compatibility: conceptual, notes: 'Scaleway Serverless Functions and Containers offer managed functions with HTTP, cron and queue triggers.', approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/lambda/latest/dg/welcome.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function', 'https://aws-controllers-k8s.github.io/community/reference/']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

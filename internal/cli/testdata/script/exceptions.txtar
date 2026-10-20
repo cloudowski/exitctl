@@ -1,0 +1,58 @@
+# Accepted lock-in exceptions (US7, FR-038, quickstart V8).
+# The fixture config has three exceptions: keep-cognito (active until
+# 2027-01-01), old-sqs (expired 2026-01-01), no-reason (empty reason, invalid).
+
+exec exitctl scan $FIXTURES/exceptions --include-drafts --as-of 2026-10-06 --emoji never --no-color
+stdout '^  Lock-in index +48/100'
+stdout '^  Exceptions: 1 accepted \(index without exceptions: 56\)$'
+! stdout 'notice:'
+stderr '^notice: exception old-sqs expired on 2026-01-01 \(as of 2026-10-06\); its 2 findings count again$'
+stderr '^notice: exception no-reason is invalid and ignored: it has no reason$'
+! stderr 'keep-cognito'
+# The expired exception's queue counts again and stays an anchor.
+exec exitctl scan $FIXTURES/exceptions --include-drafts --as-of 2026-10-06 --all --emoji never --no-color
+stdout 'aws_sqs_queue\.events'
+
+# explain shows accepted findings with exception, owner, reason, and expiry.
+exec exitctl explain aws_cognito_user_pool.main --include-drafts --emoji never --no-color
+stdout '\[accepted: keep-cognito\]'
+stdout 'accepted by platform-team: Identity is shared with other products'
+stdout 'until 2027-01-01'
+exec exitctl explain aws_sqs_queue.events --include-drafts --emoji never --no-color
+! stdout 'accepted'
+
+# The result records all three states and the reference date.
+exec exitctl scan $FIXTURES/exceptions --include-drafts --as-of 2026-10-06 --format json --no-store
+stdout '"as_of": "2026-10-06"'
+stdout '"index": 48'
+stdout '"index_without_exceptions": 56'
+stdout '"id": "keep-cognito",\s*"state": "active"'
+stdout '"id": "no-reason",\s*"state": "invalid"'
+stdout '"id": "old-sqs",\s*"state": "expired"'
+stdout '"status": "accepted",\s*"exception": "keep-cognito"'
+
+# Before old-sqs expired, both exceptions are active and the index drops further.
+exec exitctl scan $FIXTURES/exceptions --include-drafts --as-of 2025-12-31 --emoji never --no-color
+stdout '^  Exceptions: 2 accepted \(index without exceptions: 56\)$'
+! stderr 'old-sqs'
+stderr 'no-reason is invalid'
+
+# Without exceptions (explicit config with none) the index equals the index
+# without exceptions above, and no Exceptions line is printed.
+exec exitctl scan $FIXTURES/exceptions --include-drafts --as-of 2026-10-06 --config plain.yaml --emoji never --no-color
+stdout '^  Lock-in index +56/100'
+! stdout 'Exceptions:'
+! stderr 'notice:'
+
+# A duplicate exception id is a configuration error.
+! exec exitctl scan $FIXTURES/exceptions --include-drafts --config dup.yaml
+stderr 'id "a" appears more than once'
+
+-- plain.yaml --
+version: 1
+repo_name: exceptions
+-- dup.yaml --
+version: 1
+exceptions:
+  - {id: a, select: {service: aws.sqs}, reason: r, owner: o}
+  - {id: a, select: {service: aws.cognito}, reason: r, owner: o}

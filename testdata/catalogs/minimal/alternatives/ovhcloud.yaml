@@ -1,0 +1,15 @@
+schema: "1.0"
+kind: alternative
+id: ovhcloud
+name: OVHcloud
+alternative_kind: european-provider
+license: proprietary
+homepage: https://www.ovhcloud.com/
+vendor_contributed: false
+provenance:
+  origin: maintainer
+  author: cloudowski
+  status: verified
+  reviewed_by: cloudowski
+  reviewed_on: 2026-10-06
+  sources: []

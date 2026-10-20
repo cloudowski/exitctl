@@ -1,0 +1,92 @@
+schema: '1.0'
+kind: service
+id: oci.compute
+provider: oci
+name: OCI Compute
+category: compute
+resource_types:
+  terraform:
+  - oci_core_instance
+  - oci_core_instance_configuration
+  - oci_core_instance_pool
+  - oci_core_instance_pool_instance
+  - oci_core_instance_console_connection
+  - oci_core_instance_maintenance_event
+  - oci_core_vnic_attachment
+  - oci_core_image
+  - oci_core_shape_management
+  - oci_core_dedicated_vm_host
+  - oci_core_cluster_network
+  - oci_core_compute_cluster
+  - oci_core_compute_capacity_reservation
+  - oci_core_compute_image_capability_schema
+  - oci_core_console_history
+  - oci_core_app_catalog_listing_resource_version_agreement
+  - oci_core_app_catalog_subscription
+  - oci_autoscaling_auto_scaling_configuration
+traits:
+- {id: proprietary-api, level: low, reason: 'Standard VMs and images; only provisioning, shapes and instance metadata are OCI specific.'}
+- {id: operational-tooling-coupling, level: low, reason: 'Instance pools, autoscaling and the Oracle Cloud Agent use OCI tooling.'}
+edge_hints:
+- {resource_type: oci_core_instance, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_core_instance, attribute: create_vnic_details.subnet_id, edge_kind: containment}
+- {resource_type: oci_core_instance, attribute: create_vnic_details.nsg_ids, edge_kind: binding}
+- {resource_type: oci_core_instance, attribute: source_details.source_id, edge_kind: reference}
+- {resource_type: oci_core_instance_configuration, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_core_instance_pool, attribute: instance_configuration_id, edge_kind: binding}
+- {resource_type: oci_core_instance_pool, attribute: placement_configurations.primary_subnet_id, edge_kind: containment}
+- {resource_type: oci_core_instance_pool, attribute: load_balancers.load_balancer_id, edge_kind: binding}
+- {resource_type: oci_core_instance_pool_instance, attribute: instance_pool_id, edge_kind: containment}
+- {resource_type: oci_core_vnic_attachment, attribute: instance_id, edge_kind: binding}
+- {resource_type: oci_core_vnic_attachment, attribute: create_vnic_details.subnet_id, edge_kind: containment}
+- {resource_type: oci_core_image, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_core_cluster_network, attribute: instance_pools.instance_configuration_id, edge_kind: binding}
+- {resource_type: oci_autoscaling_auto_scaling_configuration, attribute: auto_scaling_resources.id, edge_kind: binding}
+sdk:
+- ecosystem: npm
+  packages: [oci-core, oci-autoscaling]
+  imports: ['[''"]oci-(core|autoscaling)[''"]']
+- ecosystem: pypi
+  imports: ['^\s*from\s+oci\.(core|autoscaling)\b', '^\s*from\s+oci\s+import\s+.*\b(core|autoscaling)\b']
+  usage: ['\boci\.core\.(ComputeClient|ComputeManagementClient)\b', '\boci\.autoscaling\.\w+']
+  gate: [oci]
+- ecosystem: go
+  packages: [github.com/oracle/oci-go-sdk/v65/core, github.com/oracle/oci-go-sdk/v65/autoscaling]
+  imports: ['"github\.com/oracle/oci-go-sdk/v[0-9]+/(core|autoscaling)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.oracle.oci.sdk:oci-java-sdk-core', 'com.oracle.oci.sdk:oci-java-sdk-autoscaling']
+  imports: ['^\s*import\s+com\.oracle\.bmc\.(core|autoscaling)\.']
+- ecosystem: nuget
+  packages: [OCI.DotNetSDK.Core, OCI.DotNetSDK.Autoscaling]
+  imports: ['^\s*using\s+Oci\.(Core|Autoscaling)Service\b']
+alternatives:
+- ref: hetzner
+  difficulty: low
+  compatibility: conceptual
+  notes: Cloud servers run the same OS images; cloud-init carries over, shapes and instance pools are remapped.
+  approved_by: cloudowski
+- ref: ovhcloud
+  difficulty: low
+  compatibility: conceptual
+  notes: Public Cloud instances on OpenStack; images and cloud-init carry over.
+  approved_by: cloudowski
+- ref: scaleway
+  difficulty: low
+  compatibility: conceptual
+  notes: Instances run standard images; instance metadata usage needs adjustment.
+  approved_by: cloudowski
+- ref: upcloud
+  difficulty: low
+  compatibility: conceptual
+  notes: Cloud servers with standard images and cloud-init; autoscaling is rebuilt with own tooling.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.oracle.com/en-us/iaas/Content/Compute/home.htm
+  - https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/core_instance
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

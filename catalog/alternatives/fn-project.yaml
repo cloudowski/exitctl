@@ -1,0 +1,18 @@
+schema: '1.0'
+kind: alternative
+id: fn-project
+name: Fn Project
+alternative_kind: oss-self-hosted
+license: Apache-2.0
+homepage: https://fnproject.io/
+vendor_contributed: false
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://fnproject.io/
+  - https://github.com/fnproject/fn
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

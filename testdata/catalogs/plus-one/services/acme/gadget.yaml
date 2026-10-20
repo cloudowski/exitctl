@@ -1,0 +1,22 @@
+schema: "1.0"
+kind: service
+id: acme.gadget
+provider: acme
+name: Acme Gadget
+category: widget.gadget
+resource_types:
+  terraform: [acme_gadget]
+traits:
+  - id: acme-widget-protocol
+alternatives:
+  - { ref: acme-open-widget, difficulty: high, compatibility: conceptual }
+provenance:
+  origin: llm
+  author: catalog-drafter
+  status: draft
+  sources: []
+  llm:
+    batch: "2026-10-acme"
+    model: example-model
+    prompt_version: "1"
+    eval_passed: false

@@ -1,0 +1,15 @@
+schema: "1.0"
+kind: alternative
+id: nats
+name: NATS
+alternative_kind: oss-self-hosted
+license: Apache-2.0
+homepage: https://nats.io/
+vendor_contributed: false
+provenance:
+  origin: maintainer
+  author: cloudowski
+  status: verified
+  reviewed_by: cloudowski
+  reviewed_on: 2026-10-06
+  sources: []

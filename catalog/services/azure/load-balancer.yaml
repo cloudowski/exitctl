@@ -1,0 +1,62 @@
+schema: '1.0'
+kind: service
+id: azure.load-balancer
+provider: azure
+name: Azure Load Balancer
+category: network.load-balancer
+resource_types:
+  terraform:
+  - azurerm_lb
+  - azurerm_lb_backend_address_pool
+  - azurerm_lb_backend_address_pool_address
+  - azurerm_lb_probe
+  - azurerm_lb_rule
+  - azurerm_lb_nat_rule
+  - azurerm_lb_nat_pool
+  - azurerm_lb_outbound_rule
+  - azurerm_network_interface_backend_address_pool_association
+  - azurerm_network_interface_nat_rule_association
+  kubernetes:
+  - {group: network.azure.com, kind: LoadBalancer}
+  - {group: network.azure.com, kind: LoadBalancersInboundNatRule}
+traits:
+- {id: provider-specific-annotations, level: low, reason: Kubernetes Services use service.beta.kubernetes.io/azure-* annotations to configure the Azure LB.}
+- {id: provider-network-construct, level: low, reason: 'Frontends, backend pools and probes are Azure network resources.'}
+kubernetes_bindings:
+- match: {kind: Service, annotation: service.beta.kubernetes.io/azure-*, exists: true}
+edge_hints:
+- {resource_type: azurerm_lb, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_lb_backend_address_pool, attribute: loadbalancer_id, edge_kind: containment}
+- {resource_type: azurerm_lb_probe, attribute: loadbalancer_id, edge_kind: containment}
+- {resource_type: azurerm_lb_rule, attribute: loadbalancer_id, edge_kind: containment}
+- {resource_type: azurerm_lb_nat_rule, attribute: loadbalancer_id, edge_kind: containment}
+- {resource_type: azurerm_lb_nat_pool, attribute: loadbalancer_id, edge_kind: containment}
+- {resource_type: azurerm_lb_outbound_rule, attribute: loadbalancer_id, edge_kind: containment}
+- {resource_type: azurerm_lb_backend_address_pool_address, attribute: backend_address_pool_id, edge_kind: containment}
+alternatives:
+- ref: haproxy
+  difficulty: low
+  compatibility: conceptual
+  notes: L4 load balancing with health checks; Kubernetes LB Services need a bare-metal LB implementation.
+  approved_by: cloudowski
+- ref: envoy
+  difficulty: low
+  compatibility: conceptual
+  notes: TCP/UDP proxying with health checks; replace Azure LB annotations.
+  approved_by: cloudowski
+- ref: nginx
+  difficulty: low
+  compatibility: conceptual
+  notes: Stream module provides L4 load balancing; replace Azure LB annotations.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/load-balancer/load-balancer-overview
+  - https://cloud-provider-azure.sigs.k8s.io/topics/loadbalancer/
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/lb
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

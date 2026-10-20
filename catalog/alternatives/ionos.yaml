@@ -1,0 +1,16 @@
+schema: '1.0'
+kind: alternative
+id: ionos
+name: IONOS Cloud
+alternative_kind: european-provider
+license: proprietary
+homepage: https://cloud.ionos.com/
+vendor_contributed: false
+provenance:
+  origin: llm
+  author: claude
+  status: deprecated
+  sources:
+  - https://cloud.ionos.com/
+  - https://docs.ionos.com/cloud
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: false}

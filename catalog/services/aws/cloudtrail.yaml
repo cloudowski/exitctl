@@ -1,0 +1,62 @@
+schema: '1.0'
+kind: service
+id: aws.cloudtrail
+provider: aws
+name: AWS CloudTrail
+category: observability
+resource_types:
+  terraform: [aws_cloudtrail, aws_cloudtrail_event_data_store, aws_cloudtrail_organization_delegated_admin_account]
+  cloudformation: ['AWS::CloudTrail::Trail', 'AWS::CloudTrail::EventDataStore', 'AWS::CloudTrail::Channel', 'AWS::CloudTrail::ResourcePolicy', 'AWS::CloudTrail::Dashboard']
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'Records AWS API activity only; audit, alerting and compliance processes built on it are AWS-specific.'}
+rules:
+- id: aws.cloudtrail.lake
+  match:
+    resource_type: [aws_cloudtrail_event_data_store]
+  then: {add_trait: proprietary-query-language, level: medium, evidence: name}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-cloudtrail', '@aws-sdk/client-cloudtrail-data']
+  imports: ['[''"]@aws-sdk/client-cloudtrail(-data)?[''"/]']
+  usage: ['\bAWS\.CloudTrail\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["''](cloudtrail|cloudtrail-data)["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/cloudtrail, github.com/aws/aws-sdk-go-v2/service/cloudtraildata]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/(cloudtrail|cloudtraildata)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:cloudtrail', 'software.amazon.awssdk:cloudtraildata']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.(cloudtrail|cloudtraildata)\.']
+- ecosystem: nuget
+  packages: [AWSSDK.CloudTrail, AWSSDK.CloudTrailData]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.(CloudTrail|CloudTrailData)\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-cloudtrail, aws-sdk-cloudtraildata]
+  imports: ['^\s*require\s+["'']aws-sdk-(cloudtrail|cloudtraildata)["'']']
+  usage: ['(?i)\bAws::(cloudtrail|cloudtraildata)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-cloudtrail, aws-sdk-cloudtraildata]
+  imports: ['\baws_sdk_(cloudtrail|cloudtraildata)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(cloudtrail|cloudtraildata)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_cloudtrail, attribute: s3_bucket_name, edge_kind: data-flow}
+- {resource_type: aws_cloudtrail, attribute: cloud_watch_logs_group_arn, edge_kind: data-flow}
+- {resource_type: aws_cloudtrail, attribute: cloud_watch_logs_role_arn, edge_kind: binding}
+- {resource_type: aws_cloudtrail, attribute: sns_topic_name, edge_kind: data-flow}
+- {resource_type: aws_cloudtrail, attribute: kms_key_id, edge_kind: reference}
+alternatives:
+- {ref: opensearch, difficulty: medium, compatibility: conceptual, notes: 'Audit events from the target platform can be indexed and searched; event schemas differ per provider.', approved_by: cloudowski}
+- {ref: clickhouse, difficulty: medium, compatibility: conceptual, notes: Columnar storage for long-term audit log analytics with SQL instead of CloudTrail Lake., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudtrail']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

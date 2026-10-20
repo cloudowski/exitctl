@@ -1,0 +1,15 @@
+schema: "1.0"
+kind: trait
+id: proprietary-runtime
+name: Proprietary runtime
+level: high
+dimensions: [technical, operational]
+explanation: Code runs in a provider-specific function runtime with its own event contracts.
+exit_hint: Package functions as containers and run them on a portable serverless platform.
+provenance:
+  origin: maintainer
+  author: cloudowski
+  status: verified
+  reviewed_by: cloudowski
+  reviewed_on: 2026-10-06
+  sources: []

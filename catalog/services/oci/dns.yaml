@@ -1,0 +1,87 @@
+schema: '1.0'
+kind: service
+id: oci.dns
+provider: oci
+name: OCI DNS
+category: network.dns
+resource_types:
+  terraform:
+  - oci_dns_zone
+  - oci_dns_rrset
+  - oci_dns_record
+  - oci_dns_view
+  - oci_dns_resolver
+  - oci_dns_resolver_endpoint
+  - oci_dns_steering_policy
+  - oci_dns_steering_policy_attachment
+  - oci_dns_tsig_key
+  - oci_dns_action_create_zone_from_zone_file
+  - oci_dns_zone_promote_dnssec_key_version
+  - oci_dns_zone_stage_dnssec_key_version
+traits:
+- {id: proprietary-api, level: low, reason: Standard DNS records served over the DNS protocol; zones export as zone files.}
+rules:
+- id: oci.dns.steering-policies
+  match: {resource_type: [oci_dns_steering_policy]}
+  then: {add_trait: managed-only-feature, level: medium, evidence: oci_dns_steering_policy}
+- id: oci.dns.private-resolver
+  match: {resource_type: [oci_dns_resolver, oci_dns_view]}
+  then: {add_trait: provider-network-construct, level: low, evidence: oci_dns_resolver}
+sdk:
+- ecosystem: npm
+  packages: [oci-dns]
+  imports: ['[''"]oci-dns[''"]']
+- ecosystem: pypi
+  imports: ['^\s*from\s+oci\.dns\b', '^\s*from\s+oci\s+import\s+.*\bdns\b']
+  usage: ['\boci\.dns\.DnsClient\b']
+  gate: [oci]
+- ecosystem: go
+  packages: [github.com/oracle/oci-go-sdk/v65/dns]
+  imports: ['"github\.com/oracle/oci-go-sdk/v[0-9]+/dns(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.oracle.oci.sdk:oci-java-sdk-dns']
+  imports: ['^\s*import\s+com\.oracle\.bmc\.dns\.']
+- ecosystem: nuget
+  packages: [OCI.DotNetSDK.Dns]
+  imports: ['^\s*using\s+Oci\.DnsService\b']
+edge_hints:
+- {resource_type: oci_dns_zone, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_dns_zone, attribute: view_id, edge_kind: containment}
+- {resource_type: oci_dns_rrset, attribute: zone_name_or_id, edge_kind: containment}
+- {resource_type: oci_dns_record, attribute: zone_name_or_id, edge_kind: containment}
+- {resource_type: oci_dns_view, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_dns_resolver_endpoint, attribute: resolver_id, edge_kind: containment}
+- {resource_type: oci_dns_resolver_endpoint, attribute: subnet_id, edge_kind: containment}
+- {resource_type: oci_dns_steering_policy_attachment, attribute: steering_policy_id, edge_kind: binding}
+- {resource_type: oci_dns_steering_policy_attachment, attribute: zone_id, edge_kind: binding}
+alternatives:
+- ref: coredns
+  difficulty: low
+  compatibility: protocol-compatible
+  notes: Serves zone files exported from OCI DNS; steering policies need another traffic management layer.
+  approved_by: cloudowski
+- ref: hetzner
+  difficulty: low
+  compatibility: protocol-compatible
+  notes: Hosted DNS with zone file import and an API supported by external-dns.
+  approved_by: cloudowski
+- ref: ovhcloud
+  difficulty: low
+  compatibility: protocol-compatible
+  notes: Hosted DNS zones with zone file import; traffic steering is not equivalent.
+  approved_by: cloudowski
+- ref: scaleway
+  difficulty: low
+  compatibility: protocol-compatible
+  notes: Domains and DNS with zone import and external-dns support.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.oracle.com/en-us/iaas/Content/DNS/home.htm
+  - https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/dns_zone
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

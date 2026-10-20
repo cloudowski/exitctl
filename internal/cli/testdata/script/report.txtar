@@ -1,0 +1,22 @@
+# reports in every format (US3).
+exec exitctl scan $FIXTURES/shop-aws --include-drafts --as-of 2026-10-06 --repo-name shop-aws --emoji never --no-color
+
+exec exitctl report
+stdout 'wrote exitctl-report\.html'
+grep '<html' exitctl-report.html
+grep 'Exit Readiness' exitctl-report.html
+! grep '<script src=' exitctl-report.html
+! grep '<link [^>]*href="http' exitctl-report.html
+
+exec exitctl report --format md -o r.md
+grep '^# ' r.md
+grep 'Exit Readiness' r.md
+
+exec exitctl report --format json -o r.json
+grep '"format": "exitctl.result/v1"' r.json
+
+! exec exitctl report --format pdf
+stderr 'unknown --format'
+
+! exec exitctl report --input missing.json
+stderr 'missing.json'

@@ -1,0 +1,36 @@
+schema: "1.0"
+kind: categories
+categories:
+  - { id: compute, name: Compute }
+  - { id: compute.serverless, name: Serverless compute }
+  - { id: compute.container, name: Container compute }
+  - { id: database, name: Database }
+  - { id: database.relational, name: Relational database }
+  - { id: database.nosql, name: NoSQL database }
+  - { id: database.nosql.key-value, name: Key-value store }
+  - { id: database.nosql.document, name: Document database }
+  - { id: database.cache, name: Cache }
+  - { id: messaging, name: Messaging }
+  - { id: messaging.queue, name: Message queue }
+  - { id: messaging.pubsub, name: Publish-subscribe }
+  - { id: messaging.stream, name: Event streaming }
+  - { id: storage, name: Storage }
+  - { id: storage.object, name: Object storage }
+  - { id: storage.block, name: Block storage }
+  - { id: storage.file, name: File storage }
+  - { id: network, name: Networking }
+  - { id: network.load-balancer, name: Load balancer }
+  - { id: network.dns, name: DNS }
+  - { id: network.cdn, name: CDN }
+  - { id: identity, name: Identity }
+  - { id: identity.iam, name: Identity and access management }
+  - { id: identity.user-directory, name: User directory }
+  - { id: security.secrets, name: Secrets management }
+  - { id: security.kms, name: Key management }
+  - { id: observability, name: Observability }
+  - { id: analytics, name: Analytics }
+  - { id: ai-ml, name: AI and machine learning }
+  - { id: integration, name: Integration }
+  - { id: devops.ci, name: Continuous integration }
+  - { id: devops.registry, name: Artifact and container registry }
+  - { id: devops.iac, name: Infrastructure as code }

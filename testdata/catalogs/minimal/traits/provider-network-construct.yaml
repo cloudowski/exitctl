@@ -1,0 +1,15 @@
+schema: "1.0"
+kind: trait
+id: provider-network-construct
+name: Provider network construct
+level: medium
+dimensions: [operational]
+explanation: Network layout uses provider-specific constructs.
+exit_hint: Recreate the topology with the target platform network primitives.
+provenance:
+  origin: maintainer
+  author: cloudowski
+  status: verified
+  reviewed_by: cloudowski
+  reviewed_on: 2026-10-06
+  sources: []

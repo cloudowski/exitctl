@@ -1,0 +1,4332 @@
+{
+  "format": "exitctl.result/v1",
+  "kind": "result",
+  "versions": {
+    "tool": "0.1.0-dev",
+    "catalog": "2026.10.1",
+    "catalog_schema": "1.0",
+    "rules": "1.1.0",
+    "config_fingerprint": "8d36fc36",
+    "custom_scoring": false,
+    "catalog_drafts_included": true
+  },
+  "inputs": [
+    {
+      "repo": "shop-aws",
+      "as_of": "2026-10-06",
+      "versions": {
+        "tool": "0.1.0-dev",
+        "catalog": "2026.10.1",
+        "catalog_schema": "1.0",
+        "rules": "1.1.0",
+        "config_fingerprint": "8d36fc36",
+        "custom_scoring": false,
+        "catalog_drafts_included": true
+      }
+    }
+  ],
+  "facts": {
+    "sources": [
+      {
+        "repo": "shop-aws",
+        "path": ".github/workflows/deploy.yml",
+        "kind": "github-actions",
+        "status": "parsed"
+      },
+      {
+        "repo": "shop-aws",
+        "path": "infra/auth.tf",
+        "kind": "terraform",
+        "status": "parsed"
+      },
+      {
+        "repo": "shop-aws",
+        "path": "infra/db.tf",
+        "kind": "terraform",
+        "status": "parsed"
+      },
+      {
+        "repo": "shop-aws",
+        "path": "infra/fn.tf",
+        "kind": "terraform",
+        "status": "parsed"
+      },
+      {
+        "repo": "shop-aws",
+        "path": "infra/network.tf",
+        "kind": "terraform",
+        "status": "parsed"
+      },
+      {
+        "repo": "shop-aws",
+        "path": "infra/providers.tf",
+        "kind": "terraform",
+        "status": "parsed"
+      },
+      {
+        "repo": "shop-aws",
+        "path": "infra/queue.tf",
+        "kind": "terraform",
+        "status": "parsed"
+      },
+      {
+        "repo": "shop-aws",
+        "path": "infra/vars.tf",
+        "kind": "terraform",
+        "status": "parsed"
+      },
+      {
+        "repo": "shop-aws",
+        "path": "k8s/configmap.yaml",
+        "kind": "kubernetes",
+        "status": "parsed"
+      },
+      {
+        "repo": "shop-aws",
+        "path": "k8s/deployment.yaml",
+        "kind": "kubernetes",
+        "status": "parsed"
+      },
+      {
+        "repo": "shop-aws",
+        "path": "k8s/ingress.yaml",
+        "kind": "kubernetes",
+        "status": "parsed"
+      },
+      {
+        "repo": "shop-aws",
+        "path": "k8s/namespace.yaml",
+        "kind": "kubernetes",
+        "status": "parsed"
+      },
+      {
+        "repo": "shop-aws",
+        "path": "k8s/pvc.yaml",
+        "kind": "kubernetes",
+        "status": "parsed"
+      },
+      {
+        "repo": "shop-aws",
+        "path": "k8s/service.yaml",
+        "kind": "kubernetes",
+        "status": "parsed"
+      },
+      {
+        "repo": "shop-aws",
+        "path": "k8s/serviceaccount.yaml",
+        "kind": "kubernetes",
+        "status": "parsed"
+      },
+      {
+        "repo": "shop-aws",
+        "path": "k8s/storageclass.yaml",
+        "kind": "kubernetes",
+        "status": "parsed"
+      },
+      {
+        "repo": "shop-aws",
+        "path": "services/orders/Dockerfile",
+        "kind": "dockerfile",
+        "status": "parsed"
+      },
+      {
+        "repo": "shop-aws",
+        "path": "services/orders/package.json",
+        "kind": "package-manifest",
+        "status": "parsed"
+      }
+    ],
+    "raw_nodes": [
+      {
+        "id": "shop-aws//#/ConfigMap/shop/orders-config",
+        "node_kind": "resource",
+        "source_kind": "kubernetes",
+        "type": "/ConfigMap",
+        "native_address": "/ConfigMap/shop/orders-config",
+        "attributes": {
+          "data": {
+            "LOG_LEVEL": "info",
+            "TABLE_NAME": "orders"
+          },
+          "metadata": {
+            "name": "orders-config",
+            "namespace": "shop"
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/configmap.yaml",
+            "line": 2,
+            "excerpt": "kind: ConfigMap",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//#/Namespace/_/shop",
+        "node_kind": "resource",
+        "source_kind": "kubernetes",
+        "type": "/Namespace",
+        "native_address": "/Namespace/_/shop",
+        "attributes": {
+          "metadata": {
+            "name": "shop"
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/namespace.yaml",
+            "line": 2,
+            "excerpt": "kind: Namespace",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//#/PersistentVolumeClaim/shop/orders-cache",
+        "node_kind": "resource",
+        "source_kind": "kubernetes",
+        "type": "/PersistentVolumeClaim",
+        "native_address": "/PersistentVolumeClaim/shop/orders-cache",
+        "attributes": {
+          "metadata": {
+            "name": "orders-cache",
+            "namespace": "shop"
+          },
+          "spec": {
+            "accessModes": [
+              "ReadWriteOnce"
+            ],
+            "resources": {
+              "requests": {
+                "storage": "5Gi"
+              }
+            },
+            "storageClassName": "gp3"
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/pvc.yaml",
+            "line": 2,
+            "excerpt": "kind: PersistentVolumeClaim",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//#/Service/shop/orders-api",
+        "node_kind": "resource",
+        "source_kind": "kubernetes",
+        "type": "/Service",
+        "native_address": "/Service/shop/orders-api",
+        "attributes": {
+          "metadata": {
+            "name": "orders-api",
+            "namespace": "shop"
+          },
+          "spec": {
+            "ports": [
+              {
+                "port": 80,
+                "targetPort": 8080
+              }
+            ],
+            "selector": {
+              "app": "orders-api"
+            }
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/service.yaml",
+            "line": 2,
+            "excerpt": "kind: Service",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//#/ServiceAccount/shop/orders-api",
+        "node_kind": "resource",
+        "source_kind": "kubernetes",
+        "type": "/ServiceAccount",
+        "native_address": "/ServiceAccount/shop/orders-api",
+        "attributes": {
+          "metadata": {
+            "annotations": {
+              "eks.amazonaws.com/role-arn": "arn:aws:iam::123456789012:role/orders-api"
+            },
+            "name": "orders-api",
+            "namespace": "shop"
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/serviceaccount.yaml",
+            "line": 2,
+            "excerpt": "kind: ServiceAccount",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//#apps/Deployment/shop/orders-api",
+        "node_kind": "resource",
+        "source_kind": "kubernetes",
+        "type": "apps/Deployment",
+        "native_address": "apps/Deployment/shop/orders-api",
+        "attributes": {
+          "metadata": {
+            "labels": {
+              "app": "orders-api"
+            },
+            "name": "orders-api",
+            "namespace": "shop"
+          },
+          "spec": {
+            "replicas": 2,
+            "selector": {
+              "matchLabels": {
+                "app": "orders-api"
+              }
+            },
+            "template": {
+              "metadata": {
+                "labels": {
+                  "app": "orders-api"
+                }
+              },
+              "spec": {
+                "containers": [
+                  {
+                    "envFrom": [
+                      {
+                        "configMapRef": {
+                          "name": "orders-config"
+                        }
+                      }
+                    ],
+                    "image": "123456789012.dkr.ecr.eu-west-1.amazonaws.com/orders-api:1.4.2",
+                    "name": "orders-api",
+                    "ports": [
+                      {
+                        "containerPort": 8080
+                      }
+                    ],
+                    "volumeMounts": [
+                      {
+                        "mountPath": "/var/cache/orders",
+                        "name": "cache"
+                      }
+                    ]
+                  }
+                ],
+                "serviceAccountName": "orders-api",
+                "volumes": [
+                  {
+                    "name": "cache",
+                    "persistentVolumeClaim": {
+                      "claimName": "orders-cache"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/deployment.yaml",
+            "line": 2,
+            "excerpt": "kind: Deployment",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//#networking.k8s.io/Ingress/shop/orders-api",
+        "node_kind": "resource",
+        "source_kind": "kubernetes",
+        "type": "networking.k8s.io/Ingress",
+        "native_address": "networking.k8s.io/Ingress/shop/orders-api",
+        "attributes": {
+          "metadata": {
+            "annotations": {
+              "alb.ingress.kubernetes.io/scheme": "internet-facing",
+              "alb.ingress.kubernetes.io/target-type": "ip"
+            },
+            "name": "orders-api",
+            "namespace": "shop"
+          },
+          "spec": {
+            "ingressClassName": "alb",
+            "rules": [
+              {
+                "http": {
+                  "paths": [
+                    {
+                      "backend": {
+                        "service": {
+                          "name": "orders-api",
+                          "port": {
+                            "number": 80
+                          }
+                        }
+                      },
+                      "path": "/",
+                      "pathType": "Prefix"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/ingress.yaml",
+            "line": 2,
+            "excerpt": "kind: Ingress",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//#storage.k8s.io/StorageClass/_/gp3",
+        "node_kind": "resource",
+        "source_kind": "kubernetes",
+        "type": "storage.k8s.io/StorageClass",
+        "native_address": "storage.k8s.io/StorageClass/_/gp3",
+        "attributes": {
+          "metadata": {
+            "name": "gp3"
+          },
+          "parameters": {
+            "type": "gp3"
+          },
+          "provisioner": "ebs.csi.aws.com",
+          "volumeBindingMode": "WaitForFirstConsumer"
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/storageclass.yaml",
+            "line": 2,
+            "excerpt": "kind: StorageClass",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//.github/workflows/deploy.yml#action/actions/checkout",
+        "node_kind": "resource",
+        "source_kind": "github-actions",
+        "type": "ci_action",
+        "native_address": "action/actions/checkout",
+        "attributes": {
+          "action": "actions/checkout",
+          "ref": "v4"
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": ".github/workflows/deploy.yml",
+            "line": 15,
+            "excerpt": "- uses: actions/checkout@v4",
+            "source_kind": "github-actions"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//.github/workflows/deploy.yml#action/aws-actions/amazon-ecr-login",
+        "node_kind": "resource",
+        "source_kind": "github-actions",
+        "type": "ci_action",
+        "native_address": "action/aws-actions/amazon-ecr-login",
+        "attributes": {
+          "action": "aws-actions/amazon-ecr-login",
+          "ref": "v2"
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": ".github/workflows/deploy.yml",
+            "line": 20,
+            "excerpt": "- uses: aws-actions/amazon-ecr-login@v2",
+            "source_kind": "github-actions"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//.github/workflows/deploy.yml#action/aws-actions/configure-aws-credentials",
+        "node_kind": "resource",
+        "source_kind": "github-actions",
+        "type": "ci_action",
+        "native_address": "action/aws-actions/configure-aws-credentials",
+        "attributes": {
+          "action": "aws-actions/configure-aws-credentials",
+          "ref": "v4"
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": ".github/workflows/deploy.yml",
+            "line": 16,
+            "excerpt": "- uses: aws-actions/configure-aws-credentials@v4",
+            "source_kind": "github-actions"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//infra#aws_cognito_user_pool.main",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "aws_cognito_user_pool",
+        "native_address": "aws_cognito_user_pool.main",
+        "provider_identity": "aws:aws_cognito_user_pool/shop-users",
+        "attributes": {
+          "name": "shop-users",
+          "password_policy": {
+            "minimum_length": 12
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/auth.tf",
+            "line": 1,
+            "excerpt": "resource \"aws_cognito_user_pool\" \"main\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//infra#aws_cognito_user_pool_client.web",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "aws_cognito_user_pool_client",
+        "native_address": "aws_cognito_user_pool_client.web",
+        "provider_identity": "aws:aws_cognito_user_pool_client/shop-web",
+        "attributes": {
+          "name": "shop-web",
+          "user_pool_id": {
+            "$unknown": true
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/auth.tf",
+            "line": 9,
+            "excerpt": "resource \"aws_cognito_user_pool_client\" \"web\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//infra#aws_dynamodb_table.orders",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "aws_dynamodb_table",
+        "native_address": "aws_dynamodb_table.orders",
+        "provider_identity": "aws:aws_dynamodb_table/orders",
+        "attributes": {
+          "attribute": {
+            "name": "order_id",
+            "type": "S"
+          },
+          "billing_mode": "PAY_PER_REQUEST",
+          "hash_key": "order_id",
+          "name": "orders",
+          "stream_enabled": true,
+          "stream_view_type": "NEW_IMAGE"
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/db.tf",
+            "line": 1,
+            "excerpt": "resource \"aws_dynamodb_table\" \"orders\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//infra#aws_iam_role.lambda",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "aws_iam_role",
+        "native_address": "aws_iam_role.lambda",
+        "provider_identity": "aws:aws_iam_role/order-processor",
+        "attributes": {
+          "assume_role_policy": {
+            "$unknown": true
+          },
+          "name": "order-processor"
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 1,
+            "excerpt": "resource \"aws_iam_role\" \"lambda\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//infra#aws_lambda_event_source_mapping.events_queue",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "aws_lambda_event_source_mapping",
+        "native_address": "aws_lambda_event_source_mapping.events_queue",
+        "attributes": {
+          "batch_size": 10,
+          "event_source_arn": {
+            "$unknown": true
+          },
+          "function_name": {
+            "$unknown": true
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 40,
+            "excerpt": "resource \"aws_lambda_event_source_mapping\" \"events_queue\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//infra#aws_lambda_event_source_mapping.orders_stream",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "aws_lambda_event_source_mapping",
+        "native_address": "aws_lambda_event_source_mapping.orders_stream",
+        "attributes": {
+          "event_source_arn": {
+            "$unknown": true
+          },
+          "function_name": {
+            "$unknown": true
+          },
+          "starting_position": "LATEST"
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 34,
+            "excerpt": "resource \"aws_lambda_event_source_mapping\" \"orders_stream\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//infra#aws_lambda_function.order_processor",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "aws_lambda_function",
+        "native_address": "aws_lambda_function.order_processor",
+        "provider_identity": "aws:aws_lambda_function/order-processor",
+        "attributes": {
+          "environment": {
+            "variables": {
+              "$unknown": true
+            }
+          },
+          "filename": "build/order-processor.zip",
+          "function_name": "order-processor",
+          "handler": "index.handler",
+          "role": {
+            "$unknown": true
+          },
+          "runtime": "nodejs20.x",
+          "vpc_config": {
+            "security_group_ids": {
+              "$unknown": true
+            },
+            "subnet_ids": {
+              "$unknown": true
+            }
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 14,
+            "excerpt": "resource \"aws_lambda_function\" \"order_processor\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//infra#aws_security_group.app",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "aws_security_group",
+        "native_address": "aws_security_group.app",
+        "provider_identity": "aws:aws_security_group/shop-app",
+        "attributes": {
+          "egress": {
+            "cidr_blocks": [
+              "0.0.0.0/0"
+            ],
+            "from_port": 0,
+            "protocol": "-1",
+            "to_port": 0
+          },
+          "name": "shop-app",
+          "vpc_id": {
+            "$unknown": true
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/network.tf",
+            "line": 22,
+            "excerpt": "resource \"aws_security_group\" \"app\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//infra#aws_sqs_queue.events",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "aws_sqs_queue",
+        "native_address": "aws_sqs_queue.events",
+        "provider_identity": "aws:aws_sqs_queue/events",
+        "attributes": {
+          "name": "events",
+          "visibility_timeout_seconds": 60
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/queue.tf",
+            "line": 1,
+            "excerpt": "resource \"aws_sqs_queue\" \"events\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//infra#aws_ssm_parameter.db",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "aws_ssm_parameter",
+        "native_address": "aws_ssm_parameter.db",
+        "provider_identity": "aws:aws_ssm_parameter//shop/db/password",
+        "attributes": {
+          "name": "/shop/db/password",
+          "type": "SecureString",
+          "value": {
+            "$redacted": true
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/vars.tf",
+            "line": 7,
+            "excerpt": "resource \"aws_ssm_parameter\" \"db\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//infra#aws_subnet.a",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "aws_subnet",
+        "native_address": "aws_subnet.a",
+        "attributes": {
+          "availability_zone": "eu-west-1a",
+          "cidr_block": "10.20.1.0/24",
+          "vpc_id": {
+            "$unknown": true
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/network.tf",
+            "line": 10,
+            "excerpt": "resource \"aws_subnet\" \"a\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//infra#aws_subnet.b",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "aws_subnet",
+        "native_address": "aws_subnet.b",
+        "attributes": {
+          "availability_zone": "eu-west-1b",
+          "cidr_block": "10.20.2.0/24",
+          "vpc_id": {
+            "$unknown": true
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/network.tf",
+            "line": 16,
+            "excerpt": "resource \"aws_subnet\" \"b\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//infra#aws_vpc.main",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "aws_vpc",
+        "native_address": "aws_vpc.main",
+        "attributes": {
+          "cidr_block": "10.20.0.0/16",
+          "enable_dns_hostnames": true,
+          "tags": {
+            "Name": "shop"
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/network.tf",
+            "line": 1,
+            "excerpt": "resource \"aws_vpc\" \"main\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//infra#random_id.suffix",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "random_id",
+        "native_address": "random_id.suffix",
+        "attributes": {
+          "byte_length": 4
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/vars.tf",
+            "line": 13,
+            "excerpt": "resource \"random_id\" \"suffix\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//services/orders#component",
+        "node_kind": "component",
+        "source_kind": "package-manifest",
+        "type": "component",
+        "native_address": "services/orders",
+        "attributes": {},
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "services/orders/package.json",
+            "line": 1,
+            "excerpt": "{",
+            "source_kind": "package-manifest"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//services/orders/Dockerfile#image/gcr.io/distroless/nodejs20",
+        "node_kind": "resource",
+        "source_kind": "dockerfile",
+        "type": "container_image",
+        "native_address": "image/gcr.io/distroless/nodejs20",
+        "attributes": {
+          "image": "gcr.io/distroless/nodejs20",
+          "registry": "gcr.io"
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "services/orders/Dockerfile",
+            "line": 8,
+            "excerpt": "FROM gcr.io/distroless/nodejs20",
+            "source_kind": "dockerfile"
+          }
+        ]
+      },
+      {
+        "id": "shop-aws//services/orders/Dockerfile#image/public.ecr.aws/docker/library/node:20-alpine",
+        "node_kind": "resource",
+        "source_kind": "dockerfile",
+        "type": "container_image",
+        "native_address": "image/public.ecr.aws/docker/library/node:20-alpine",
+        "attributes": {
+          "image": "public.ecr.aws/docker/library/node:20-alpine",
+          "registry": "public.ecr.aws"
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "services/orders/Dockerfile",
+            "line": 1,
+            "excerpt": "FROM public.ecr.aws/docker/library/node:20-alpine AS build",
+            "source_kind": "dockerfile"
+          }
+        ]
+      }
+    ],
+    "raw_edges": [
+      {
+        "from": "shop-aws//#/PersistentVolumeClaim/shop/orders-cache",
+        "to": "shop-aws//#storage.k8s.io/StorageClass/_/gp3",
+        "attribute": "spec.storageClassName",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/pvc.yaml",
+            "line": 7,
+            "excerpt": "storageClassName: gp3",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//#/Service/shop/orders-api",
+        "to": "shop-aws//#apps/Deployment/shop/orders-api",
+        "attribute": "spec.selector",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/service.yaml",
+            "line": 7,
+            "excerpt": "selector:",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//#apps/Deployment/shop/orders-api",
+        "to": "shop-aws//#/ConfigMap/shop/orders-config",
+        "attribute": "spec.template.spec.containers.envFrom.configMapRef.name",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/deployment.yaml",
+            "line": 26,
+            "excerpt": "name: orders-config",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//#apps/Deployment/shop/orders-api",
+        "to": "shop-aws//#/PersistentVolumeClaim/shop/orders-cache",
+        "attribute": "spec.template.spec.volumes.persistentVolumeClaim.claimName",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/deployment.yaml",
+            "line": 33,
+            "excerpt": "claimName: orders-cache",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//#apps/Deployment/shop/orders-api",
+        "to": "shop-aws//#/ServiceAccount/shop/orders-api",
+        "attribute": "spec.template.spec.serviceAccountName",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/deployment.yaml",
+            "line": 18,
+            "excerpt": "serviceAccountName: orders-api",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//#networking.k8s.io/Ingress/shop/orders-api",
+        "to": "shop-aws//#/Service/shop/orders-api",
+        "attribute": "spec.rules.http.paths.backend.service.name",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/ingress.yaml",
+            "line": 18,
+            "excerpt": "name: orders-api",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//#networking.k8s.io/Ingress/shop/orders-api",
+        "to": "shop-aws//#networking.k8s.io/IngressClass/_/alb",
+        "attribute": "spec.ingressClassName",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/ingress.yaml",
+            "line": 10,
+            "excerpt": "ingressClassName: alb",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_cognito_user_pool_client.web",
+        "to": "shop-aws//infra#aws_cognito_user_pool.main",
+        "attribute": "user_pool_id",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/auth.tf",
+            "line": 11,
+            "excerpt": "user_pool_id = aws_cognito_user_pool.main.id",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_lambda_event_source_mapping.events_queue",
+        "to": "shop-aws//infra#aws_lambda_function.order_processor",
+        "attribute": "function_name",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 42,
+            "excerpt": "function_name    = aws_lambda_function.order_processor.arn",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_lambda_event_source_mapping.events_queue",
+        "to": "shop-aws//infra#aws_sqs_queue.events",
+        "attribute": "event_source_arn",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 41,
+            "excerpt": "event_source_arn = aws_sqs_queue.events.arn",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_lambda_event_source_mapping.orders_stream",
+        "to": "shop-aws//infra#aws_dynamodb_table.orders",
+        "attribute": "event_source_arn",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 35,
+            "excerpt": "event_source_arn  = aws_dynamodb_table.orders.stream_arn",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_lambda_event_source_mapping.orders_stream",
+        "to": "shop-aws//infra#aws_lambda_function.order_processor",
+        "attribute": "function_name",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 36,
+            "excerpt": "function_name     = aws_lambda_function.order_processor.arn",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_lambda_function.order_processor",
+        "to": "shop-aws//infra#aws_dynamodb_table.orders",
+        "attribute": "environment.variables",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 28,
+            "excerpt": "TABLE_NAME = aws_dynamodb_table.orders.name",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_lambda_function.order_processor",
+        "to": "shop-aws//infra#aws_iam_role.lambda",
+        "attribute": "role",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 16,
+            "excerpt": "role          = aws_iam_role.lambda.arn",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_lambda_function.order_processor",
+        "to": "shop-aws//infra#aws_security_group.app",
+        "attribute": "vpc_config.security_group_ids",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 23,
+            "excerpt": "security_group_ids = [aws_security_group.app.id]",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_lambda_function.order_processor",
+        "to": "shop-aws//infra#aws_sqs_queue.events",
+        "attribute": "environment.variables",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 29,
+            "excerpt": "QUEUE_URL  = aws_sqs_queue.events.url",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_lambda_function.order_processor",
+        "to": "shop-aws//infra#aws_subnet.a",
+        "attribute": "vpc_config.subnet_ids",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 22,
+            "excerpt": "subnet_ids         = [aws_subnet.a.id, aws_subnet.b.id]",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_lambda_function.order_processor",
+        "to": "shop-aws//infra#aws_subnet.b",
+        "attribute": "vpc_config.subnet_ids",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 22,
+            "excerpt": "subnet_ids         = [aws_subnet.a.id, aws_subnet.b.id]",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_security_group.app",
+        "to": "shop-aws//infra#aws_vpc.main",
+        "attribute": "vpc_id",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/network.tf",
+            "line": 24,
+            "excerpt": "vpc_id = aws_vpc.main.id",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_subnet.a",
+        "to": "shop-aws//infra#aws_vpc.main",
+        "attribute": "vpc_id",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/network.tf",
+            "line": 11,
+            "excerpt": "vpc_id            = aws_vpc.main.id",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_subnet.b",
+        "to": "shop-aws//infra#aws_vpc.main",
+        "attribute": "vpc_id",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/network.tf",
+            "line": 17,
+            "excerpt": "vpc_id            = aws_vpc.main.id",
+            "source_kind": "terraform"
+          }
+        ]
+      }
+    ],
+    "package_uses": [
+      {
+        "component": "shop-aws//services/orders#component",
+        "ecosystem": "npm",
+        "name": "@aws-sdk/client-dynamodb",
+        "version": "^3.600.0",
+        "manifest": {
+          "repo": "shop-aws",
+          "path": "services/orders/package.json",
+          "line": 7,
+          "excerpt": "\"@aws-sdk/client-dynamodb\": \"^3.600.0\",",
+          "source_kind": "package-manifest"
+        }
+      },
+      {
+        "component": "shop-aws//services/orders#component",
+        "ecosystem": "npm",
+        "name": "@aws-sdk/lib-dynamodb",
+        "version": "^3.600.0",
+        "manifest": {
+          "repo": "shop-aws",
+          "path": "services/orders/package.json",
+          "line": 8,
+          "excerpt": "\"@aws-sdk/lib-dynamodb\": \"^3.600.0\",",
+          "source_kind": "package-manifest"
+        }
+      },
+      {
+        "component": "shop-aws//services/orders#component",
+        "ecosystem": "npm",
+        "name": "express",
+        "version": "^4.19.2",
+        "manifest": {
+          "repo": "shop-aws",
+          "path": "services/orders/package.json",
+          "line": 9,
+          "excerpt": "\"express\": \"^4.19.2\"",
+          "source_kind": "package-manifest"
+        }
+      }
+    ],
+    "code_uses": [
+      {
+        "component": "shop-aws//services/orders#component",
+        "ecosystem": "npm",
+        "pattern_kind": "import",
+        "service": "aws.dynamodb",
+        "match": "\"@aws-sdk/client-dynamodb\"",
+        "evidence": {
+          "repo": "shop-aws",
+          "path": "services/orders/src/handler.ts",
+          "line": 2,
+          "excerpt": "import { AttributeValue } from \"@aws-sdk/client-dynamodb\";",
+          "source_kind": "code"
+        }
+      },
+      {
+        "component": "shop-aws//services/orders#component",
+        "ecosystem": "npm",
+        "pattern_kind": "import",
+        "service": "aws.dynamodb",
+        "match": "\"@aws-sdk/client-dynamodb\"",
+        "evidence": {
+          "repo": "shop-aws",
+          "path": "services/orders/src/repo.ts",
+          "line": 1,
+          "excerpt": "import { DynamoDBClient } from \"@aws-sdk/client-dynamodb\";",
+          "source_kind": "code"
+        }
+      },
+      {
+        "component": "shop-aws//services/orders#component",
+        "ecosystem": "npm",
+        "pattern_kind": "import",
+        "service": "aws.dynamodb",
+        "match": "\"@aws-sdk/lib-dynamodb\"",
+        "evidence": {
+          "repo": "shop-aws",
+          "path": "services/orders/src/repo.ts",
+          "line": 2,
+          "excerpt": "import { DynamoDBDocumentClient, GetCommand, PutCommand } from \"@aws-sdk/lib-dynamodb\";",
+          "source_kind": "code"
+        }
+      }
+    ],
+    "gaps": [
+      {
+        "kind": "unresolved_reference",
+        "subject": "shop-aws//#networking.k8s.io/IngressClass/_/alb",
+        "repo": "shop-aws",
+        "path": "k8s/ingress.yaml",
+        "count": 1
+      }
+    ]
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "implied//aws.ebs",
+        "kind": "implied_service",
+        "type": "aws.ebs",
+        "service": "aws.ebs",
+        "class": "service",
+        "sources": [
+          "shop-aws//k8s/storageclass.yaml"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/storageclass.yaml",
+            "line": 2,
+            "excerpt": "kind: StorageClass",
+            "source_kind": "kubernetes"
+          }
+        ],
+        "findings": [
+          {
+            "id": "implied//aws.ebs::data-gravity",
+            "trait": "data-gravity",
+            "level": "low",
+            "dimensions": [
+              "data"
+            ],
+            "origin": "binding",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "k8s/storageclass.yaml",
+                "line": 2,
+                "excerpt": "kind: StorageClass",
+                "source_kind": "kubernetes"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "implied//aws.ebs::operational-tooling-coupling",
+            "trait": "operational-tooling-coupling",
+            "level": "low",
+            "dimensions": [
+              "operational"
+            ],
+            "origin": "binding",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "k8s/storageclass.yaml",
+                "line": 2,
+                "excerpt": "kind: StorageClass",
+                "source_kind": "kubernetes"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.25,
+        "risk_by_dimension": {
+          "data": 0.25,
+          "operational": 0.25
+        },
+        "weight": 3.585,
+        "contribution": 0.8962,
+        "dependents_count": 5,
+        "dependents": [
+          "shop-aws//#/PersistentVolumeClaim/shop/orders-cache",
+          "shop-aws//#/Service/shop/orders-api",
+          "shop-aws//#apps/Deployment/shop/orders-api",
+          "shop-aws//#networking.k8s.io/Ingress/shop/orders-api",
+          "shop-aws//#storage.k8s.io/StorageClass/_/gp3"
+        ],
+        "wave": 1
+      },
+      {
+        "id": "implied//aws.elb",
+        "kind": "implied_service",
+        "type": "aws.elb",
+        "service": "aws.elb",
+        "class": "service",
+        "sources": [
+          "shop-aws//k8s/ingress.yaml"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/ingress.yaml",
+            "line": 2,
+            "excerpt": "kind: Ingress",
+            "source_kind": "kubernetes"
+          }
+        ],
+        "findings": [
+          {
+            "id": "implied//aws.elb::provider-network-construct",
+            "trait": "provider-network-construct",
+            "level": "low",
+            "dimensions": [
+              "technical",
+              "operational"
+            ],
+            "origin": "binding",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "k8s/ingress.yaml",
+                "line": 2,
+                "excerpt": "kind: Ingress",
+                "source_kind": "kubernetes"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "implied//aws.elb::provider-specific-annotations",
+            "trait": "provider-specific-annotations",
+            "level": "low",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "binding",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "k8s/ingress.yaml",
+                "line": 2,
+                "excerpt": "kind: Ingress",
+                "source_kind": "kubernetes"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.225,
+        "risk_by_dimension": {
+          "operational": 0.25,
+          "technical": 0.25
+        },
+        "weight": 2,
+        "contribution": 0.45,
+        "dependents_count": 1,
+        "dependents": [
+          "shop-aws//#networking.k8s.io/Ingress/shop/orders-api"
+        ],
+        "wave": 1
+      },
+      {
+        "id": "shop-aws//#/ConfigMap/shop/orders-config",
+        "kind": "resource",
+        "type": "/ConfigMap",
+        "native_address": "/ConfigMap/shop/orders-config",
+        "class": "neutral",
+        "sources": [
+          "shop-aws//k8s/configmap.yaml"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/configmap.yaml",
+            "line": 2,
+            "excerpt": "kind: ConfigMap",
+            "source_kind": "kubernetes"
+          }
+        ],
+        "findings": [],
+        "risk": 0,
+        "weight": 3,
+        "dependents_count": 3,
+        "dependents": [
+          "shop-aws//#/Service/shop/orders-api",
+          "shop-aws//#apps/Deployment/shop/orders-api",
+          "shop-aws//#networking.k8s.io/Ingress/shop/orders-api"
+        ],
+        "wave": 1
+      },
+      {
+        "id": "shop-aws//#/Namespace/_/shop",
+        "kind": "resource",
+        "type": "/Namespace",
+        "native_address": "/Namespace/_/shop",
+        "class": "neutral",
+        "sources": [
+          "shop-aws//k8s/namespace.yaml"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/namespace.yaml",
+            "line": 2,
+            "excerpt": "kind: Namespace",
+            "source_kind": "kubernetes"
+          }
+        ],
+        "findings": [],
+        "risk": 0,
+        "weight": 1,
+        "dependents_count": 0,
+        "wave": 1
+      },
+      {
+        "id": "shop-aws//#/PersistentVolumeClaim/shop/orders-cache",
+        "kind": "resource",
+        "type": "/PersistentVolumeClaim",
+        "native_address": "/PersistentVolumeClaim/shop/orders-cache",
+        "class": "neutral",
+        "sources": [
+          "shop-aws//k8s/pvc.yaml"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/pvc.yaml",
+            "line": 2,
+            "excerpt": "kind: PersistentVolumeClaim",
+            "source_kind": "kubernetes"
+          }
+        ],
+        "findings": [],
+        "risk": 0,
+        "weight": 3,
+        "dependents_count": 3,
+        "dependents": [
+          "shop-aws//#/Service/shop/orders-api",
+          "shop-aws//#apps/Deployment/shop/orders-api",
+          "shop-aws//#networking.k8s.io/Ingress/shop/orders-api"
+        ],
+        "wave": 3
+      },
+      {
+        "id": "shop-aws//#/Service/shop/orders-api",
+        "kind": "resource",
+        "type": "/Service",
+        "native_address": "/Service/shop/orders-api",
+        "class": "neutral",
+        "sources": [
+          "shop-aws//k8s/service.yaml"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/service.yaml",
+            "line": 2,
+            "excerpt": "kind: Service",
+            "source_kind": "kubernetes"
+          }
+        ],
+        "findings": [],
+        "risk": 0,
+        "weight": 2,
+        "dependents_count": 1,
+        "dependents": [
+          "shop-aws//#networking.k8s.io/Ingress/shop/orders-api"
+        ],
+        "wave": 5
+      },
+      {
+        "id": "shop-aws//#/ServiceAccount/shop/orders-api",
+        "kind": "resource",
+        "type": "/ServiceAccount",
+        "native_address": "/ServiceAccount/shop/orders-api",
+        "class": "neutral",
+        "sources": [
+          "shop-aws//k8s/serviceaccount.yaml"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/serviceaccount.yaml",
+            "line": 2,
+            "excerpt": "kind: ServiceAccount",
+            "source_kind": "kubernetes"
+          }
+        ],
+        "findings": [],
+        "risk": 0,
+        "weight": 3,
+        "dependents_count": 3,
+        "dependents": [
+          "shop-aws//#/Service/shop/orders-api",
+          "shop-aws//#apps/Deployment/shop/orders-api",
+          "shop-aws//#networking.k8s.io/Ingress/shop/orders-api"
+        ],
+        "wave": 2
+      },
+      {
+        "id": "shop-aws//#apps/Deployment/shop/orders-api",
+        "kind": "resource",
+        "type": "apps/Deployment",
+        "native_address": "apps/Deployment/shop/orders-api",
+        "class": "neutral",
+        "sources": [
+          "shop-aws//k8s/deployment.yaml"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/deployment.yaml",
+            "line": 2,
+            "excerpt": "kind: Deployment",
+            "source_kind": "kubernetes"
+          }
+        ],
+        "findings": [],
+        "risk": 0,
+        "weight": 2.585,
+        "dependents_count": 2,
+        "dependents": [
+          "shop-aws//#/Service/shop/orders-api",
+          "shop-aws//#networking.k8s.io/Ingress/shop/orders-api"
+        ],
+        "wave": 4
+      },
+      {
+        "id": "shop-aws//#networking.k8s.io/Ingress/shop/orders-api",
+        "kind": "resource",
+        "type": "networking.k8s.io/Ingress",
+        "native_address": "networking.k8s.io/Ingress/shop/orders-api",
+        "class": "neutral",
+        "sources": [
+          "shop-aws//k8s/ingress.yaml"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/ingress.yaml",
+            "line": 2,
+            "excerpt": "kind: Ingress",
+            "source_kind": "kubernetes"
+          }
+        ],
+        "findings": [],
+        "risk": 0,
+        "weight": 1,
+        "dependents_count": 0,
+        "wave": 6
+      },
+      {
+        "id": "shop-aws//#storage.k8s.io/StorageClass/_/gp3",
+        "kind": "resource",
+        "type": "storage.k8s.io/StorageClass",
+        "native_address": "storage.k8s.io/StorageClass/_/gp3",
+        "class": "neutral",
+        "sources": [
+          "shop-aws//k8s/storageclass.yaml"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/storageclass.yaml",
+            "line": 2,
+            "excerpt": "kind: StorageClass",
+            "source_kind": "kubernetes"
+          }
+        ],
+        "findings": [],
+        "risk": 0,
+        "weight": 3.3219,
+        "dependents_count": 4,
+        "dependents": [
+          "shop-aws//#/PersistentVolumeClaim/shop/orders-cache",
+          "shop-aws//#/Service/shop/orders-api",
+          "shop-aws//#apps/Deployment/shop/orders-api",
+          "shop-aws//#networking.k8s.io/Ingress/shop/orders-api"
+        ],
+        "wave": 2
+      },
+      {
+        "id": "shop-aws//.github/workflows/deploy.yml#action/actions/checkout",
+        "kind": "resource",
+        "type": "ci_action",
+        "native_address": "action/actions/checkout",
+        "class": "neutral",
+        "sources": [
+          "shop-aws//.github/workflows/deploy.yml"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": ".github/workflows/deploy.yml",
+            "line": 15,
+            "excerpt": "- uses: actions/checkout@v4",
+            "source_kind": "github-actions"
+          }
+        ],
+        "findings": [],
+        "risk": 0,
+        "weight": 1,
+        "dependents_count": 0,
+        "wave": 1
+      },
+      {
+        "id": "shop-aws//.github/workflows/deploy.yml#action/aws-actions/amazon-ecr-login",
+        "kind": "resource",
+        "type": "ci_action",
+        "native_address": "action/aws-actions/amazon-ecr-login",
+        "service": "aws.ecr",
+        "class": "service",
+        "sources": [
+          "shop-aws//.github/workflows/deploy.yml"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": ".github/workflows/deploy.yml",
+            "line": 20,
+            "excerpt": "- uses: aws-actions/amazon-ecr-login@v2",
+            "source_kind": "github-actions"
+          }
+        ],
+        "findings": [
+          {
+            "id": "shop-aws//.github/workflows/deploy.yml#action/aws-actions/amazon-ecr-login::provider-registry",
+            "trait": "provider-registry",
+            "level": "low",
+            "dimensions": [
+              "operational"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": ".github/workflows/deploy.yml",
+                "line": 20,
+                "excerpt": "- uses: aws-actions/amazon-ecr-login@v2",
+                "source_kind": "github-actions"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.175,
+        "risk_by_dimension": {
+          "operational": 0.25
+        },
+        "weight": 1,
+        "contribution": 0.175,
+        "dependents_count": 0,
+        "wave": 1
+      },
+      {
+        "id": "shop-aws//.github/workflows/deploy.yml#action/aws-actions/configure-aws-credentials",
+        "kind": "resource",
+        "type": "ci_action",
+        "native_address": "action/aws-actions/configure-aws-credentials",
+        "service": "aws.iam",
+        "class": "service",
+        "sources": [
+          "shop-aws//.github/workflows/deploy.yml"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": ".github/workflows/deploy.yml",
+            "line": 16,
+            "excerpt": "- uses: aws-actions/configure-aws-credentials@v4",
+            "source_kind": "github-actions"
+          }
+        ],
+        "findings": [
+          {
+            "id": "shop-aws//.github/workflows/deploy.yml#action/aws-actions/configure-aws-credentials::proprietary-iam-model",
+            "trait": "proprietary-iam-model",
+            "level": "medium",
+            "dimensions": [
+              "technical",
+              "operational"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": ".github/workflows/deploy.yml",
+                "line": 16,
+                "excerpt": "- uses: aws-actions/configure-aws-credentials@v4",
+                "source_kind": "github-actions"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "shop-aws//.github/workflows/deploy.yml#action/aws-actions/configure-aws-credentials::provider-ci-auth",
+            "trait": "provider-ci-auth",
+            "level": "low",
+            "dimensions": [
+              "operational"
+            ],
+            "origin": "rule:aws.iam.ci-auth",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": ".github/workflows/deploy.yml",
+                "line": 16,
+                "excerpt": "- uses: aws-actions/configure-aws-credentials@v4",
+                "source_kind": "github-actions"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "shop-aws//.github/workflows/deploy.yml#action/aws-actions/configure-aws-credentials::skills-specialization",
+            "trait": "skills-specialization",
+            "level": "low",
+            "dimensions": [
+              "skills"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": ".github/workflows/deploy.yml",
+                "line": 16,
+                "excerpt": "- uses: aws-actions/configure-aws-credentials@v4",
+                "source_kind": "github-actions"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.45,
+        "risk_by_dimension": {
+          "operational": 0.5,
+          "skills": 0.25,
+          "technical": 0.5
+        },
+        "weight": 3.3219,
+        "contribution": 1.4949,
+        "dependents_count": 4,
+        "dependents": [
+          "shop-aws//#/Service/shop/orders-api",
+          "shop-aws//#/ServiceAccount/shop/orders-api",
+          "shop-aws//#apps/Deployment/shop/orders-api",
+          "shop-aws//#networking.k8s.io/Ingress/shop/orders-api"
+        ],
+        "wave": 1
+      },
+      {
+        "id": "shop-aws//infra#aws_cognito_user_pool.main",
+        "kind": "resource",
+        "type": "aws_cognito_user_pool",
+        "native_address": "aws_cognito_user_pool.main",
+        "service": "aws.cognito",
+        "class": "service",
+        "sources": [
+          "shop-aws//infra/auth.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/auth.tf",
+            "line": 1,
+            "excerpt": "resource \"aws_cognito_user_pool\" \"main\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "shop-aws//infra#aws_cognito_user_pool.main::non-exportable-data",
+            "trait": "non-exportable-data",
+            "level": "high",
+            "dimensions": [
+              "data"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/auth.tf",
+                "line": 1,
+                "excerpt": "resource \"aws_cognito_user_pool\" \"main\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "shop-aws//infra#aws_cognito_user_pool.main::proprietary-api",
+            "trait": "proprietary-api",
+            "level": "high",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/auth.tf",
+                "line": 1,
+                "excerpt": "resource \"aws_cognito_user_pool\" \"main\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "shop-aws//infra#aws_cognito_user_pool.main::proprietary-sdk",
+            "trait": "proprietary-sdk",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/auth.tf",
+                "line": 1,
+                "excerpt": "resource \"aws_cognito_user_pool\" \"main\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.8,
+        "risk_by_dimension": {
+          "data": 0.8,
+          "technical": 0.8
+        },
+        "weight": 2,
+        "contribution": 1.6,
+        "dependents_count": 1,
+        "dependents": [
+          "shop-aws//infra#aws_cognito_user_pool_client.web"
+        ],
+        "wave": 1
+      },
+      {
+        "id": "shop-aws//infra#aws_cognito_user_pool_client.web",
+        "kind": "resource",
+        "type": "aws_cognito_user_pool_client",
+        "native_address": "aws_cognito_user_pool_client.web",
+        "service": "aws.cognito",
+        "class": "service",
+        "sources": [
+          "shop-aws//infra/auth.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/auth.tf",
+            "line": 9,
+            "excerpt": "resource \"aws_cognito_user_pool_client\" \"web\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "shop-aws//infra#aws_cognito_user_pool_client.web::non-exportable-data",
+            "trait": "non-exportable-data",
+            "level": "high",
+            "dimensions": [
+              "data"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/auth.tf",
+                "line": 9,
+                "excerpt": "resource \"aws_cognito_user_pool_client\" \"web\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "shop-aws//infra#aws_cognito_user_pool_client.web::proprietary-api",
+            "trait": "proprietary-api",
+            "level": "high",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/auth.tf",
+                "line": 9,
+                "excerpt": "resource \"aws_cognito_user_pool_client\" \"web\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "shop-aws//infra#aws_cognito_user_pool_client.web::proprietary-sdk",
+            "trait": "proprietary-sdk",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/auth.tf",
+                "line": 9,
+                "excerpt": "resource \"aws_cognito_user_pool_client\" \"web\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.8,
+        "risk_by_dimension": {
+          "data": 0.8,
+          "technical": 0.8
+        },
+        "weight": 1,
+        "contribution": 0.8,
+        "dependents_count": 0,
+        "wave": 2
+      },
+      {
+        "id": "shop-aws//infra#aws_dynamodb_table.orders",
+        "kind": "resource",
+        "type": "aws_dynamodb_table",
+        "native_address": "aws_dynamodb_table.orders",
+        "service": "aws.dynamodb",
+        "class": "service",
+        "sources": [
+          "shop-aws//infra/db.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/db.tf",
+            "line": 1,
+            "excerpt": "resource \"aws_dynamodb_table\" \"orders\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "shop-aws//infra#aws_dynamodb_table.orders::managed-change-stream",
+            "trait": "managed-change-stream",
+            "level": "high",
+            "dimensions": [
+              "technical",
+              "data"
+            ],
+            "origin": "rule:aws.dynamodb.streams",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/db.tf",
+                "line": 1,
+                "excerpt": "resource \"aws_dynamodb_table\" \"orders\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "shop-aws//infra#aws_dynamodb_table.orders::proprietary-api",
+            "trait": "proprietary-api",
+            "level": "high",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/db.tf",
+                "line": 1,
+                "excerpt": "resource \"aws_dynamodb_table\" \"orders\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "shop-aws//infra#aws_dynamodb_table.orders::proprietary-data-model",
+            "trait": "proprietary-data-model",
+            "level": "high",
+            "dimensions": [
+              "technical",
+              "data"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/db.tf",
+                "line": 1,
+                "excerpt": "resource \"aws_dynamodb_table\" \"orders\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "shop-aws//infra#aws_dynamodb_table.orders::proprietary-sdk",
+            "trait": "proprietary-sdk",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/db.tf",
+                "line": 1,
+                "excerpt": "resource \"aws_dynamodb_table\" \"orders\" {",
+                "source_kind": "terraform"
+              },
+              {
+                "repo": "shop-aws",
+                "path": "services/orders/package.json",
+                "line": 7,
+                "excerpt": "\"@aws-sdk/client-dynamodb\": \"^3.600.0\",",
+                "source_kind": "package-manifest"
+              },
+              {
+                "repo": "shop-aws",
+                "path": "services/orders/package.json",
+                "line": 8,
+                "excerpt": "\"@aws-sdk/lib-dynamodb\": \"^3.600.0\",",
+                "source_kind": "package-manifest"
+              },
+              {
+                "repo": "shop-aws",
+                "path": "services/orders/src/handler.ts",
+                "line": 2,
+                "excerpt": "import { AttributeValue } from \"@aws-sdk/client-dynamodb\";",
+                "source_kind": "code"
+              },
+              {
+                "repo": "shop-aws",
+                "path": "services/orders/src/repo.ts",
+                "line": 1,
+                "excerpt": "import { DynamoDBClient } from \"@aws-sdk/client-dynamodb\";",
+                "source_kind": "code"
+              },
+              {
+                "repo": "shop-aws",
+                "path": "services/orders/src/repo.ts",
+                "line": 2,
+                "excerpt": "import { DynamoDBDocumentClient, GetCommand, PutCommand } from \"@aws-sdk/lib-dynamodb\";",
+                "source_kind": "code"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.8,
+        "risk_by_dimension": {
+          "data": 0.8,
+          "technical": 0.8
+        },
+        "weight": 3.3219,
+        "contribution": 2.6575,
+        "dependents_count": 4,
+        "dependents": [
+          "shop-aws//infra#aws_lambda_event_source_mapping.events_queue",
+          "shop-aws//infra#aws_lambda_event_source_mapping.orders_stream",
+          "shop-aws//infra#aws_lambda_function.order_processor",
+          "shop-aws//services/orders#component"
+        ],
+        "wave": 1
+      },
+      {
+        "id": "shop-aws//infra#aws_iam_role.lambda",
+        "kind": "resource",
+        "type": "aws_iam_role",
+        "native_address": "aws_iam_role.lambda",
+        "service": "aws.iam",
+        "class": "service",
+        "sources": [
+          "shop-aws//infra/fn.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 1,
+            "excerpt": "resource \"aws_iam_role\" \"lambda\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "shop-aws//infra#aws_iam_role.lambda::proprietary-iam-model",
+            "trait": "proprietary-iam-model",
+            "level": "medium",
+            "dimensions": [
+              "technical",
+              "operational"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/fn.tf",
+                "line": 1,
+                "excerpt": "resource \"aws_iam_role\" \"lambda\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "shop-aws//infra#aws_iam_role.lambda::skills-specialization",
+            "trait": "skills-specialization",
+            "level": "low",
+            "dimensions": [
+              "skills"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/fn.tf",
+                "line": 1,
+                "excerpt": "resource \"aws_iam_role\" \"lambda\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.45,
+        "risk_by_dimension": {
+          "operational": 0.5,
+          "skills": 0.25,
+          "technical": 0.5
+        },
+        "weight": 4,
+        "contribution": 1.8,
+        "dependents_count": 7,
+        "dependents": [
+          "shop-aws//#/Service/shop/orders-api",
+          "shop-aws//#/ServiceAccount/shop/orders-api",
+          "shop-aws//#apps/Deployment/shop/orders-api",
+          "shop-aws//#networking.k8s.io/Ingress/shop/orders-api",
+          "shop-aws//infra#aws_lambda_event_source_mapping.events_queue",
+          "shop-aws//infra#aws_lambda_event_source_mapping.orders_stream",
+          "shop-aws//infra#aws_lambda_function.order_processor"
+        ],
+        "wave": 1
+      },
+      {
+        "id": "shop-aws//infra#aws_lambda_event_source_mapping.events_queue",
+        "kind": "resource",
+        "type": "aws_lambda_event_source_mapping",
+        "native_address": "aws_lambda_event_source_mapping.events_queue",
+        "service": "aws.lambda",
+        "class": "service",
+        "sources": [
+          "shop-aws//infra/fn.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 40,
+            "excerpt": "resource \"aws_lambda_event_source_mapping\" \"events_queue\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "shop-aws//infra#aws_lambda_event_source_mapping.events_queue::managed-change-stream",
+            "trait": "managed-change-stream",
+            "level": "medium",
+            "dimensions": [
+              "technical",
+              "data"
+            ],
+            "origin": "rule:aws.lambda.event-source-mapping",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/fn.tf",
+                "line": 40,
+                "excerpt": "resource \"aws_lambda_event_source_mapping\" \"events_queue\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "shop-aws//infra#aws_lambda_event_source_mapping.events_queue::proprietary-event-model",
+            "trait": "proprietary-event-model",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/fn.tf",
+                "line": 40,
+                "excerpt": "resource \"aws_lambda_event_source_mapping\" \"events_queue\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "shop-aws//infra#aws_lambda_event_source_mapping.events_queue::proprietary-runtime",
+            "trait": "proprietary-runtime",
+            "level": "high",
+            "dimensions": [
+              "technical",
+              "operational"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/fn.tf",
+                "line": 40,
+                "excerpt": "resource \"aws_lambda_event_source_mapping\" \"events_queue\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "shop-aws//infra#aws_lambda_event_source_mapping.events_queue::proprietary-sdk",
+            "trait": "proprietary-sdk",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/fn.tf",
+                "line": 40,
+                "excerpt": "resource \"aws_lambda_event_source_mapping\" \"events_queue\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.72,
+        "risk_by_dimension": {
+          "data": 0.5,
+          "operational": 0.8,
+          "technical": 0.8
+        },
+        "weight": 1,
+        "contribution": 0.72,
+        "dependents_count": 0,
+        "wave": 4
+      },
+      {
+        "id": "shop-aws//infra#aws_lambda_event_source_mapping.orders_stream",
+        "kind": "resource",
+        "type": "aws_lambda_event_source_mapping",
+        "native_address": "aws_lambda_event_source_mapping.orders_stream",
+        "service": "aws.lambda",
+        "class": "service",
+        "sources": [
+          "shop-aws//infra/fn.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 34,
+            "excerpt": "resource \"aws_lambda_event_source_mapping\" \"orders_stream\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "shop-aws//infra#aws_lambda_event_source_mapping.orders_stream::managed-change-stream",
+            "trait": "managed-change-stream",
+            "level": "medium",
+            "dimensions": [
+              "technical",
+              "data"
+            ],
+            "origin": "rule:aws.lambda.event-source-mapping",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/fn.tf",
+                "line": 34,
+                "excerpt": "resource \"aws_lambda_event_source_mapping\" \"orders_stream\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "shop-aws//infra#aws_lambda_event_source_mapping.orders_stream::proprietary-event-model",
+            "trait": "proprietary-event-model",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/fn.tf",
+                "line": 34,
+                "excerpt": "resource \"aws_lambda_event_source_mapping\" \"orders_stream\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "shop-aws//infra#aws_lambda_event_source_mapping.orders_stream::proprietary-runtime",
+            "trait": "proprietary-runtime",
+            "level": "high",
+            "dimensions": [
+              "technical",
+              "operational"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/fn.tf",
+                "line": 34,
+                "excerpt": "resource \"aws_lambda_event_source_mapping\" \"orders_stream\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "shop-aws//infra#aws_lambda_event_source_mapping.orders_stream::proprietary-sdk",
+            "trait": "proprietary-sdk",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/fn.tf",
+                "line": 34,
+                "excerpt": "resource \"aws_lambda_event_source_mapping\" \"orders_stream\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.72,
+        "risk_by_dimension": {
+          "data": 0.5,
+          "operational": 0.8,
+          "technical": 0.8
+        },
+        "weight": 1,
+        "contribution": 0.72,
+        "dependents_count": 0,
+        "wave": 4
+      },
+      {
+        "id": "shop-aws//infra#aws_lambda_function.order_processor",
+        "kind": "resource",
+        "type": "aws_lambda_function",
+        "native_address": "aws_lambda_function.order_processor",
+        "service": "aws.lambda",
+        "class": "service",
+        "sources": [
+          "shop-aws//infra/fn.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 14,
+            "excerpt": "resource \"aws_lambda_function\" \"order_processor\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "shop-aws//infra#aws_lambda_function.order_processor::proprietary-event-model",
+            "trait": "proprietary-event-model",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/fn.tf",
+                "line": 14,
+                "excerpt": "resource \"aws_lambda_function\" \"order_processor\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "shop-aws//infra#aws_lambda_function.order_processor::proprietary-runtime",
+            "trait": "proprietary-runtime",
+            "level": "high",
+            "dimensions": [
+              "technical",
+              "operational"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/fn.tf",
+                "line": 14,
+                "excerpt": "resource \"aws_lambda_function\" \"order_processor\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "shop-aws//infra#aws_lambda_function.order_processor::proprietary-sdk",
+            "trait": "proprietary-sdk",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/fn.tf",
+                "line": 14,
+                "excerpt": "resource \"aws_lambda_function\" \"order_processor\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.72,
+        "risk_by_dimension": {
+          "operational": 0.8,
+          "technical": 0.8
+        },
+        "weight": 2.585,
+        "contribution": 1.8612,
+        "dependents_count": 2,
+        "dependents": [
+          "shop-aws//infra#aws_lambda_event_source_mapping.events_queue",
+          "shop-aws//infra#aws_lambda_event_source_mapping.orders_stream"
+        ],
+        "wave": 3
+      },
+      {
+        "id": "shop-aws//infra#aws_security_group.app",
+        "kind": "resource",
+        "type": "aws_security_group",
+        "native_address": "aws_security_group.app",
+        "service": "aws.vpc",
+        "class": "service",
+        "sources": [
+          "shop-aws//infra/network.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/network.tf",
+            "line": 22,
+            "excerpt": "resource \"aws_security_group\" \"app\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "shop-aws//infra#aws_security_group.app::provider-network-construct",
+            "trait": "provider-network-construct",
+            "level": "medium",
+            "dimensions": [
+              "technical",
+              "operational"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/network.tf",
+                "line": 22,
+                "excerpt": "resource \"aws_security_group\" \"app\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.45,
+        "risk_by_dimension": {
+          "operational": 0.5,
+          "technical": 0.5
+        },
+        "weight": 3,
+        "contribution": 1.35,
+        "dependents_count": 3,
+        "dependents": [
+          "shop-aws//infra#aws_lambda_event_source_mapping.events_queue",
+          "shop-aws//infra#aws_lambda_event_source_mapping.orders_stream",
+          "shop-aws//infra#aws_lambda_function.order_processor"
+        ],
+        "wave": 2
+      },
+      {
+        "id": "shop-aws//infra#aws_sqs_queue.events",
+        "kind": "resource",
+        "type": "aws_sqs_queue",
+        "native_address": "aws_sqs_queue.events",
+        "service": "aws.sqs",
+        "class": "service",
+        "sources": [
+          "shop-aws//infra/queue.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/queue.tf",
+            "line": 1,
+            "excerpt": "resource \"aws_sqs_queue\" \"events\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "shop-aws//infra#aws_sqs_queue.events::proprietary-api",
+            "trait": "proprietary-api",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/queue.tf",
+                "line": 1,
+                "excerpt": "resource \"aws_sqs_queue\" \"events\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "shop-aws//infra#aws_sqs_queue.events::proprietary-sdk",
+            "trait": "proprietary-sdk",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/queue.tf",
+                "line": 1,
+                "excerpt": "resource \"aws_sqs_queue\" \"events\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.45,
+        "risk_by_dimension": {
+          "technical": 0.5
+        },
+        "weight": 3,
+        "contribution": 1.35,
+        "dependents_count": 3,
+        "dependents": [
+          "shop-aws//infra#aws_lambda_event_source_mapping.events_queue",
+          "shop-aws//infra#aws_lambda_event_source_mapping.orders_stream",
+          "shop-aws//infra#aws_lambda_function.order_processor"
+        ],
+        "wave": 1
+      },
+      {
+        "id": "shop-aws//infra#aws_ssm_parameter.db",
+        "kind": "resource",
+        "type": "aws_ssm_parameter",
+        "native_address": "aws_ssm_parameter.db",
+        "service": "aws.ssm-parameter-store",
+        "class": "service",
+        "sources": [
+          "shop-aws//infra/vars.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/vars.tf",
+            "line": 7,
+            "excerpt": "resource \"aws_ssm_parameter\" \"db\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "shop-aws//infra#aws_ssm_parameter.db::proprietary-api",
+            "trait": "proprietary-api",
+            "level": "low",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/vars.tf",
+                "line": 7,
+                "excerpt": "resource \"aws_ssm_parameter\" \"db\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "shop-aws//infra#aws_ssm_parameter.db::proprietary-sdk",
+            "trait": "proprietary-sdk",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/vars.tf",
+                "line": 7,
+                "excerpt": "resource \"aws_ssm_parameter\" \"db\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.45,
+        "risk_by_dimension": {
+          "technical": 0.5
+        },
+        "weight": 1,
+        "contribution": 0.45,
+        "dependents_count": 0,
+        "wave": 1
+      },
+      {
+        "id": "shop-aws//infra#aws_subnet.a",
+        "kind": "resource",
+        "type": "aws_subnet",
+        "native_address": "aws_subnet.a",
+        "service": "aws.vpc",
+        "class": "service",
+        "sources": [
+          "shop-aws//infra/network.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/network.tf",
+            "line": 10,
+            "excerpt": "resource \"aws_subnet\" \"a\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "shop-aws//infra#aws_subnet.a::provider-network-construct",
+            "trait": "provider-network-construct",
+            "level": "medium",
+            "dimensions": [
+              "technical",
+              "operational"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/network.tf",
+                "line": 10,
+                "excerpt": "resource \"aws_subnet\" \"a\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.45,
+        "risk_by_dimension": {
+          "operational": 0.5,
+          "technical": 0.5
+        },
+        "weight": 3,
+        "contribution": 1.35,
+        "dependents_count": 3,
+        "dependents": [
+          "shop-aws//infra#aws_lambda_event_source_mapping.events_queue",
+          "shop-aws//infra#aws_lambda_event_source_mapping.orders_stream",
+          "shop-aws//infra#aws_lambda_function.order_processor"
+        ],
+        "wave": 2
+      },
+      {
+        "id": "shop-aws//infra#aws_subnet.b",
+        "kind": "resource",
+        "type": "aws_subnet",
+        "native_address": "aws_subnet.b",
+        "service": "aws.vpc",
+        "class": "service",
+        "sources": [
+          "shop-aws//infra/network.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/network.tf",
+            "line": 16,
+            "excerpt": "resource \"aws_subnet\" \"b\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "shop-aws//infra#aws_subnet.b::provider-network-construct",
+            "trait": "provider-network-construct",
+            "level": "medium",
+            "dimensions": [
+              "technical",
+              "operational"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/network.tf",
+                "line": 16,
+                "excerpt": "resource \"aws_subnet\" \"b\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.45,
+        "risk_by_dimension": {
+          "operational": 0.5,
+          "technical": 0.5
+        },
+        "weight": 3,
+        "contribution": 1.35,
+        "dependents_count": 3,
+        "dependents": [
+          "shop-aws//infra#aws_lambda_event_source_mapping.events_queue",
+          "shop-aws//infra#aws_lambda_event_source_mapping.orders_stream",
+          "shop-aws//infra#aws_lambda_function.order_processor"
+        ],
+        "wave": 2
+      },
+      {
+        "id": "shop-aws//infra#aws_vpc.main",
+        "kind": "resource",
+        "type": "aws_vpc",
+        "native_address": "aws_vpc.main",
+        "service": "aws.vpc",
+        "class": "service",
+        "sources": [
+          "shop-aws//infra/network.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/network.tf",
+            "line": 1,
+            "excerpt": "resource \"aws_vpc\" \"main\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "shop-aws//infra#aws_vpc.main::provider-network-construct",
+            "trait": "provider-network-construct",
+            "level": "medium",
+            "dimensions": [
+              "technical",
+              "operational"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "infra/network.tf",
+                "line": 1,
+                "excerpt": "resource \"aws_vpc\" \"main\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.45,
+        "risk_by_dimension": {
+          "operational": 0.5,
+          "technical": 0.5
+        },
+        "weight": 3.8074,
+        "contribution": 1.7133,
+        "dependents_count": 6,
+        "dependents": [
+          "shop-aws//infra#aws_lambda_event_source_mapping.events_queue",
+          "shop-aws//infra#aws_lambda_event_source_mapping.orders_stream",
+          "shop-aws//infra#aws_lambda_function.order_processor",
+          "shop-aws//infra#aws_security_group.app",
+          "shop-aws//infra#aws_subnet.a",
+          "shop-aws//infra#aws_subnet.b"
+        ],
+        "wave": 1
+      },
+      {
+        "id": "shop-aws//infra#random_id.suffix",
+        "kind": "resource",
+        "type": "random_id",
+        "native_address": "random_id.suffix",
+        "class": "context",
+        "sources": [
+          "shop-aws//infra/vars.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/vars.tf",
+            "line": 13,
+            "excerpt": "resource \"random_id\" \"suffix\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [],
+        "risk": 0,
+        "weight": 1,
+        "dependents_count": 0,
+        "wave": 1
+      },
+      {
+        "id": "shop-aws//services/orders#component",
+        "kind": "component",
+        "type": "component",
+        "native_address": "services/orders",
+        "class": "component",
+        "sources": [
+          "shop-aws//services/orders/package.json"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "services/orders/package.json",
+            "line": 1,
+            "excerpt": "{",
+            "source_kind": "package-manifest"
+          }
+        ],
+        "findings": [],
+        "risk": 0,
+        "weight": 1,
+        "dependents_count": 0,
+        "wave": 2
+      },
+      {
+        "id": "shop-aws//services/orders/Dockerfile#image/gcr.io/distroless/nodejs20",
+        "kind": "resource",
+        "type": "container_image",
+        "native_address": "image/gcr.io/distroless/nodejs20",
+        "service": "gcp.artifact-registry",
+        "class": "service",
+        "sources": [
+          "shop-aws//services/orders/Dockerfile"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "services/orders/Dockerfile",
+            "line": 8,
+            "excerpt": "FROM gcr.io/distroless/nodejs20",
+            "source_kind": "dockerfile"
+          }
+        ],
+        "findings": [
+          {
+            "id": "shop-aws//services/orders/Dockerfile#image/gcr.io/distroless/nodejs20::provider-registry",
+            "trait": "provider-registry",
+            "level": "low",
+            "dimensions": [
+              "operational"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "services/orders/Dockerfile",
+                "line": 8,
+                "excerpt": "FROM gcr.io/distroless/nodejs20",
+                "source_kind": "dockerfile"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.175,
+        "risk_by_dimension": {
+          "operational": 0.25
+        },
+        "weight": 1,
+        "contribution": 0.175,
+        "dependents_count": 0,
+        "wave": 1
+      },
+      {
+        "id": "shop-aws//services/orders/Dockerfile#image/public.ecr.aws/docker/library/node:20-alpine",
+        "kind": "resource",
+        "type": "container_image",
+        "native_address": "image/public.ecr.aws/docker/library/node:20-alpine",
+        "service": "aws.ecr",
+        "class": "service",
+        "sources": [
+          "shop-aws//services/orders/Dockerfile"
+        ],
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "services/orders/Dockerfile",
+            "line": 1,
+            "excerpt": "FROM public.ecr.aws/docker/library/node:20-alpine AS build",
+            "source_kind": "dockerfile"
+          }
+        ],
+        "findings": [
+          {
+            "id": "shop-aws//services/orders/Dockerfile#image/public.ecr.aws/docker/library/node:20-alpine::provider-registry",
+            "trait": "provider-registry",
+            "level": "low",
+            "dimensions": [
+              "operational"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "shop-aws",
+                "path": "services/orders/Dockerfile",
+                "line": 1,
+                "excerpt": "FROM public.ecr.aws/docker/library/node:20-alpine AS build",
+                "source_kind": "dockerfile"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.175,
+        "risk_by_dimension": {
+          "operational": 0.25
+        },
+        "weight": 1,
+        "contribution": 0.175,
+        "dependents_count": 0,
+        "wave": 1
+      }
+    ],
+    "edges": [
+      {
+        "from": "shop-aws//#/PersistentVolumeClaim/shop/orders-cache",
+        "to": "shop-aws//#storage.k8s.io/StorageClass/_/gp3",
+        "kind": "reference",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/pvc.yaml",
+            "line": 7,
+            "excerpt": "storageClassName: gp3",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//#/Service/shop/orders-api",
+        "to": "shop-aws//#apps/Deployment/shop/orders-api",
+        "kind": "reference",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/service.yaml",
+            "line": 7,
+            "excerpt": "selector:",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//#/ServiceAccount/shop/orders-api",
+        "to": "shop-aws//.github/workflows/deploy.yml#action/aws-actions/configure-aws-credentials",
+        "kind": "binding",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/serviceaccount.yaml",
+            "line": 2,
+            "excerpt": "kind: ServiceAccount",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//#/ServiceAccount/shop/orders-api",
+        "to": "shop-aws//infra#aws_iam_role.lambda",
+        "kind": "binding",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/serviceaccount.yaml",
+            "line": 2,
+            "excerpt": "kind: ServiceAccount",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//#apps/Deployment/shop/orders-api",
+        "to": "shop-aws//#/ConfigMap/shop/orders-config",
+        "kind": "reference",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/deployment.yaml",
+            "line": 26,
+            "excerpt": "name: orders-config",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//#apps/Deployment/shop/orders-api",
+        "to": "shop-aws//#/PersistentVolumeClaim/shop/orders-cache",
+        "kind": "reference",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/deployment.yaml",
+            "line": 33,
+            "excerpt": "claimName: orders-cache",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//#apps/Deployment/shop/orders-api",
+        "to": "shop-aws//#/ServiceAccount/shop/orders-api",
+        "kind": "reference",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/deployment.yaml",
+            "line": 18,
+            "excerpt": "serviceAccountName: orders-api",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//#networking.k8s.io/Ingress/shop/orders-api",
+        "to": "implied//aws.elb",
+        "kind": "binding",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/ingress.yaml",
+            "line": 2,
+            "excerpt": "kind: Ingress",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//#networking.k8s.io/Ingress/shop/orders-api",
+        "to": "shop-aws//#/Service/shop/orders-api",
+        "kind": "reference",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/ingress.yaml",
+            "line": 18,
+            "excerpt": "name: orders-api",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//#storage.k8s.io/StorageClass/_/gp3",
+        "to": "implied//aws.ebs",
+        "kind": "binding",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "k8s/storageclass.yaml",
+            "line": 2,
+            "excerpt": "kind: StorageClass",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_cognito_user_pool_client.web",
+        "to": "shop-aws//infra#aws_cognito_user_pool.main",
+        "kind": "containment",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/auth.tf",
+            "line": 11,
+            "excerpt": "user_pool_id = aws_cognito_user_pool.main.id",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_lambda_event_source_mapping.events_queue",
+        "to": "shop-aws//infra#aws_lambda_function.order_processor",
+        "kind": "data-flow",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 42,
+            "excerpt": "function_name    = aws_lambda_function.order_processor.arn",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_lambda_event_source_mapping.events_queue",
+        "to": "shop-aws//infra#aws_sqs_queue.events",
+        "kind": "data-flow",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 41,
+            "excerpt": "event_source_arn = aws_sqs_queue.events.arn",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_lambda_event_source_mapping.orders_stream",
+        "to": "shop-aws//infra#aws_dynamodb_table.orders",
+        "kind": "data-flow",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 35,
+            "excerpt": "event_source_arn  = aws_dynamodb_table.orders.stream_arn",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_lambda_event_source_mapping.orders_stream",
+        "to": "shop-aws//infra#aws_lambda_function.order_processor",
+        "kind": "data-flow",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 36,
+            "excerpt": "function_name     = aws_lambda_function.order_processor.arn",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_lambda_function.order_processor",
+        "to": "shop-aws//infra#aws_dynamodb_table.orders",
+        "kind": "reference",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 28,
+            "excerpt": "TABLE_NAME = aws_dynamodb_table.orders.name",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_lambda_function.order_processor",
+        "to": "shop-aws//infra#aws_iam_role.lambda",
+        "kind": "binding",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 16,
+            "excerpt": "role          = aws_iam_role.lambda.arn",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_lambda_function.order_processor",
+        "to": "shop-aws//infra#aws_security_group.app",
+        "kind": "containment",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 23,
+            "excerpt": "security_group_ids = [aws_security_group.app.id]",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_lambda_function.order_processor",
+        "to": "shop-aws//infra#aws_sqs_queue.events",
+        "kind": "reference",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 29,
+            "excerpt": "QUEUE_URL  = aws_sqs_queue.events.url",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_lambda_function.order_processor",
+        "to": "shop-aws//infra#aws_subnet.a",
+        "kind": "containment",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 22,
+            "excerpt": "subnet_ids         = [aws_subnet.a.id, aws_subnet.b.id]",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_lambda_function.order_processor",
+        "to": "shop-aws//infra#aws_subnet.b",
+        "kind": "containment",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/fn.tf",
+            "line": 22,
+            "excerpt": "subnet_ids         = [aws_subnet.a.id, aws_subnet.b.id]",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_security_group.app",
+        "to": "shop-aws//infra#aws_vpc.main",
+        "kind": "containment",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/network.tf",
+            "line": 24,
+            "excerpt": "vpc_id = aws_vpc.main.id",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_subnet.a",
+        "to": "shop-aws//infra#aws_vpc.main",
+        "kind": "containment",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/network.tf",
+            "line": 11,
+            "excerpt": "vpc_id            = aws_vpc.main.id",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//infra#aws_subnet.b",
+        "to": "shop-aws//infra#aws_vpc.main",
+        "kind": "containment",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "infra/network.tf",
+            "line": 17,
+            "excerpt": "vpc_id            = aws_vpc.main.id",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "shop-aws//services/orders#component",
+        "to": "shop-aws//infra#aws_dynamodb_table.orders",
+        "kind": "usage",
+        "confidence": "service-level",
+        "evidence": [
+          {
+            "repo": "shop-aws",
+            "path": "services/orders/package.json",
+            "line": 7,
+            "excerpt": "\"@aws-sdk/client-dynamodb\": \"^3.600.0\",",
+            "source_kind": "package-manifest"
+          },
+          {
+            "repo": "shop-aws",
+            "path": "services/orders/package.json",
+            "line": 8,
+            "excerpt": "\"@aws-sdk/lib-dynamodb\": \"^3.600.0\",",
+            "source_kind": "package-manifest"
+          },
+          {
+            "repo": "shop-aws",
+            "path": "services/orders/src/handler.ts",
+            "line": 2,
+            "excerpt": "import { AttributeValue } from \"@aws-sdk/client-dynamodb\";",
+            "source_kind": "code"
+          },
+          {
+            "repo": "shop-aws",
+            "path": "services/orders/src/repo.ts",
+            "line": 1,
+            "excerpt": "import { DynamoDBClient } from \"@aws-sdk/client-dynamodb\";",
+            "source_kind": "code"
+          },
+          {
+            "repo": "shop-aws",
+            "path": "services/orders/src/repo.ts",
+            "line": 2,
+            "excerpt": "import { DynamoDBDocumentClient, GetCommand, PutCommand } from \"@aws-sdk/lib-dynamodb\";",
+            "source_kind": "code"
+          }
+        ]
+      }
+    ],
+    "groups": [],
+    "sccs": []
+  },
+  "analysis": {
+    "status": "ok",
+    "index": 33,
+    "index_without_exceptions": 33,
+    "grade": "C",
+    "confidence": "normal",
+    "dimensions": {
+      "data": 11,
+      "economic": null,
+      "operational": 25,
+      "skills": 3,
+      "technical": 34
+    },
+    "anchors": [
+      {
+        "rank": 1,
+        "node": "shop-aws//infra#aws_dynamodb_table.orders",
+        "contribution": 2.6575,
+        "dependents_count": 4,
+        "components_using": 1,
+        "sdk_files": 3,
+        "alternatives": [
+          {
+            "id": "scylladb",
+            "name": "ScyllaDB",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "api-compatible",
+            "recommended": false,
+            "notes": "ScyllaDB Alternator implements the DynamoDB API; streams, transactions and some expressions differ, so test coverage matters."
+          },
+          {
+            "id": "cassandra",
+            "name": "Apache Cassandra",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Wide-column model fits key-based access; data model and queries must be redesigned in CQL."
+          },
+          {
+            "id": "mongodb",
+            "name": "MongoDB Community Server",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Document model covers items and secondary indexes; access code and change streams need a rewrite."
+          },
+          {
+            "id": "postgresql",
+            "name": "PostgreSQL",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "JSONB tables with composite keys can host single-table designs; queries and streams are rewritten."
+          }
+        ],
+        "reason": "Managed change stream + Proprietary API + 3 SDK files + 4 dependent resources"
+      },
+      {
+        "rank": 2,
+        "node": "shop-aws//infra#aws_lambda_function.order_processor",
+        "contribution": 1.8612,
+        "dependents_count": 2,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "knative",
+            "name": "Knative",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Knative Serving runs HTTP containers with scale to zero; Eventing replaces event source mappings."
+          },
+          {
+            "id": "openfaas",
+            "name": "OpenFaaS",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Functions run as containers on Kubernetes; handlers and event triggers (queues, cron, HTTP) need adaptation."
+          },
+          {
+            "id": "scaleway",
+            "name": "Scaleway",
+            "kind": "european-provider",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Scaleway Serverless Functions and Containers offer managed functions with HTTP, cron and queue triggers."
+          }
+        ],
+        "reason": "Proprietary runtime + Proprietary SDK + 2 dependent resources"
+      },
+      {
+        "rank": 3,
+        "node": "shop-aws//infra#aws_iam_role.lambda",
+        "contribution": 1.8,
+        "dependents_count": 7,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "keycloak",
+            "name": "Keycloak",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "conceptual",
+            "recommended": true,
+            "notes": "Keycloak provides identities and OIDC tokens; resource permissions must be redone in each target system."
+          },
+          {
+            "id": "vault-openbao",
+            "name": "OpenBao",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Vault/OpenBao issues short-lived credentials and secrets; replaces access keys and STS role assumption."
+          },
+          {
+            "id": "zitadel",
+            "name": "ZITADEL",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "ZITADEL provides identities and OIDC; cloud resource authorization must be redesigned."
+          }
+        ],
+        "reason": "Proprietary IAM model + Skills specialization + 7 dependent resources"
+      },
+      {
+        "rank": 4,
+        "node": "shop-aws//infra#aws_vpc.main",
+        "contribution": 1.7133,
+        "dependents_count": 6,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "scaleway",
+            "name": "Scaleway",
+            "kind": "european-provider",
+            "difficulty": "low",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Scaleway VPC and Private Networks with Public Gateways map to VPCs, subnets and NAT."
+          }
+        ],
+        "reason": "Provider network construct + 6 dependent resources"
+      },
+      {
+        "rank": 5,
+        "node": "shop-aws//infra#aws_cognito_user_pool.main",
+        "contribution": 1.6,
+        "dependents_count": 1,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "keycloak",
+            "name": "Keycloak",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "protocol-compatible",
+            "recommended": false,
+            "notes": "OIDC/OAuth2 apps switch issuer; user import works, but passwords need reset or a lazy migration flow."
+          },
+          {
+            "id": "zitadel",
+            "name": "ZITADEL",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "protocol-compatible",
+            "recommended": false,
+            "notes": "OIDC provider with user import APIs; Cognito triggers become actions and password hashes are not portable."
+          }
+        ],
+        "reason": "Non-exportable data + Proprietary API + 1 dependent resource"
+      },
+      {
+        "rank": 6,
+        "node": "shop-aws//.github/workflows/deploy.yml#action/aws-actions/configure-aws-credentials",
+        "contribution": 1.4949,
+        "dependents_count": 4,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "keycloak",
+            "name": "Keycloak",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "conceptual",
+            "recommended": true,
+            "notes": "Keycloak provides identities and OIDC tokens; resource permissions must be redone in each target system."
+          },
+          {
+            "id": "vault-openbao",
+            "name": "OpenBao",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Vault/OpenBao issues short-lived credentials and secrets; replaces access keys and STS role assumption."
+          },
+          {
+            "id": "zitadel",
+            "name": "ZITADEL",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "ZITADEL provides identities and OIDC; cloud resource authorization must be redesigned."
+          }
+        ],
+        "reason": "Proprietary IAM model + Provider CI authentication + 4 dependent resources"
+      },
+      {
+        "rank": 7,
+        "node": "shop-aws//infra#aws_security_group.app",
+        "contribution": 1.35,
+        "dependents_count": 3,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "scaleway",
+            "name": "Scaleway",
+            "kind": "european-provider",
+            "difficulty": "low",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Scaleway VPC and Private Networks with Public Gateways map to VPCs, subnets and NAT."
+          }
+        ],
+        "reason": "Provider network construct + 3 dependent resources"
+      },
+      {
+        "rank": 8,
+        "node": "shop-aws//infra#aws_sqs_queue.events",
+        "contribution": 1.35,
+        "dependents_count": 3,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "apache-kafka",
+            "name": "Apache Kafka",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Fits when queues carry event streams; per-message visibility and delays have no direct equivalent."
+          },
+          {
+            "id": "nats",
+            "name": "NATS",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "JetStream work-queue streams with ack and redelivery replace SQS queues; producers and consumers are rewritten."
+          },
+          {
+            "id": "rabbitmq",
+            "name": "RabbitMQ",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Queues, acknowledgements and dead-letter exchanges cover SQS patterns; client code changes to AMQP."
+          }
+        ],
+        "reason": "Proprietary API + Proprietary SDK + 3 dependent resources"
+      },
+      {
+        "rank": 9,
+        "node": "shop-aws//infra#aws_subnet.a",
+        "contribution": 1.35,
+        "dependents_count": 3,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "scaleway",
+            "name": "Scaleway",
+            "kind": "european-provider",
+            "difficulty": "low",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Scaleway VPC and Private Networks with Public Gateways map to VPCs, subnets and NAT."
+          }
+        ],
+        "reason": "Provider network construct + 3 dependent resources"
+      },
+      {
+        "rank": 10,
+        "node": "shop-aws//infra#aws_subnet.b",
+        "contribution": 1.35,
+        "dependents_count": 3,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "scaleway",
+            "name": "Scaleway",
+            "kind": "european-provider",
+            "difficulty": "low",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Scaleway VPC and Private Networks with Public Gateways map to VPCs, subnets and NAT."
+          }
+        ],
+        "reason": "Provider network construct + 3 dependent resources"
+      },
+      {
+        "rank": 11,
+        "node": "implied//aws.ebs",
+        "contribution": 0.8962,
+        "dependents_count": 5,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "ceph",
+            "name": "Ceph",
+            "kind": "oss-self-hosted",
+            "difficulty": "low",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Ceph RBD provides replicated block volumes with a Kubernetes CSI driver; data is copied at file or block level."
+          },
+          {
+            "id": "scaleway",
+            "name": "Scaleway",
+            "kind": "european-provider",
+            "difficulty": "low",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Scaleway Block Storage volumes attach to instances and Kapsule clusters via CSI."
+          }
+        ],
+        "reason": "Data gravity + Operational tooling coupling + 5 dependent resources"
+      },
+      {
+        "rank": 12,
+        "node": "shop-aws//infra#aws_cognito_user_pool_client.web",
+        "contribution": 0.8,
+        "dependents_count": 0,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "keycloak",
+            "name": "Keycloak",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "protocol-compatible",
+            "recommended": false,
+            "notes": "OIDC/OAuth2 apps switch issuer; user import works, but passwords need reset or a lazy migration flow."
+          },
+          {
+            "id": "zitadel",
+            "name": "ZITADEL",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "protocol-compatible",
+            "recommended": false,
+            "notes": "OIDC provider with user import APIs; Cognito triggers become actions and password hashes are not portable."
+          }
+        ],
+        "reason": "Non-exportable data + Proprietary API"
+      },
+      {
+        "rank": 13,
+        "node": "shop-aws//infra#aws_lambda_event_source_mapping.events_queue",
+        "contribution": 0.72,
+        "dependents_count": 0,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "knative",
+            "name": "Knative",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Knative Serving runs HTTP containers with scale to zero; Eventing replaces event source mappings."
+          },
+          {
+            "id": "openfaas",
+            "name": "OpenFaaS",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Functions run as containers on Kubernetes; handlers and event triggers (queues, cron, HTTP) need adaptation."
+          },
+          {
+            "id": "scaleway",
+            "name": "Scaleway",
+            "kind": "european-provider",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Scaleway Serverless Functions and Containers offer managed functions with HTTP, cron and queue triggers."
+          }
+        ],
+        "reason": "Proprietary runtime + Managed change stream"
+      },
+      {
+        "rank": 14,
+        "node": "shop-aws//infra#aws_lambda_event_source_mapping.orders_stream",
+        "contribution": 0.72,
+        "dependents_count": 0,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "knative",
+            "name": "Knative",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Knative Serving runs HTTP containers with scale to zero; Eventing replaces event source mappings."
+          },
+          {
+            "id": "openfaas",
+            "name": "OpenFaaS",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Functions run as containers on Kubernetes; handlers and event triggers (queues, cron, HTTP) need adaptation."
+          },
+          {
+            "id": "scaleway",
+            "name": "Scaleway",
+            "kind": "european-provider",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Scaleway Serverless Functions and Containers offer managed functions with HTTP, cron and queue triggers."
+          }
+        ],
+        "reason": "Proprietary runtime + Managed change stream"
+      },
+      {
+        "rank": 15,
+        "node": "implied//aws.elb",
+        "contribution": 0.45,
+        "dependents_count": 1,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "envoy",
+            "name": "Envoy Proxy",
+            "kind": "oss-self-hosted",
+            "difficulty": "low",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Envoy or Envoy Gateway implements L4/L7 routing with the Kubernetes Gateway API."
+          },
+          {
+            "id": "haproxy",
+            "name": "HAProxy",
+            "kind": "oss-self-hosted",
+            "difficulty": "low",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "HAProxy covers L4 and L7 load balancing with health checks and stickiness."
+          },
+          {
+            "id": "nginx",
+            "name": "NGINX",
+            "kind": "oss-self-hosted",
+            "difficulty": "low",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "NGINX (or ingress-nginx) handles L7 routing and TLS; listener rules translate to server and location blocks."
+          },
+          {
+            "id": "traefik",
+            "name": "Traefik Proxy",
+            "kind": "oss-self-hosted",
+            "difficulty": "low",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Traefik ingress replaces ALB Ingress; alb.ingress annotations become Traefik routers and middlewares."
+          }
+        ],
+        "reason": "Provider network construct + Provider-specific annotations + 1 dependent resource"
+      },
+      {
+        "rank": 16,
+        "node": "shop-aws//infra#aws_ssm_parameter.db",
+        "contribution": 0.45,
+        "dependents_count": 0,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "kubernetes",
+            "name": "Kubernetes",
+            "kind": "oss-self-hosted",
+            "difficulty": "low",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "ConfigMaps and Secrets provide configuration to workloads running on Kubernetes."
+          },
+          {
+            "id": "vault-openbao",
+            "name": "OpenBao",
+            "kind": "oss-self-hosted",
+            "difficulty": "low",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "KV secrets engine stores hierarchical configuration and secrets; lookups in code change."
+          },
+          {
+            "id": "sops",
+            "name": "SOPS",
+            "kind": "oss-self-hosted",
+            "difficulty": "low",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Encrypted configuration files in Git replace static parameters; no runtime API."
+          }
+        ],
+        "reason": "Proprietary SDK + Proprietary API"
+      },
+      {
+        "rank": 17,
+        "node": "shop-aws//.github/workflows/deploy.yml#action/aws-actions/amazon-ecr-login",
+        "contribution": 0.175,
+        "dependents_count": 0,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "forgejo",
+            "name": "Forgejo",
+            "kind": "oss-self-hosted",
+            "difficulty": "low",
+            "compatibility": "protocol-compatible",
+            "recommended": false,
+            "notes": "Forgejo package registry hosts OCI container images next to source code."
+          },
+          {
+            "id": "gitea",
+            "name": "Gitea",
+            "kind": "oss-self-hosted",
+            "difficulty": "low",
+            "compatibility": "protocol-compatible",
+            "recommended": false,
+            "notes": "Gitea package registry hosts OCI container images next to source code."
+          },
+          {
+            "id": "harbor",
+            "name": "Harbor",
+            "kind": "oss-self-hosted",
+            "difficulty": "low",
+            "compatibility": "protocol-compatible",
+            "recommended": false,
+            "notes": "OCI-compliant registry with replication, scanning and proxy cache; images move with skopeo or crane."
+          },
+          {
+            "id": "scaleway",
+            "name": "Scaleway",
+            "kind": "european-provider",
+            "difficulty": "low",
+            "compatibility": "protocol-compatible",
+            "recommended": false,
+            "notes": "Scaleway Container Registry is a managed OCI registry."
+          }
+        ],
+        "reason": "Provider registry"
+      },
+      {
+        "rank": 18,
+        "node": "shop-aws//services/orders/Dockerfile#image/gcr.io/distroless/nodejs20",
+        "contribution": 0.175,
+        "dependents_count": 0,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "forgejo",
+            "name": "Forgejo",
+            "kind": "oss-self-hosted",
+            "difficulty": "low",
+            "compatibility": "api-compatible",
+            "recommended": false,
+            "notes": "Built-in package registry supports OCI, npm, Maven and PyPI."
+          },
+          {
+            "id": "harbor",
+            "name": "Harbor",
+            "kind": "oss-self-hosted",
+            "difficulty": "low",
+            "compatibility": "api-compatible",
+            "recommended": false,
+            "notes": "OCI registry with replication; copy images with skopeo or crane and update image references."
+          },
+          {
+            "id": "scaleway",
+            "name": "Scaleway",
+            "kind": "european-provider",
+            "difficulty": "low",
+            "compatibility": "api-compatible",
+            "recommended": false,
+            "notes": "Scaleway Container Registry stores OCI images."
+          }
+        ],
+        "reason": "Provider registry"
+      },
+      {
+        "rank": 19,
+        "node": "shop-aws//services/orders/Dockerfile#image/public.ecr.aws/docker/library/node:20-alpine",
+        "contribution": 0.175,
+        "dependents_count": 0,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "forgejo",
+            "name": "Forgejo",
+            "kind": "oss-self-hosted",
+            "difficulty": "low",
+            "compatibility": "protocol-compatible",
+            "recommended": false,
+            "notes": "Forgejo package registry hosts OCI container images next to source code."
+          },
+          {
+            "id": "gitea",
+            "name": "Gitea",
+            "kind": "oss-self-hosted",
+            "difficulty": "low",
+            "compatibility": "protocol-compatible",
+            "recommended": false,
+            "notes": "Gitea package registry hosts OCI container images next to source code."
+          },
+          {
+            "id": "harbor",
+            "name": "Harbor",
+            "kind": "oss-self-hosted",
+            "difficulty": "low",
+            "compatibility": "protocol-compatible",
+            "recommended": false,
+            "notes": "OCI-compliant registry with replication, scanning and proxy cache; images move with skopeo or crane."
+          },
+          {
+            "id": "scaleway",
+            "name": "Scaleway",
+            "kind": "european-provider",
+            "difficulty": "low",
+            "compatibility": "protocol-compatible",
+            "recommended": false,
+            "notes": "Scaleway Container Registry is a managed OCI registry."
+          }
+        ],
+        "reason": "Provider registry"
+      }
+    ],
+    "lever": {
+      "service": "aws.vpc",
+      "alternative": "scaleway",
+      "delta": 9
+    },
+    "coverage": {
+      "types": 1,
+      "resources": 1,
+      "weighted": 1,
+      "unknown_types": 0
+    },
+    "waves": [
+      {
+        "wave": 1,
+        "units": [
+          [
+            "implied//aws.ebs"
+          ],
+          [
+            "implied//aws.elb"
+          ],
+          [
+            "shop-aws//#/ConfigMap/shop/orders-config"
+          ],
+          [
+            "shop-aws//#/Namespace/_/shop"
+          ],
+          [
+            "shop-aws//.github/workflows/deploy.yml#action/actions/checkout"
+          ],
+          [
+            "shop-aws//.github/workflows/deploy.yml#action/aws-actions/amazon-ecr-login"
+          ],
+          [
+            "shop-aws//.github/workflows/deploy.yml#action/aws-actions/configure-aws-credentials"
+          ],
+          [
+            "shop-aws//infra#aws_cognito_user_pool.main"
+          ],
+          [
+            "shop-aws//infra#aws_dynamodb_table.orders"
+          ],
+          [
+            "shop-aws//infra#aws_iam_role.lambda"
+          ],
+          [
+            "shop-aws//infra#aws_sqs_queue.events"
+          ],
+          [
+            "shop-aws//infra#aws_ssm_parameter.db"
+          ],
+          [
+            "shop-aws//infra#aws_vpc.main"
+          ],
+          [
+            "shop-aws//infra#random_id.suffix"
+          ],
+          [
+            "shop-aws//services/orders/Dockerfile#image/gcr.io/distroless/nodejs20"
+          ],
+          [
+            "shop-aws//services/orders/Dockerfile#image/public.ecr.aws/docker/library/node:20-alpine"
+          ]
+        ]
+      },
+      {
+        "wave": 2,
+        "units": [
+          [
+            "shop-aws//#/ServiceAccount/shop/orders-api"
+          ],
+          [
+            "shop-aws//#storage.k8s.io/StorageClass/_/gp3"
+          ],
+          [
+            "shop-aws//infra#aws_cognito_user_pool_client.web"
+          ],
+          [
+            "shop-aws//infra#aws_security_group.app"
+          ],
+          [
+            "shop-aws//infra#aws_subnet.a"
+          ],
+          [
+            "shop-aws//infra#aws_subnet.b"
+          ],
+          [
+            "shop-aws//services/orders#component"
+          ]
+        ]
+      },
+      {
+        "wave": 3,
+        "units": [
+          [
+            "shop-aws//#/PersistentVolumeClaim/shop/orders-cache"
+          ],
+          [
+            "shop-aws//infra#aws_lambda_function.order_processor"
+          ]
+        ]
+      },
+      {
+        "wave": 4,
+        "units": [
+          [
+            "shop-aws//#apps/Deployment/shop/orders-api"
+          ],
+          [
+            "shop-aws//infra#aws_lambda_event_source_mapping.events_queue"
+          ],
+          [
+            "shop-aws//infra#aws_lambda_event_source_mapping.orders_stream"
+          ]
+        ]
+      },
+      {
+        "wave": 5,
+        "units": [
+          [
+            "shop-aws//#/Service/shop/orders-api"
+          ]
+        ]
+      },
+      {
+        "wave": 6,
+        "units": [
+          [
+            "shop-aws//#networking.k8s.io/Ingress/shop/orders-api"
+          ]
+        ]
+      }
+    ],
+    "chains": [
+      {
+        "nodes": [
+          "shop-aws//infra#aws_lambda_event_source_mapping.events_queue",
+          "shop-aws//infra#aws_lambda_function.order_processor",
+          "shop-aws//infra#aws_dynamodb_table.orders"
+        ]
+      },
+      {
+        "nodes": [
+          "shop-aws//infra#aws_lambda_event_source_mapping.orders_stream",
+          "shop-aws//infra#aws_lambda_function.order_processor",
+          "shop-aws//infra#aws_dynamodb_table.orders"
+        ]
+      },
+      {
+        "nodes": [
+          "shop-aws//infra#aws_cognito_user_pool_client.web",
+          "shop-aws//infra#aws_cognito_user_pool.main"
+        ]
+      }
+    ],
+    "exceptions": [],
+    "notes": [
+      "draft catalog entries were scored (development mode); results are unverified"
+    ]
+  }
+}

@@ -1,0 +1,89 @@
+schema: '1.0'
+kind: service
+id: aws.rds
+provider: aws
+name: Amazon Relational Database Service (RDS)
+category: database.relational
+resource_types:
+  terraform: [aws_db_instance, aws_db_parameter_group, aws_db_option_group, aws_db_subnet_group, aws_db_snapshot, aws_db_snapshot_copy, aws_db_instance_role_association, aws_db_instance_automated_backups_replication, aws_db_proxy, aws_db_proxy_default_target_group, aws_db_proxy_target, aws_db_proxy_endpoint, aws_db_event_subscription, aws_rds_custom_db_engine_version, aws_rds_reserved_instance, aws_rds_certificate, aws_rds_export_task, aws_rds_instance_state]
+  cloudformation: ['AWS::RDS::DBInstance', 'AWS::RDS::DBParameterGroup', 'AWS::RDS::OptionGroup', 'AWS::RDS::DBSubnetGroup', 'AWS::RDS::DBSecurityGroup', 'AWS::RDS::DBSecurityGroupIngress', 'AWS::RDS::DBProxy', 'AWS::RDS::DBProxyEndpoint', 'AWS::RDS::DBProxyTargetGroup', 'AWS::RDS::EventSubscription', 'AWS::RDS::CustomDBEngineVersion']
+  kubernetes:
+  - {group: rds.services.k8s.aws, kind: DBInstance}
+  - {group: rds.services.k8s.aws, kind: DBParameterGroup}
+  - {group: rds.services.k8s.aws, kind: DBSubnetGroup}
+  - {group: rds.services.k8s.aws, kind: DBProxy}
+  - {group: rds.services.k8s.aws, kind: DBSnapshot}
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'Engines are standard PostgreSQL, MySQL or MariaDB; backups, parameter groups and failover use RDS tooling.'}
+- {id: data-gravity, level: medium, reason: 'Moving a live database needs dump and restore or logical replication with a planned cutover; RDS snapshots restore only on AWS.'}
+rules:
+- id: aws.rds.iam-database-auth
+  match:
+    resource_type: [aws_db_instance]
+  when: {attr: iam_database_authentication_enabled, equals: true}
+  then: {add_trait: proprietary-iam-model, level: low, evidence: iam_database_authentication_enabled}
+- id: aws.rds.commercial-engine
+  match:
+    resource_type: [aws_db_instance]
+  when: {attr: engine, matches: '^(oracle|sqlserver|db2)'}
+  then: {add_trait: skills-specialization, level: medium, evidence: engine}
+- id: aws.rds.custom
+  match:
+    resource_type: [aws_rds_custom_db_engine_version]
+  then: {add_trait: managed-only-feature, level: medium, evidence: engine}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-rds', '@aws-sdk/rds-signer']
+  imports: ['[''"]@aws-sdk/(client-rds|rds-signer)[''"/]']
+  usage: ['\bAWS\.RDS\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  packages: [aws-advanced-python-wrapper]
+  imports: ['^\s*(from|import)\s+aws_advanced_python_wrapper\b']
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["'']rds["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/rds, github.com/aws/aws-sdk-go-v2/feature/rds/auth]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/rds(/[^"]*)?"', '"github\.com/aws/aws-sdk-go-v2/feature/rds/auth"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:rds', 'com.amazonaws:aws-java-sdk-rds', 'software.amazon.jdbc:aws-advanced-jdbc-wrapper']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.(awssdk\.services\.rds|jdbc)\.', '^\s*import\s+(static\s+)?com\.amazonaws\.services\.rds\.']
+- ecosystem: nuget
+  packages: [AWSSDK.RDS]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.RDS\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-rds]
+  imports: ['^\s*require\s+["'']aws-sdk-(rds)["'']']
+  usage: ['(?i)\bAws::(rds)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-rds]
+  imports: ['\baws_sdk_(rds)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(rds)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_db_instance, attribute: db_subnet_group_name, edge_kind: containment}
+- {resource_type: aws_db_instance, attribute: parameter_group_name, edge_kind: reference}
+- {resource_type: aws_db_instance, attribute: option_group_name, edge_kind: reference}
+- {resource_type: aws_db_instance, attribute: replicate_source_db, edge_kind: data-flow}
+- {resource_type: aws_db_instance, attribute: kms_key_id, edge_kind: reference}
+- {resource_type: aws_db_instance, attribute: monitoring_role_arn, edge_kind: binding}
+- {resource_type: aws_db_proxy, attribute: vpc_subnet_ids, edge_kind: containment}
+- {resource_type: aws_db_proxy_target, attribute: db_instance_identifier, edge_kind: binding}
+- {resource_type: aws_db_proxy_target, attribute: db_proxy_name, edge_kind: containment}
+- {resource_type: aws_db_snapshot, attribute: db_instance_identifier, edge_kind: reference}
+alternatives:
+- {ref: postgresql, difficulty: low, compatibility: api-compatible, notes: 'RDS for PostgreSQL is upstream PostgreSQL; migrate with pg_dump or logical replication. Check rds_* extensions.', approved_by: cloudowski}
+- {ref: mysql, difficulty: low, compatibility: api-compatible, notes: RDS for MySQL is upstream MySQL; migrate with dumps or binlog replication., approved_by: cloudowski}
+- {ref: mariadb, difficulty: low, compatibility: api-compatible, notes: RDS for MariaDB is upstream MariaDB; migrate with mariadb-dump or replication., approved_by: cloudowski}
+- {ref: ovhcloud, difficulty: low, compatibility: api-compatible, notes: OVHcloud Public Cloud Databases offer managed PostgreSQL and MySQL., approved_by: cloudowski}
+- {ref: scaleway, difficulty: low, compatibility: api-compatible, notes: Scaleway Managed Databases offer PostgreSQL and MySQL., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_instance']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

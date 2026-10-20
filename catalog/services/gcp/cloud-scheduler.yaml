@@ -1,0 +1,43 @@
+schema: '1.0'
+kind: service
+id: gcp.cloud-scheduler
+provider: gcp
+name: Cloud Scheduler
+category: integration
+resource_types:
+  terraform: [google_cloud_scheduler_job]
+  kubernetes:
+  - {group: cloudscheduler.cnrm.cloud.google.com, kind: CloudSchedulerJob}
+traits:
+- {id: proprietary-api, level: low, reason: 'Jobs are cron schedules with HTTP, Pub/Sub or App Engine targets; the model is simple to port.'}
+sdk:
+- ecosystem: npm
+  packages: ['@google-cloud/scheduler']
+  imports: ['[''"]@google-cloud/(scheduler)[''"/]']
+- ecosystem: pypi
+  packages: [google-cloud-scheduler]
+  imports: [^\s*from\s+google\.cloud\s+import\s+.*\b(scheduler\w*)\b, ^\s*(from|import)\s+google\.cloud\.(scheduler\w*)\b]
+- ecosystem: go
+  packages: [cloud.google.com/go/scheduler]
+  imports: ['"cloud\.google\.com/go/(scheduler)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.google.cloud:google-cloud-scheduler']
+  imports: ['^\s*import\s+(static\s+)?com\.google\.(cloud\.scheduler)\b']
+- ecosystem: nuget
+  packages: [Google.Cloud.Scheduler.V1]
+  imports: ['^\s*using\s+(static\s+)?Google\.Cloud\.(Scheduler)\b']
+edge_hints:
+- {resource_type: google_cloud_scheduler_job, attribute: pubsub_target.topic_name, edge_kind: data-flow}
+- {resource_type: google_cloud_scheduler_job, attribute: http_target.oidc_token.service_account_email, edge_kind: reference}
+alternatives:
+- {ref: kubernetes, difficulty: low, compatibility: conceptual, notes: Kubernetes CronJobs run scheduled containers; HTTP or Pub/Sub targets become a job that calls them., approved_by: cloudowski}
+- {ref: argo-workflows, difficulty: low, compatibility: conceptual, notes: CronWorkflows schedule multi-step jobs with retries., approved_by: cloudowski}
+- {ref: temporal, difficulty: medium, compatibility: conceptual, notes: Temporal schedules start workflows on cron or interval specs., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/scheduler/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/cloud_scheduler_job']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

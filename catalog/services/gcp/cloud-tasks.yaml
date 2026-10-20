@@ -1,0 +1,41 @@
+schema: '1.0'
+kind: service
+id: gcp.cloud-tasks
+provider: gcp
+name: Cloud Tasks
+category: messaging.queue
+resource_types:
+  terraform: [google_cloud_tasks_queue, google_cloud_tasks_queue_iam_binding, google_cloud_tasks_queue_iam_member, google_cloud_tasks_queue_iam_policy]
+  kubernetes:
+  - {group: cloudtasks.cnrm.cloud.google.com, kind: CloudTasksQueue}
+traits:
+- {id: proprietary-api, level: medium, reason: Tasks are HTTP or App Engine targets dispatched by a Google-specific queue API with its own rate and retry settings.}
+- {id: proprietary-sdk}
+sdk:
+- ecosystem: npm
+  packages: ['@google-cloud/tasks']
+  imports: ['[''"]@google-cloud/(tasks)[''"/]']
+- ecosystem: pypi
+  packages: [google-cloud-tasks]
+  imports: [^\s*from\s+google\.cloud\s+import\s+.*\b(tasks|tasks_v2|tasks_v2beta3)\b, ^\s*(from|import)\s+google\.cloud\.(tasks|tasks_v2|tasks_v2beta3)\b]
+- ecosystem: go
+  packages: [cloud.google.com/go/cloudtasks]
+  imports: ['"cloud\.google\.com/go/(cloudtasks)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.google.cloud:google-cloud-tasks']
+  imports: ['^\s*import\s+(static\s+)?com\.google\.(cloud\.tasks)\b']
+- ecosystem: nuget
+  packages: [Google.Cloud.Tasks.V2]
+  imports: ['^\s*using\s+(static\s+)?Google\.Cloud\.(Tasks)\b']
+alternatives:
+- {ref: rabbitmq, difficulty: medium, compatibility: conceptual, notes: Queues with workers replace HTTP task dispatch; rate limits and scheduled delivery need plugins or app logic., approved_by: cloudowski}
+- {ref: temporal, difficulty: medium, compatibility: conceptual, notes: Activities with retries and timers replace queued HTTP tasks; enqueue code becomes workflow code., approved_by: cloudowski}
+- {ref: nats, difficulty: medium, compatibility: conceptual, notes: JetStream work-queue streams replace queues; HTTP push dispatch must be implemented by a consumer., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/tasks/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/cloud_tasks_queue']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

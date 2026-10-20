@@ -1,0 +1,15 @@
+schema: "1.0"
+kind: trait
+id: proprietary-iam-model
+name: Proprietary IAM model
+level: medium
+dimensions: [operational, technical]
+explanation: Access control relies on provider-specific identity and policy semantics.
+exit_hint: Map roles to a portable workload identity scheme such as SPIFFE.
+provenance:
+  origin: maintainer
+  author: cloudowski
+  status: verified
+  reviewed_by: cloudowski
+  reviewed_on: 2026-10-06
+  sources: []

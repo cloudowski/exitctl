@@ -1,0 +1,42 @@
+schema: '1.0'
+kind: service
+id: gcp.workflows
+provider: gcp
+name: Workflows
+category: integration
+resource_types:
+  terraform: [google_workflows_workflow]
+  kubernetes:
+  - {group: workflows.cnrm.cloud.google.com, kind: WorkflowsWorkflow}
+traits:
+- {id: proprietary-workflow-definition, level: high, reason: 'Workflows are written in the Google Workflows syntax with Google connectors; no other engine runs them, like ASL for Step Functions.'}
+- {id: proprietary-sdk}
+sdk:
+- ecosystem: npm
+  packages: ['@google-cloud/workflows']
+  imports: ['[''"]@google-cloud/(workflows)[''"/]']
+- ecosystem: pypi
+  packages: [google-cloud-workflows]
+  imports: [^\s*from\s+google\.cloud\s+import\s+.*\b(workflows\w*)\b, ^\s*(from|import)\s+google\.cloud\.(workflows\w*)\b]
+- ecosystem: go
+  packages: [cloud.google.com/go/workflows]
+  imports: ['"cloud\.google\.com/go/(workflows)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.google.cloud:google-cloud-workflows', 'com.google.cloud:google-cloud-workflow-executions']
+  imports: ['^\s*import\s+(static\s+)?com\.google\.(cloud\.workflows)\b']
+- ecosystem: nuget
+  packages: [Google.Cloud.Workflows.V1, Google.Cloud.Workflows.Executions.V1]
+  imports: ['^\s*using\s+(static\s+)?Google\.Cloud\.(Workflows)\b']
+edge_hints:
+- {resource_type: google_workflows_workflow, attribute: service_account, edge_kind: reference}
+alternatives:
+- {ref: temporal, difficulty: high, compatibility: conceptual, notes: Workflow logic moves into code with Temporal SDKs; connectors become activities., approved_by: cloudowski}
+- {ref: argo-workflows, difficulty: medium, compatibility: conceptual, notes: Steps map to Argo templates running containers; Google connectors need replacement., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/workflows/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/workflows_workflow']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

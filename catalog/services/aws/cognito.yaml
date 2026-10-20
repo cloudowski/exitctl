@@ -1,0 +1,78 @@
+schema: '1.0'
+kind: service
+id: aws.cognito
+provider: aws
+name: Amazon Cognito
+category: identity.user-directory
+resource_types:
+  terraform: [aws_cognito_user_pool, aws_cognito_user_pool_client, aws_cognito_user_pool_domain, aws_cognito_user_pool_ui_customization, aws_cognito_user_group, aws_cognito_user, aws_cognito_user_in_group, aws_cognito_identity_provider, aws_cognito_resource_server, aws_cognito_risk_configuration, aws_cognito_managed_user_pool_client, aws_cognito_log_delivery_configuration, aws_cognito_managed_login_branding, aws_cognito_identity_pool, aws_cognito_identity_pool_roles_attachment, aws_cognito_identity_pool_provider_principal_tag]
+  cloudformation: ['AWS::Cognito::UserPool', 'AWS::Cognito::UserPoolClient', 'AWS::Cognito::UserPoolDomain', 'AWS::Cognito::UserPoolGroup', 'AWS::Cognito::UserPoolUser', 'AWS::Cognito::UserPoolUserToGroupAttachment', 'AWS::Cognito::UserPoolIdentityProvider', 'AWS::Cognito::UserPoolResourceServer', 'AWS::Cognito::UserPoolUICustomizationAttachment', 'AWS::Cognito::UserPoolRiskConfigurationAttachment', 'AWS::Cognito::LogDeliveryConfiguration', 'AWS::Cognito::ManagedLoginBranding', 'AWS::Cognito::IdentityPool', 'AWS::Cognito::IdentityPoolRoleAttachment', 'AWS::Cognito::IdentityPoolPrincipalTag']
+traits:
+- {id: proprietary-api, level: high, reason: 'OIDC endpoints are standard, but sign-up, MFA, admin APIs, triggers and Amplify/SDK flows are Cognito-specific.'}
+- {id: non-exportable-data, reason: 'Password hashes and MFA secrets cannot be exported from user pools; migration needs password resets or lazy migration at sign-in.'}
+- {id: proprietary-sdk}
+rules:
+- id: aws.cognito.lambda-triggers
+  match:
+    resource_type: [aws_cognito_user_pool]
+  when: {attr: lambda_config, exists: true}
+  then: {add_trait: proprietary-event-model, level: medium, evidence: lambda_config}
+- id: aws.cognito.identity-pool
+  match:
+    resource_type: [aws_cognito_identity_pool]
+  then: {add_trait: proprietary-iam-model, level: medium, evidence: cognito_identity_providers}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-cognito-identity-provider', '@aws-sdk/client-cognito-identity', 'amazon-cognito-identity-js', 'aws-jwt-verify']
+  imports: ['[''"]@aws-sdk/client-cognito-(identity-provider|identity)[''"/]', '[''"](amazon-cognito-identity-js|aws-jwt-verify)[''"/]']
+  usage: ['\bAWS\.(CognitoIdentityServiceProvider|CognitoIdentity)\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  packages: [pycognito, warrant]
+  imports: ['^\s*(from|import)\s+(pycognito|warrant)\b']
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["''](cognito-idp|cognito-identity)["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider, github.com/aws/aws-sdk-go-v2/service/cognitoidentity]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/(cognitoidentityprovider|cognitoidentity)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:cognitoidentityprovider', 'software.amazon.awssdk:cognitoidentity', 'com.amazonaws:aws-java-sdk-cognitoidp', 'com.amazonaws:aws-java-sdk-cognitoidentity']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.(cognitoidentityprovider|cognitoidentity)\.', '^\s*import\s+(static\s+)?com\.amazonaws\.services\.(cognitoidp|cognitoidentity)\.']
+- ecosystem: nuget
+  packages: [AWSSDK.CognitoIdentityProvider, AWSSDK.CognitoIdentity, Amazon.Extensions.CognitoAuthentication, Amazon.AspNetCore.Identity.Cognito]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.(CognitoIdentityProvider|CognitoIdentity|Extensions\.CognitoAuthentication|AspNetCore\.Identity\.Cognito)\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-cognitoidentityprovider, aws-sdk-cognitoidentity]
+  imports: ['^\s*require\s+["'']aws-sdk-(cognitoidentityprovider|cognitoidentity)["'']']
+  usage: ['(?i)\bAws::(cognitoidentityprovider|cognitoidentity)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-cognitoidentityprovider, aws-sdk-cognitoidentity]
+  imports: ['\baws_sdk_(cognitoidentityprovider|cognitoidentity)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(cognitoidentityprovider|cognitoidentity)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_cognito_user_pool_client, attribute: user_pool_id, edge_kind: containment}
+- {resource_type: aws_cognito_user_pool_domain, attribute: user_pool_id, edge_kind: containment}
+- {resource_type: aws_cognito_user_group, attribute: user_pool_id, edge_kind: containment}
+- {resource_type: aws_cognito_user, attribute: user_pool_id, edge_kind: containment}
+- {resource_type: aws_cognito_identity_provider, attribute: user_pool_id, edge_kind: containment}
+- {resource_type: aws_cognito_resource_server, attribute: user_pool_id, edge_kind: containment}
+- {resource_type: aws_cognito_user_pool, attribute: lambda_config.pre_sign_up, edge_kind: data-flow}
+- {resource_type: aws_cognito_user_pool, attribute: lambda_config.pre_token_generation, edge_kind: data-flow}
+- {resource_type: aws_cognito_user_pool, attribute: lambda_config.post_confirmation, edge_kind: data-flow}
+- {resource_type: aws_cognito_identity_pool_roles_attachment, attribute: identity_pool_id, edge_kind: binding}
+- {resource_type: aws_cognito_identity_pool, attribute: cognito_identity_providers.client_id, edge_kind: reference}
+alternatives:
+- {ref: keycloak, difficulty: high, compatibility: protocol-compatible, notes: 'OIDC/OAuth2 apps switch issuer; user import works, but passwords need reset or a lazy migration flow.', approved_by: cloudowski}
+- {ref: zitadel, difficulty: high, compatibility: protocol-compatible, notes: OIDC provider with user import APIs; Cognito triggers become actions and password hashes are not portable., approved_by: cloudowski}
+- {ref: authentik, difficulty: high, compatibility: protocol-compatible, notes: OIDC/SAML provider with flows; custom sign-up logic and Amplify client code must be replaced., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/cognito/latest/developerguide/what-is-amazon-cognito.html', 'https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-import-users.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cognito_user_pool']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

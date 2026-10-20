@@ -1,0 +1,23 @@
+schema: "1.0"
+kind: service
+id: aws.ebs
+provider: aws
+name: Amazon EBS
+category: storage.block
+resource_types:
+  terraform: [aws_ebs_volume]
+traits:
+  - id: proprietary-api
+    level: low
+    reason: Block devices expose standard semantics; only provisioning is provider-specific.
+kubernetes_bindings:
+  - match: { kind: StorageClass, group: storage.k8s.io, field: provisioner, in: [ebs.csi.aws.com, kubernetes.io/aws-ebs] }
+alternatives:
+  - { ref: ceph, difficulty: medium, compatibility: protocol-compatible, approved_by: cloudowski }
+provenance:
+  origin: maintainer
+  author: cloudowski
+  status: verified
+  reviewed_by: cloudowski
+  reviewed_on: 2026-10-06
+  sources: []

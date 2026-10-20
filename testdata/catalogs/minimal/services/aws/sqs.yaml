@@ -1,0 +1,20 @@
+schema: "1.0"
+kind: service
+id: aws.sqs
+provider: aws
+name: Amazon SQS
+category: messaging.queue
+resource_types:
+  terraform: [aws_sqs_queue]
+traits:
+  - id: proprietary-api
+alternatives:
+  - { ref: rabbitmq, difficulty: medium, compatibility: conceptual, recommended: true, approved_by: cloudowski }
+  - { ref: nats, difficulty: medium, compatibility: conceptual, approved_by: cloudowski }
+provenance:
+  origin: maintainer
+  author: cloudowski
+  status: verified
+  reviewed_by: cloudowski
+  reviewed_on: 2026-10-06
+  sources: []

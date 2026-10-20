@@ -1,0 +1,211 @@
+# CI for exitctl (T096). Releases are built by .github/workflows/release.yml on a "vX.Y.Z" tag.
+#
+# Maintainer decision: the slow jobs "determinism", "determinism-diff" and "cross" are
+# disabled (commented out) to keep CI around two minutes; re-enable them by uncommenting.
+# SC-003 stays covered meanwhile by the determinism and golden tests that run in "test".
+#
+# Jobs:
+#   lint              golangci-lint v2 with the repository .golangci.yml
+#   test              go test ./... (unit + golden + testscript e2e)
+#   (disabled) determinism       make determinism on linux/amd64 and darwin/arm64, plus JSON scan
+#                     results of every fixture uploaded as artifacts (SC-003, R15)
+#   (disabled) determinism-diff  downloads both result sets and compares them byte for byte
+#   e2e-offline       testscript suite inside a network-less user namespace (SC-009, R20)
+#   (disabled) cross             make cross (linux/darwin x amd64/arm64)
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Never let the go command fetch a different toolchain: setup-go installs the
+  # version from go.mod and that is the one we test.
+  GOTOOLCHAIN: local
+  CGO_ENABLED: "0"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: golangci/golangci-lint-action@v9
+        with:
+          # golangci-lint v2 (the config uses `version: "2"`).
+          version: v2.14
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: go test
+        run: go test ./...
+
+  # Disabled for now (slow, ~3 min each). Uncomment to re-enable "determinism" and
+  # "determinism-diff" (the diff needs both matrix jobs).
+
+  # determinism:
+  #   name: determinism (${{ matrix.goos }}/${{ matrix.goarch }})
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       include:
+  #         - os: ubuntu-latest
+  #           goos: linux
+  #           goarch: amd64
+  #         - os: macos-latest
+  #           goos: darwin
+  #           goarch: arm64
+  #   runs-on: ${{ matrix.os }}
+  #   steps:
+  #     - uses: actions/checkout@v7
+  #     - uses: actions/setup-go@v7
+  #       with:
+  #         go-version-file: go.mod
+  #         cache: true
+  #     - name: Check runner architecture
+  #       run: |
+  #         test "$(go env GOOS)/$(go env GOARCH)" = "${{ matrix.goos }}/${{ matrix.goarch }}"
+  #     - name: make determinism
+  #       run: make determinism
+  #     - name: make build
+  #       run: make build
+  #     - name: Scan every fixture to JSON
+  #       shell: bash
+  #       run: |
+  #         set -euo pipefail
+  #         out="determinism-results"
+  #         mkdir -p "$out"
+  #         scan() {
+  #           # $1 = fixture directory, $2 = repository name / output file stem
+  #           local rc=0
+  #           ./bin/exitctl scan "$1" --include-drafts --as-of 2026-10-06 \
+  #             --repo-name "$2" --no-store --format json > "$out/$2.json" || rc=$?
+  #           # 0 = success, 2 = nothing to scan; anything else is a real failure.
+  #           if [ "$rc" -ne 0 ] && [ "$rc" -ne 2 ]; then
+  #             echo "::error::scan of $1 exited $rc"
+  #             exit 1
+  #           fi
+  #           # Exit codes are part of the cross-architecture comparison too.
+  #           echo "$rc" > "$out/$2.exitcode"
+  #         }
+  #         for dir in testdata/fixtures/*/; do
+  #           dir="${dir%/}"
+  #           name="$(basename "$dir")"
+  #           # A fixture with no regular files at its top level (e.g. split/) is a
+  #           # group of repositories: scan each child as its own repository.
+  #           if [ -z "$(find "$dir" -mindepth 1 -maxdepth 1 -type f -print -quit)" ]; then
+  #             for child in "$dir"/*/; do
+  #               child="${child%/}"
+  #               scan "$child" "$name-$(basename "$child")"
+  #             done
+  #           else
+  #             scan "$dir" "$name"
+  #           fi
+  #         done
+  #         ls -l "$out"
+  #     - uses: actions/upload-artifact@v7
+  #       with:
+  #         name: determinism-${{ matrix.goos }}-${{ matrix.goarch }}
+  #         path: determinism-results/
+  #         if-no-files-found: error
+  #         retention-days: 7
+
+  # determinism-diff:
+  #   name: determinism (cross-architecture diff)
+  #   needs: determinism
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/download-artifact@v8
+  #       with:
+  #         name: determinism-linux-amd64
+  #         path: results/linux-amd64
+  #     - uses: actions/download-artifact@v8
+  #       with:
+  #         name: determinism-darwin-arm64
+  #         path: results/darwin-arm64
+  #     - name: Compare results byte for byte
+  #       run: |
+  #         set -eu
+  #         # Same file set on both sides, and identical bytes in every file.
+  #         diff -r results/linux-amd64 results/darwin-arm64
+  #         for f in results/linux-amd64/*; do
+  #           cmp "$f" "results/darwin-arm64/$(basename "$f")"
+  #         done
+  #         echo "linux/amd64 and darwin/arm64 results are byte-identical"
+
+  e2e-offline:
+    runs-on: ubuntu-latest
+    env:
+      # Inside the namespace nothing can be downloaded, so fail fast instead of
+      # timing out if a module is missing from the cache.
+      GOPROXY: "off"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Warm module and build caches (with network)
+        env:
+          GOPROXY: https://proxy.golang.org,direct
+        run: |
+          go mod download
+          go test -count=1 -run '^$' ./internal/cli/...
+      - name: Allow unprivileged user namespaces
+        # Ubuntu 24.04 (ubuntu-latest) ships AppArmor with
+        # kernel.apparmor_restrict_unprivileged_userns=1, which makes
+        # `unshare -r` fail with "write failed /proc/self/uid_map: Operation not
+        # permitted". `unshare -rn` needs an unprivileged user namespace (to get a
+        # private, empty network namespace without root), so relax the
+        # restriction for this ephemeral runner only. The sysctl does not exist on
+        # older kernels, hence the tolerant check.
+        run: |
+          if sysctl -n kernel.apparmor_restrict_unprivileged_userns >/dev/null 2>&1; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
+          if sysctl -n kernel.unprivileged_userns_clone >/dev/null 2>&1; then
+            sudo sysctl -w kernel.unprivileged_userns_clone=1
+          fi
+          unshare -rn true
+      - name: Prove the namespace has no network
+        run: |
+          # Only a loopback interface (down) exists; any outbound request must fail.
+          unshare -rn sh -c 'ip -o link show; if curl -sS --max-time 5 -o /dev/null https://proxy.golang.org; then echo "network reachable inside namespace"; exit 1; fi'
+      - name: make e2e-offline
+        run: |
+          # The Makefile falls back to printing a hint when unshare is missing;
+          # make sure that path is not silently taken here.
+          command -v unshare
+          make e2e-offline
+
+  # Disabled for now (slow, ~6 min; GoReleaser builds the release binaries anyway).
+  # cross:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v7
+  #     - uses: actions/setup-go@v7
+  #       with:
+  #         go-version-file: go.mod
+  #         cache: true
+  #     - name: make cross
+  #       run: make cross
+  #     - name: List binaries
+  #       run: ls -l dist/

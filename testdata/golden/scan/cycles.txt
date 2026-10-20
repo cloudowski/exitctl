@@ -1,0 +1,15 @@
+Offline, read-only scan: 4 Terraform resources, 3 K8s objects
+  Lock-in index  26/100  grade C
+  technical ███░░░░░░░  data ░░░░░░░░░░  operational ███░░░░░░░  skills ░░░░░░░░░░
+  economic: not assessed
+
+  Top anchors                          dependents  alternatives
+  1. aws_security_group.a                       3  Scaleway
+  2. aws_security_group.b                       3  Scaleway
+  3. aws_security_group_rule.a_from_b           0  Scaleway
+  4. aws_security_group_rule.b_from_a           0  Scaleway
+
+  Biggest lever: Amazon Virtual Private Cloud (VPC) -> Scaleway lowers the index by 26 pts
+  Coverage: 100% of types, 100% of resources
+  Explain #1: exitctl explain 1  |  Report: exitctl report --format html --open
+  exitctl 0.1.0-dev · catalog 2026.10.1 · rules 1.1.0 · config 8d36fc36 (draft catalog)

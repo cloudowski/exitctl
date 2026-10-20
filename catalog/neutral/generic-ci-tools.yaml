@@ -1,0 +1,19 @@
+schema: '1.0'
+kind: neutral
+id: generic-ci-tools
+provider: generic
+# GitHub Actions that install generic tools or automate repository chores.
+# They tie a pipeline to GitHub Actions, not to a cloud provider. Listed
+# explicitly so that new cloud-specific actions stay visible as unknown.
+resource_types:
+  ci_action: ['actions/*/*', 'github/*/*', 'step-security/*', 'hashicorp/setup-terraform', 'hashicorp/setup-packer', 'terraform-linters/*', 'helm/*', 'azure/setup-kubectl', 'azure/setup-helm', 'dorny/*', 'peter-evans/*', 'tj-actions/*', 'amannn/*', 'mshick/*', 'dessant/*', 'pre-commit/*', 'astral-sh/*', 'ossf/*', 'aquasecurity/*', 'oras-project/*', 'cycjimmy/*', 'jaxxstorm/*', 'stefanprodan/helm-gh-pages', 'stefanprodan/timoni/actions/setup', 'docker-practice/*', 'clowdhaus/*', 'clowdhaus/*/*', 'artursouza/*', 'ai-action/*', 'microsoft/ps-rule', 'golangci/*', 'goreleaser/*', 'sigstore/*', 'codecov/*', 'softprops/*', 'gradle/*', 'ruby/*', 'pnpm/*', 'mikefarah/*', 'imranismail/*', 'returntocorp/*', 'super-linter/*', 'reviewdog/*', 'ncipollo/release-action']
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.github.com/en/actions/sharing-automations/reusing-workflows
+  - https://github.com/marketplace?type=actions
+  llm: {batch: 2026-10-07-coverage, model: claude-opus-5-5, prompt_version: catalog-coverage-v1, eval_passed: true}

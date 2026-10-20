@@ -1,0 +1,57 @@
+schema: '1.0'
+kind: service
+id: gcp.cloud-dns
+provider: gcp
+name: Cloud DNS
+category: network.dns
+resource_types:
+  terraform: [google_dns_managed_zone, google_dns_record_set, google_dns_policy, google_dns_response_policy, google_dns_response_policy_rule, google_dns_managed_zone_iam_binding, google_dns_managed_zone_iam_member, google_dns_managed_zone_iam_policy]
+  kubernetes:
+  - {group: dns.cnrm.cloud.google.com, kind: DNSManagedZone}
+  - {group: dns.cnrm.cloud.google.com, kind: DNSRecordSet}
+  - {group: dns.cnrm.cloud.google.com, kind: DNSPolicy}
+  - {group: dns.cnrm.cloud.google.com, kind: DNSResponsePolicy}
+  - {group: dns.cnrm.cloud.google.com, kind: DNSResponsePolicyRule}
+traits:
+- {id: proprietary-api, level: low, reason: Zones and records are standard DNS and exportable as zone files; management uses the Cloud DNS API.}
+- {id: operational-tooling-coupling, level: low, reason: 'Private zones, forwarding and peering are tied to Google VPC networks.'}
+rules:
+- id: gcp.cloud-dns.routing-policy
+  match:
+    resource_type: [google_dns_record_set]
+  when: {attr: routing_policy, exists: true}
+  then: {add_trait: managed-only-feature, level: low, evidence: routing_policy}
+sdk:
+- ecosystem: npm
+  packages: ['@google-cloud/dns']
+  imports: ['[''"]@google-cloud/(dns)[''"/]']
+- ecosystem: pypi
+  packages: [google-cloud-dns]
+  imports: [^\s*from\s+google\.cloud\s+import\s+.*\b(dns)\b, ^\s*(from|import)\s+google\.cloud\.(dns)\b]
+- ecosystem: go
+  packages: [google.golang.org/api/dns/v1]
+  imports: ['"google\.golang\.org/api/dns/v\w+"']
+- ecosystem: maven
+  packages: ['com.google.cloud:google-cloud-dns']
+  imports: ['^\s*import\s+(static\s+)?com\.google\.(cloud\.dns)\b']
+- ecosystem: nuget
+  packages: [Google.Apis.Dns.v1]
+  imports: [^\s*using\s+Google\.Apis\.Dns\b]
+edge_hints:
+- {resource_type: google_dns_record_set, attribute: managed_zone, edge_kind: containment}
+- {resource_type: google_dns_managed_zone, attribute: private_visibility_config.networks.network_url, edge_kind: reference}
+- {resource_type: google_dns_policy, attribute: networks.network_url, edge_kind: binding}
+- {resource_type: google_dns_response_policy_rule, attribute: response_policy, edge_kind: containment}
+alternatives:
+- {ref: external-dns, difficulty: low, compatibility: conceptual, notes: ExternalDNS manages records from Kubernetes against many DNS providers., approved_by: cloudowski}
+- {ref: coredns, difficulty: medium, compatibility: conceptual, notes: Self-hosted authoritative or internal DNS; private zone forwarding needs reconfiguration., approved_by: cloudowski}
+- {ref: ovhcloud, difficulty: low, compatibility: protocol-compatible, notes: OVHcloud DNS hosts zones; import exported zone files., approved_by: cloudowski}
+- {ref: hetzner, difficulty: low, compatibility: protocol-compatible, notes: Hetzner DNS hosts zones with an API and Terraform provider., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/dns/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_record_set']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

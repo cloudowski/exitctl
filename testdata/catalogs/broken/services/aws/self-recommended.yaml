@@ -1,0 +1,13 @@
+schema: "1.0"
+kind: service
+id: aws.self-recommended
+provider: aws
+name: Recommended by a non-maintainer
+category: messaging.queue
+resource_types:
+  terraform: [aws_self_recommended]
+traits:
+  - id: proprietary-api
+alternatives:
+  - { ref: rabbitmq, difficulty: medium, compatibility: conceptual, recommended: true, approved_by: some-contributor }
+provenance: { origin: community, author: some-contributor, status: verified, reviewed_by: cloudowski, reviewed_on: 2026-10-06 }

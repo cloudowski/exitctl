@@ -1,0 +1,138 @@
+schema: '1.0'
+kind: service
+id: oci.vcn
+provider: oci
+name: OCI Virtual Cloud Network
+category: network
+resource_types:
+  terraform:
+  - oci_core_vcn
+  - oci_core_subnet
+  - oci_core_security_list
+  - oci_core_network_security_group
+  - oci_core_network_security_group_security_rule
+  - oci_core_internet_gateway
+  - oci_core_nat_gateway
+  - oci_core_service_gateway
+  - oci_core_route_table
+  - oci_core_route_table_attachment
+  - oci_core_default_route_table
+  - oci_core_default_security_list
+  - oci_core_default_dhcp_options
+  - oci_core_dhcp_options
+  - oci_core_drg
+  - oci_core_drg_attachment
+  - oci_core_drg_attachment_management
+  - oci_core_drg_attachments_list
+  - oci_core_drg_route_table
+  - oci_core_drg_route_table_route_rule
+  - oci_core_drg_route_distribution
+  - oci_core_drg_route_distribution_statement
+  - oci_core_local_peering_gateway
+  - oci_core_remote_peering_connection
+  - oci_core_public_ip
+  - oci_core_public_ip_pool
+  - oci_core_public_ip_pool_capacity
+  - oci_core_private_ip
+  - oci_core_ipv6
+  - oci_core_vlan
+  - oci_core_cpe
+  - oci_core_ipsec
+  - oci_core_ipsec_connection_tunnel_management
+  - oci_core_cross_connect
+  - oci_core_cross_connect_group
+  - oci_core_virtual_circuit
+  - oci_core_capture_filter
+  - oci_core_vtap
+  - oci_network_firewall_network_firewall
+  - oci_network_firewall_network_firewall_policy
+traits:
+- {id: provider-network-construct, level: medium, reason: 'VCNs, security lists, NSGs, gateways and DRGs are OCI constructs that every dependent resource references.'}
+edge_hints:
+- {resource_type: oci_core_vcn, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_core_subnet, attribute: vcn_id, edge_kind: containment}
+- {resource_type: oci_core_subnet, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_core_subnet, attribute: route_table_id, edge_kind: binding}
+- {resource_type: oci_core_subnet, attribute: security_list_ids, edge_kind: binding}
+- {resource_type: oci_core_subnet, attribute: dhcp_options_id, edge_kind: binding}
+- {resource_type: oci_core_security_list, attribute: vcn_id, edge_kind: containment}
+- {resource_type: oci_core_network_security_group, attribute: vcn_id, edge_kind: containment}
+- {resource_type: oci_core_network_security_group_security_rule, attribute: network_security_group_id, edge_kind: containment}
+- {resource_type: oci_core_internet_gateway, attribute: vcn_id, edge_kind: containment}
+- {resource_type: oci_core_nat_gateway, attribute: vcn_id, edge_kind: containment}
+- {resource_type: oci_core_service_gateway, attribute: vcn_id, edge_kind: containment}
+- {resource_type: oci_core_route_table, attribute: vcn_id, edge_kind: containment}
+- {resource_type: oci_core_route_table_attachment, attribute: subnet_id, edge_kind: binding}
+- {resource_type: oci_core_route_table_attachment, attribute: route_table_id, edge_kind: binding}
+- {resource_type: oci_core_dhcp_options, attribute: vcn_id, edge_kind: containment}
+- {resource_type: oci_core_local_peering_gateway, attribute: vcn_id, edge_kind: containment}
+- {resource_type: oci_core_local_peering_gateway, attribute: peer_id, edge_kind: reference}
+- {resource_type: oci_core_vlan, attribute: vcn_id, edge_kind: containment}
+- {resource_type: oci_core_drg, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_core_drg_attachment, attribute: drg_id, edge_kind: containment}
+- {resource_type: oci_core_drg_attachment, attribute: vcn_id, edge_kind: binding}
+- {resource_type: oci_core_drg_route_table, attribute: drg_id, edge_kind: containment}
+- {resource_type: oci_core_drg_route_table_route_rule, attribute: drg_route_table_id, edge_kind: containment}
+- {resource_type: oci_core_drg_route_distribution, attribute: drg_id, edge_kind: containment}
+- {resource_type: oci_core_remote_peering_connection, attribute: drg_id, edge_kind: containment}
+- {resource_type: oci_core_ipsec, attribute: drg_id, edge_kind: containment}
+- {resource_type: oci_core_private_ip, attribute: vnic_id, edge_kind: containment}
+- {resource_type: oci_core_ipv6, attribute: vnic_id, edge_kind: containment}
+- {resource_type: oci_core_public_ip, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_network_firewall_network_firewall, attribute: subnet_id, edge_kind: containment}
+- {resource_type: oci_network_firewall_network_firewall, attribute: network_firewall_policy_id, edge_kind: binding}
+sdk:
+- ecosystem: npm
+  packages: [oci-networkfirewall]
+  imports: ['[''"]oci-networkfirewall[''"]']
+  usage: ['\bcore\.VirtualNetworkClient\b']
+  gate: [oci-core, oci-sdk]
+- ecosystem: pypi
+  imports: ['^\s*from\s+oci\.network_firewall\b', '^\s*from\s+oci\s+import\s+.*\bnetwork_firewall\b']
+  usage: ['\boci\.core\.VirtualNetworkClient\b', '\boci\.network_firewall\.\w+']
+  gate: [oci]
+- ecosystem: go
+  packages: [github.com/oracle/oci-go-sdk/v65/networkfirewall]
+  imports: ['"github\.com/oracle/oci-go-sdk/v[0-9]+/networkfirewall(/[^"]*)?"']
+  usage: ['\bcore\.NewVirtualNetworkClientWithConfigurationProvider\b']
+  gate: [github.com/oracle/oci-go-sdk/v65]
+- ecosystem: maven
+  packages: ['com.oracle.oci.sdk:oci-java-sdk-networkfirewall']
+  imports: ['^\s*import\s+com\.oracle\.bmc\.networkfirewall\.']
+  usage: ['\bVirtualNetworkClient\b']
+  gate: ['com.oracle.oci.sdk:oci-java-sdk-core']
+- ecosystem: nuget
+  packages: [OCI.DotNetSDK.Networkfirewall]
+  imports: ['^\s*using\s+Oci\.NetworkfirewallService\b']
+alternatives:
+- ref: hetzner
+  difficulty: medium
+  compatibility: conceptual
+  notes: Private networks and firewalls cover basic segmentation; DRG, service gateways and peering are redesigned.
+  approved_by: cloudowski
+- ref: ovhcloud
+  difficulty: medium
+  compatibility: conceptual
+  notes: vRack and private networks with security groups; network topology is rebuilt.
+  approved_by: cloudowski
+- ref: scaleway
+  difficulty: medium
+  compatibility: conceptual
+  notes: VPC and Private Networks with security groups; network topology is rebuilt.
+  approved_by: cloudowski
+- ref: kubernetes
+  difficulty: medium
+  compatibility: conceptual
+  notes: Inside clusters, NetworkPolicy replaces NSG and security list rules between workloads.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.oracle.com/en-us/iaas/Content/Network/Concepts/overview.htm
+  - https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/core_vcn
+  - https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/core_subnet
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

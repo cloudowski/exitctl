@@ -1,0 +1,18 @@
+schema: '1.0'
+kind: neutral
+id: azure-context
+provider: azure
+# Terraform data sources that only look up the current client or subscription.
+resource_types:
+  terraform: [azurerm_client_config, azapi_client_config, azurerm_subscription, azurerm_subscriptions, azuread_client_config]
+scored: false
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config
+  - https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config
+  llm: {batch: 2026-10-07-coverage, model: claude-opus-5-5, prompt_version: catalog-coverage-v1, eval_passed: true}

@@ -1,0 +1,19 @@
+schema: '1.0'
+kind: trait
+id: data-gravity
+name: Data gravity
+level: high
+dimensions:
+- data
+explanation: Large or central data sets make moving costly and slow because of transfer volume, egress fees and the systems that depend on them.
+exit_hint: Measure data volume and change rate, plan staged replication, and consider moving dependent systems with the data.
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://aws.amazon.com/ec2/pricing/on-demand/#Data_Transfer
+  - https://cloud.google.com/vpc/network-pricing
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

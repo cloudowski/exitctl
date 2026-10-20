@@ -1,0 +1,18 @@
+schema: '1.0'
+kind: alternative
+id: grafana
+name: Grafana
+alternative_kind: oss-self-hosted
+license: AGPL-3.0-only
+homepage: https://grafana.com/oss/grafana/
+vendor_contributed: false
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://grafana.com/oss/grafana/
+  - https://github.com/grafana/grafana
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

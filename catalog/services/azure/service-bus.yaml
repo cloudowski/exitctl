@@ -1,0 +1,99 @@
+schema: '1.0'
+kind: service
+id: azure.service-bus
+provider: azure
+name: Azure Service Bus
+category: messaging.queue
+resource_types:
+  terraform:
+  - azurerm_servicebus_namespace
+  - azurerm_servicebus_queue
+  - azurerm_servicebus_topic
+  - azurerm_servicebus_subscription
+  - azurerm_servicebus_subscription_rule
+  - azurerm_servicebus_namespace_authorization_rule
+  - azurerm_servicebus_queue_authorization_rule
+  - azurerm_servicebus_topic_authorization_rule
+  - azurerm_servicebus_namespace_disaster_recovery_config
+  - azurerm_servicebus_namespace_network_rule_set
+  - azurerm_servicebus_namespace_customer_managed_key
+  kubernetes:
+  - {group: servicebus.azure.com, kind: Namespace}
+  - {group: servicebus.azure.com, kind: NamespacesQueue}
+  - {group: servicebus.azure.com, kind: NamespacesTopic}
+  - {group: servicebus.azure.com, kind: NamespacesTopicsSubscription}
+  - {group: servicebus.azure.com, kind: NamespacesTopicsSubscriptionsRule}
+  - {group: servicebus.azure.com, kind: NamespacesAuthorizationRule}
+traits:
+- {id: proprietary-api, level: medium, reason: 'AMQP 1.0 on the wire, but entity management, sessions and filters are Service Bus specific.'}
+- {id: proprietary-sdk}
+rules:
+- id: azure.service-bus.sql-filter
+  match: {resource_type: [azurerm_servicebus_subscription_rule]}
+  when: {attr: sql_filter, exists: true}
+  then: {add_trait: proprietary-query-language, level: low, evidence: sql_filter}
+sdk:
+- ecosystem: npm
+  packages:
+  - '@azure/service-bus'
+  imports:
+  - '[''"]@azure/service-bus(/[^''"]*)?[''"]'
+- ecosystem: pypi
+  packages:
+  - azure-servicebus
+  imports:
+  - ^\s*(from|import)\s+azure\.servicebus\b
+- ecosystem: go
+  packages:
+  - github.com/Azure/azure-sdk-for-go/sdk/messaging/azservicebus
+  imports:
+  - '"github\.com/Azure/azure-sdk-for-go/sdk/messaging/azservicebus(/[^"]*)?"'
+- ecosystem: maven
+  packages:
+  - com.azure:azure-messaging-servicebus
+  - com.microsoft.azure:azure-servicebus
+  imports:
+  - ^\s*import\s+(static\s+)?com\.azure\.messaging\.servicebus\.
+  - ^\s*import\s+(static\s+)?com\.microsoft\.azure\.servicebus\.
+- ecosystem: nuget
+  packages:
+  - Azure.Messaging.ServiceBus
+  - Microsoft.Azure.ServiceBus
+  - WindowsAzure.ServiceBus
+  imports:
+  - ^\s*using\s+(static\s+)?Azure\.Messaging\.ServiceBus\b
+  - ^\s*using\s+(static\s+)?Microsoft\.Azure\.ServiceBus\b
+edge_hints:
+- {resource_type: azurerm_servicebus_namespace, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_servicebus_queue, attribute: namespace_id, edge_kind: containment}
+- {resource_type: azurerm_servicebus_topic, attribute: namespace_id, edge_kind: containment}
+- {resource_type: azurerm_servicebus_subscription, attribute: topic_id, edge_kind: containment}
+- {resource_type: azurerm_servicebus_subscription_rule, attribute: subscription_id, edge_kind: containment}
+- {resource_type: azurerm_servicebus_subscription, attribute: forward_to, edge_kind: data-flow}
+alternatives:
+- ref: rabbitmq
+  difficulty: medium
+  compatibility: conceptual
+  notes: Queues, topics via exchanges and dead-lettering map over; RabbitMQ 4 speaks AMQP 1.0 but Service Bus entity APIs differ.
+  approved_by: cloudowski
+- ref: apache-kafka
+  difficulty: high
+  compatibility: conceptual
+  notes: Topics and consumer groups replace subscriptions; per-message settlement and sessions need redesign.
+  approved_by: cloudowski
+- ref: nats
+  difficulty: medium
+  compatibility: conceptual
+  notes: JetStream streams and consumers cover queues and pub/sub; no AMQP, clients must change.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-messaging-overview
+  - https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-amqp-overview
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/servicebus_namespace
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

@@ -1,0 +1,67 @@
+schema: '1.0'
+kind: service
+id: gcp.cloud-sql
+provider: gcp
+name: Cloud SQL
+category: database.relational
+resource_types:
+  terraform: [google_sql_database_instance, google_sql_database, google_sql_user, google_sql_ssl_cert, google_sql_source_representation_instance]
+  kubernetes:
+  - {group: sql.cnrm.cloud.google.com, kind: SQLInstance}
+  - {group: sql.cnrm.cloud.google.com, kind: SQLDatabase}
+  - {group: sql.cnrm.cloud.google.com, kind: SQLUser}
+  - {group: sql.cnrm.cloud.google.com, kind: SQLSSLCert}
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'Engines are standard PostgreSQL, MySQL or SQL Server; backups, HA and maintenance use Google tooling.'}
+- {id: managed-only-feature, level: low, reason: 'IAM database authentication, Cloud SQL Auth Proxy and query insights are Google-specific add-ons.'}
+- {id: data-gravity, level: medium, reason: 'Moving a live database needs dump and restore or replication with a planned cutover; Cloud SQL backups restore only on Google Cloud.'}
+rules:
+- id: gcp.cloud-sql.iam-auth
+  match:
+    resource_type: [google_sql_database_instance]
+  when:
+    attr: settings.database_flags.name
+    in: [cloudsql.iam_authentication, cloudsql_iam_authentication]
+  then: {add_trait: proprietary-iam-model, level: low, evidence: settings.database_flags}
+- id: gcp.cloud-sql.iam-user
+  match:
+    resource_type: [google_sql_user]
+  when:
+    attr: type
+    in: [CLOUD_IAM_USER, CLOUD_IAM_SERVICE_ACCOUNT, CLOUD_IAM_GROUP]
+  then: {add_trait: proprietary-iam-model, level: low, evidence: type}
+sdk:
+- ecosystem: npm
+  packages: ['@google-cloud/cloud-sql-connector']
+  imports: ['[''"]@google-cloud/(cloud-sql-connector)[''"/]']
+- ecosystem: pypi
+  packages: [cloud-sql-python-connector]
+  imports: [^\s*from\s+google\.cloud\s+import\s+.*\b(sql\.connector)\b, ^\s*(from|import)\s+google\.cloud\.(sql\.connector)\b]
+- ecosystem: go
+  packages: [cloud.google.com/go/cloudsqlconn]
+  imports: ['"cloud\.google\.com/go/(cloudsqlconn)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.google.cloud.sql:*']
+  imports: ['^\s*import\s+(static\s+)?com\.google\.(cloud\.sql)\b']
+- ecosystem: nuget
+  packages: [Google.Cloud.Sql.V1]
+  imports: ['^\s*using\s+(static\s+)?Google\.Cloud\.(Sql)\b']
+edge_hints:
+- {resource_type: google_sql_database, attribute: instance, edge_kind: containment}
+- {resource_type: google_sql_user, attribute: instance, edge_kind: containment}
+- {resource_type: google_sql_ssl_cert, attribute: instance, edge_kind: containment}
+- {resource_type: google_sql_database_instance, attribute: settings.ip_configuration.private_network, edge_kind: containment}
+- {resource_type: google_sql_database_instance, attribute: master_instance_name, edge_kind: data-flow}
+alternatives:
+- {ref: postgresql, difficulty: low, compatibility: api-compatible, notes: 'Same engine and wire protocol; migrate with pg_dump or logical replication, replace proxy and IAM auth.', approved_by: cloudowski}
+- {ref: mysql, difficulty: low, compatibility: api-compatible, notes: Same engine and protocol for Cloud SQL for MySQL; migrate with dumps or replication., approved_by: cloudowski}
+- {ref: ovhcloud, difficulty: low, compatibility: api-compatible, notes: OVHcloud Public Cloud Databases offer managed PostgreSQL and MySQL., approved_by: cloudowski}
+- {ref: scaleway, difficulty: low, compatibility: api-compatible, notes: Scaleway Managed Database for PostgreSQL and MySQL; migrate with dumps or replication., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/sql/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/sql_database_instance', 'https://cloud.google.com/sql/docs/postgres/connect-auth-proxy']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

@@ -1,0 +1,15 @@
+Offline, read-only scan: 1 component
+  Lock-in index  34/100  grade C
+  technical ████░░░░░░  data ░░░░░░░░░░  operational ░░░░░░░░░░  skills ░░░░░░░░░░
+  economic: not assessed
+
+  Top anchors                                  dependents  alternatives
+  1. Amazon DynamoDB (code only)                        1  ScyllaDB, Apache Cassandra +2
+     + 1 file in 1 component uses Amazon DynamoDB SDK
+  2. Amazon Simple Storage Service (S3) (c...           1  Ceph, Garage +2
+     + 1 file in 1 component uses Amazon Simple Storage Service (S3) SDK
+
+  Biggest lever: Amazon DynamoDB -> ScyllaDB lowers the index by 23 pts
+  Coverage: 100% of types, 100% of resources
+  Explain #1: exitctl explain 1  |  Report: exitctl report --format html --open
+  exitctl 0.1.0-dev · catalog 2026.10.1 · rules 1.1.0 · config 8d36fc36 (draft catalog)

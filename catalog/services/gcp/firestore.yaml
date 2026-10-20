@@ -1,0 +1,49 @@
+schema: '1.0'
+kind: service
+id: gcp.firestore
+provider: gcp
+name: Firestore
+category: database.nosql.document
+resource_types:
+  terraform: [google_firestore_database, google_firestore_document, google_firestore_index, google_firestore_field, google_firestore_backup_schedule, google_datastore_index]
+  kubernetes:
+  - {group: firestore.cnrm.cloud.google.com, kind: FirestoreIndex}
+  - {group: firestore.cnrm.cloud.google.com, kind: FirestoreDatabase}
+traits:
+- {id: proprietary-data-model, level: high, reason: 'Collections, subcollections and document references follow a Firestore-specific model and limits.'}
+- {id: proprietary-api, level: high, reason: 'Queries, realtime listeners and security rules are only available through Firestore SDKs and APIs.'}
+- {id: managed-only-feature, level: medium, reason: 'Realtime listeners, offline sync and Firebase security rules have no direct self-hosted equivalent.'}
+- {id: proprietary-sdk}
+sdk:
+- ecosystem: npm
+  packages: ['@google-cloud/firestore', '@google-cloud/datastore']
+  imports: ['[''"]@google-cloud/(firestore|datastore)[''"/]']
+- ecosystem: pypi
+  packages: [google-cloud-firestore, google-cloud-datastore, google-cloud-ndb]
+  imports: [^\s*from\s+google\.cloud\s+import\s+.*\b(firestore\w*|datastore\w*|ndb)\b, ^\s*(from|import)\s+google\.cloud\.(firestore\w*|datastore\w*|ndb)\b]
+- ecosystem: go
+  packages: [cloud.google.com/go/firestore, cloud.google.com/go/datastore]
+  imports: ['"cloud\.google\.com/go/(firestore|datastore)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.google.cloud:google-cloud-firestore', 'com.google.cloud:google-cloud-datastore']
+  imports: ['^\s*import\s+(static\s+)?com\.google\.(cloud\.firestore|cloud\.datastore|firestore\.|datastore\.)\b']
+- ecosystem: nuget
+  packages: [Google.Cloud.Firestore, Google.Cloud.Firestore.V1, Google.Cloud.Datastore.V1]
+  imports: ['^\s*using\s+(static\s+)?Google\.Cloud\.(Firestore|Datastore)\b']
+edge_hints:
+- {resource_type: google_firestore_index, attribute: database, edge_kind: containment}
+- {resource_type: google_firestore_document, attribute: database, edge_kind: containment}
+- {resource_type: google_firestore_field, attribute: database, edge_kind: containment}
+- {resource_type: google_firestore_backup_schedule, attribute: database, edge_kind: containment}
+alternatives:
+- {ref: mongodb, difficulty: high, compatibility: conceptual, notes: 'Document model with change streams; Firestore queries, listeners and security rules need rewriting.', approved_by: cloudowski}
+- {ref: ferretdb, difficulty: high, compatibility: conceptual, notes: 'MongoDB wire protocol on PostgreSQL; same rewrite as MongoDB, change streams are limited.', approved_by: cloudowski}
+- {ref: postgresql, difficulty: high, compatibility: conceptual, notes: JSONB documents with LISTEN/NOTIFY or logical replication; requires schema and query redesign., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/firestore/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/firestore_database']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

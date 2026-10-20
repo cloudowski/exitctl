@@ -1,0 +1,45 @@
+schema: '1.0'
+kind: service
+id: gcp.memorystore
+provider: gcp
+name: Memorystore
+category: database.cache
+resource_types:
+  terraform: [google_redis_instance, google_redis_cluster, google_memcache_instance, google_memorystore_instance]
+  kubernetes:
+  - {group: redis.cnrm.cloud.google.com, kind: RedisInstance}
+  - {group: redis.cnrm.cloud.google.com, kind: RedisCluster}
+  - {group: memcache.cnrm.cloud.google.com, kind: MemcacheInstance}
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'Applications use the standard Redis, Valkey or Memcached protocols; provisioning and scaling are Google-specific.'}
+sdk:
+- ecosystem: npm
+  packages: ['@google-cloud/redis', '@google-cloud/memcache']
+  imports: ['[''"]@google-cloud/(redis|memcache)[''"/]']
+- ecosystem: pypi
+  packages: [google-cloud-redis, google-cloud-memcache, google-cloud-memorystore]
+  imports: [^\s*from\s+google\.cloud\s+import\s+.*\b(redis_v1\w*|memcache\w*|memorystore\w*)\b, ^\s*(from|import)\s+google\.cloud\.(redis_v1\w*|memcache\w*|memorystore\w*)\b]
+- ecosystem: go
+  packages: [cloud.google.com/go/redis, cloud.google.com/go/memcache]
+  imports: ['"cloud\.google\.com/go/(redis|memcache|memorystore)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.google.cloud:google-cloud-redis', 'com.google.cloud:google-cloud-memcache']
+  imports: ['^\s*import\s+(static\s+)?com\.google\.(cloud\.redis|cloud\.memcache)\b']
+- ecosystem: nuget
+  packages: [Google.Cloud.Redis.V1, Google.Cloud.Memcache.V1]
+  imports: ['^\s*using\s+(static\s+)?Google\.Cloud\.(Redis|Memcache)\b']
+edge_hints:
+- {resource_type: google_redis_instance, attribute: authorized_network, edge_kind: containment}
+- {resource_type: google_memcache_instance, attribute: authorized_network, edge_kind: containment}
+alternatives:
+- {ref: valkey, difficulty: low, compatibility: api-compatible, notes: Redis-protocol compatible; Memorystore for Valkey and Redis clients connect unchanged., approved_by: cloudowski}
+- {ref: redis-oss, difficulty: low, compatibility: api-compatible, notes: Same protocol and commands; replace managed failover and persistence settings., approved_by: cloudowski}
+- {ref: scaleway, difficulty: low, compatibility: api-compatible, notes: Scaleway Managed Database for Redis provides a Redis-compatible endpoint., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/memorystore/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/redis_instance']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

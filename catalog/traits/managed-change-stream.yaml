@@ -1,0 +1,25 @@
+schema: '1.0'
+kind: trait
+id: managed-change-stream
+name: Managed change stream
+level: medium
+dimensions:
+- technical
+- data
+explanation: Downstream consumers depend on a managed change data capture stream with provider-specific record format and delivery semantics.
+exit_hint: Replace with an open CDC pipeline (for example Debezium to Kafka) and adapt consumers to the new event format.
+rules:
+- id: generic.stream-enabled
+  match: {resource_type: ['*']}
+  when: {attr: stream_enabled, equals: true}
+  then: {add_trait: managed-change-stream, level: high, evidence: stream_enabled}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html
+  - https://learn.microsoft.com/en-us/azure/cosmos-db/change-feed
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

@@ -1,0 +1,51 @@
+schema: '1.0'
+kind: service
+id: gcp.cloud-run
+provider: gcp
+name: Cloud Run
+category: compute.serverless
+resource_types:
+  terraform: [google_cloud_run_service, google_cloud_run_domain_mapping, google_cloud_run_service_iam_binding, google_cloud_run_service_iam_member, google_cloud_run_service_iam_policy, google_cloud_run_v2_service, google_cloud_run_v2_job, google_cloud_run_v2_worker_pool, google_cloud_run_v2_service_iam_binding, google_cloud_run_v2_service_iam_member, google_cloud_run_v2_service_iam_policy, google_cloud_run_v2_job_iam_binding, google_cloud_run_v2_job_iam_member, google_cloud_run_v2_job_iam_policy, google_cloud_run_v2_worker_pool_iam_binding, google_cloud_run_v2_worker_pool_iam_member, google_cloud_run_v2_worker_pool_iam_policy]
+  kubernetes:
+  - {group: run.cnrm.cloud.google.com, kind: RunService}
+  - {group: run.cnrm.cloud.google.com, kind: RunJob}
+  ci_action: [google-github-actions/deploy-cloudrun]
+traits:
+- {id: proprietary-runtime, level: low, reason: Runs standard OCI containers; the service spec follows the Knative Serving API shape.}
+- {id: operational-tooling-coupling, level: low, reason: 'Revisions, traffic splitting and scaling are configured through Cloud Run tooling.'}
+- {id: proprietary-iam-model, level: low, reason: Invocation is authorized with Google IAM roles and identity tokens.}
+sdk:
+- ecosystem: npm
+  packages: ['@google-cloud/run']
+  imports: ['[''"]@google-cloud/(run)[''"/]']
+- ecosystem: pypi
+  packages: [google-cloud-run]
+  imports: [^\s*from\s+google\.cloud\s+import\s+.*\b(run_v2|run)\b, ^\s*(from|import)\s+google\.cloud\.(run_v2|run)\b]
+- ecosystem: go
+  packages: [cloud.google.com/go/run]
+  imports: ['"cloud\.google\.com/go/(run)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.google.cloud:google-cloud-run']
+  imports: ['^\s*import\s+(static\s+)?com\.google\.(cloud\.run)\b']
+- ecosystem: nuget
+  packages: [Google.Cloud.Run.V2]
+  imports: ['^\s*using\s+(static\s+)?Google\.Cloud\.(Run)\b']
+edge_hints:
+- {resource_type: google_cloud_run_v2_service, attribute: template.vpc_access.connector, edge_kind: containment}
+- {resource_type: google_cloud_run_v2_service, attribute: template.vpc_access.network_interfaces.subnetwork, edge_kind: containment}
+- {resource_type: google_cloud_run_v2_service, attribute: template.service_account, edge_kind: reference}
+- {resource_type: google_cloud_run_v2_job, attribute: template.template.vpc_access.connector, edge_kind: containment}
+- {resource_type: google_cloud_run_domain_mapping, attribute: spec.route_name, edge_kind: reference}
+alternatives:
+- {ref: knative, difficulty: low, compatibility: api-compatible, notes: Knative Serving uses the same Service resource shape; IAM-based invocation and Google integrations need replacement., approved_by: cloudowski}
+- {ref: kubernetes, difficulty: low, compatibility: conceptual, notes: Deployments with autoscaling run the same container images; scale-to-zero needs Knative or KEDA., approved_by: cloudowski}
+- {ref: scaleway, difficulty: low, compatibility: conceptual, notes: Scaleway Serverless Containers run OCI images with scale-to-zero., approved_by: cloudowski}
+- {ref: openfaas, difficulty: medium, compatibility: conceptual, notes: OpenFaaS runs containers as functions on Kubernetes; HTTP contract and scaling settings differ., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/run/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/cloud_run_v2_service', 'https://github.com/google-github-actions/deploy-cloudrun']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

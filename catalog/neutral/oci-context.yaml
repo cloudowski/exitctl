@@ -1,0 +1,15 @@
+schema: '1.0'
+kind: neutral
+id: oci-context
+provider: oci
+resource_types:
+  terraform: [oci_core_services, oci_core_images, oci_identity_availability_domains, oci_objectstorage_namespace, oci_containerengine_cluster_kube_config, oci_containerengine_node_pool_option, oci_containerengine_clusters]
+scored: false
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-08'
+  status: verified
+  sources: ['https://registry.terraform.io/providers/oracle/oci/latest/docs/data-sources/core_services', 'https://registry.terraform.io/providers/oracle/oci/latest/docs/data-sources/objectstorage_namespace']
+  llm: {batch: 2026-10-08-coverage, model: claude-sonnet-5-5, prompt_version: catalog-coverage-v1, eval_passed: true}

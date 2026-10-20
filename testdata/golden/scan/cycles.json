@@ -1,0 +1,971 @@
+{
+  "format": "exitctl.result/v1",
+  "kind": "result",
+  "versions": {
+    "tool": "0.1.0-dev",
+    "catalog": "2026.10.1",
+    "catalog_schema": "1.0",
+    "rules": "1.1.0",
+    "config_fingerprint": "8d36fc36",
+    "custom_scoring": false,
+    "catalog_drafts_included": true
+  },
+  "inputs": [
+    {
+      "repo": "cycles",
+      "as_of": "2026-10-06",
+      "versions": {
+        "tool": "0.1.0-dev",
+        "catalog": "2026.10.1",
+        "catalog_schema": "1.0",
+        "rules": "1.1.0",
+        "config_fingerprint": "8d36fc36",
+        "custom_scoring": false,
+        "catalog_drafts_included": true
+      }
+    }
+  ],
+  "facts": {
+    "sources": [
+      {
+        "repo": "cycles",
+        "path": "k8s/app.yaml",
+        "kind": "kubernetes",
+        "status": "parsed"
+      },
+      {
+        "repo": "cycles",
+        "path": "main.tf",
+        "kind": "terraform",
+        "status": "parsed"
+      }
+    ],
+    "raw_nodes": [
+      {
+        "id": "cycles//#/ConfigMap/cycles/web-config",
+        "node_kind": "resource",
+        "source_kind": "kubernetes",
+        "type": "/ConfigMap",
+        "native_address": "/ConfigMap/cycles/web-config",
+        "attributes": {
+          "data": {
+            "LOG_LEVEL": "info"
+          },
+          "metadata": {
+            "name": "web-config",
+            "namespace": "cycles"
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "k8s/app.yaml",
+            "line": 2,
+            "excerpt": "kind: ConfigMap",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "id": "cycles//#/Service/cycles/web",
+        "node_kind": "resource",
+        "source_kind": "kubernetes",
+        "type": "/Service",
+        "native_address": "/Service/cycles/web",
+        "attributes": {
+          "metadata": {
+            "name": "web",
+            "namespace": "cycles"
+          },
+          "spec": {
+            "ports": [
+              {
+                "port": 80,
+                "targetPort": 8080
+              }
+            ],
+            "selector": {
+              "app": "web"
+            }
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "k8s/app.yaml",
+            "line": 36,
+            "excerpt": "kind: Service",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "id": "cycles//#apps/Deployment/cycles/web",
+        "node_kind": "resource",
+        "source_kind": "kubernetes",
+        "type": "apps/Deployment",
+        "native_address": "apps/Deployment/cycles/web",
+        "attributes": {
+          "metadata": {
+            "labels": {
+              "app": "web"
+            },
+            "name": "web",
+            "namespace": "cycles"
+          },
+          "spec": {
+            "replicas": 2,
+            "selector": {
+              "matchLabels": {
+                "app": "web"
+              }
+            },
+            "template": {
+              "metadata": {
+                "labels": {
+                  "app": "web"
+                }
+              },
+              "spec": {
+                "containers": [
+                  {
+                    "envFrom": [
+                      {
+                        "configMapRef": {
+                          "name": "web-config"
+                        }
+                      }
+                    ],
+                    "image": "nginx:1.27",
+                    "name": "web",
+                    "ports": [
+                      {
+                        "containerPort": 8080
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "k8s/app.yaml",
+            "line": 10,
+            "excerpt": "kind: Deployment",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "id": "cycles//#aws_security_group.a",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "aws_security_group",
+        "native_address": "aws_security_group.a",
+        "provider_identity": "aws:aws_security_group/cycles-a",
+        "attributes": {
+          "description": "group a",
+          "name": "cycles-a",
+          "tags": {
+            "$unknown": true
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "main.tf",
+            "line": 16,
+            "excerpt": "resource \"aws_security_group\" \"a\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "cycles//#aws_security_group.b",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "aws_security_group",
+        "native_address": "aws_security_group.b",
+        "provider_identity": "aws:aws_security_group/cycles-b",
+        "attributes": {
+          "description": "group b",
+          "name": "cycles-b",
+          "tags": {
+            "$unknown": true
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "main.tf",
+            "line": 26,
+            "excerpt": "resource \"aws_security_group\" \"b\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "cycles//#aws_security_group_rule.a_from_b",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "aws_security_group_rule",
+        "native_address": "aws_security_group_rule.a_from_b",
+        "attributes": {
+          "from_port": 443,
+          "protocol": "tcp",
+          "security_group_id": {
+            "$unknown": true
+          },
+          "source_security_group_id": {
+            "$unknown": true
+          },
+          "to_port": 443,
+          "type": "ingress"
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "main.tf",
+            "line": 38,
+            "excerpt": "resource \"aws_security_group_rule\" \"a_from_b\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "cycles//#aws_security_group_rule.b_from_a",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "aws_security_group_rule",
+        "native_address": "aws_security_group_rule.b_from_a",
+        "attributes": {
+          "from_port": 443,
+          "protocol": "tcp",
+          "security_group_id": {
+            "$unknown": true
+          },
+          "source_security_group_id": {
+            "$unknown": true
+          },
+          "to_port": 443,
+          "type": "ingress"
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "main.tf",
+            "line": 47,
+            "excerpt": "resource \"aws_security_group_rule\" \"b_from_a\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      }
+    ],
+    "raw_edges": [
+      {
+        "from": "cycles//#/Service/cycles/web",
+        "to": "cycles//#apps/Deployment/cycles/web",
+        "attribute": "spec.selector",
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "k8s/app.yaml",
+            "line": 41,
+            "excerpt": "selector:",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "from": "cycles//#apps/Deployment/cycles/web",
+        "to": "cycles//#/ConfigMap/cycles/web-config",
+        "attribute": "spec.template.spec.containers.envFrom.configMapRef.name",
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "k8s/app.yaml",
+            "line": 33,
+            "excerpt": "name: web-config",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "from": "cycles//#aws_security_group.a",
+        "to": "cycles//#aws_security_group.b",
+        "attribute": "tags",
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "main.tf",
+            "line": 22,
+            "excerpt": "Peer = aws_security_group.b.id",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "cycles//#aws_security_group.b",
+        "to": "cycles//#aws_security_group.a",
+        "attribute": "tags",
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "main.tf",
+            "line": 32,
+            "excerpt": "Peer = aws_security_group.a.id",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "cycles//#aws_security_group_rule.a_from_b",
+        "to": "cycles//#aws_security_group.a",
+        "attribute": "security_group_id",
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "main.tf",
+            "line": 43,
+            "excerpt": "security_group_id        = aws_security_group.a.id",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "cycles//#aws_security_group_rule.a_from_b",
+        "to": "cycles//#aws_security_group.b",
+        "attribute": "source_security_group_id",
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "main.tf",
+            "line": 44,
+            "excerpt": "source_security_group_id = aws_security_group.b.id",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "cycles//#aws_security_group_rule.b_from_a",
+        "to": "cycles//#aws_security_group.a",
+        "attribute": "source_security_group_id",
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "main.tf",
+            "line": 53,
+            "excerpt": "source_security_group_id = aws_security_group.a.id",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "cycles//#aws_security_group_rule.b_from_a",
+        "to": "cycles//#aws_security_group.b",
+        "attribute": "security_group_id",
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "main.tf",
+            "line": 52,
+            "excerpt": "security_group_id        = aws_security_group.b.id",
+            "source_kind": "terraform"
+          }
+        ]
+      }
+    ],
+    "package_uses": [],
+    "code_uses": [],
+    "gaps": []
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "cycles//#/ConfigMap/cycles/web-config",
+        "kind": "resource",
+        "type": "/ConfigMap",
+        "native_address": "/ConfigMap/cycles/web-config",
+        "class": "neutral",
+        "sources": [
+          "cycles//k8s/app.yaml"
+        ],
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "k8s/app.yaml",
+            "line": 2,
+            "excerpt": "kind: ConfigMap",
+            "source_kind": "kubernetes"
+          }
+        ],
+        "findings": [],
+        "risk": 0,
+        "weight": 2.585,
+        "dependents_count": 2,
+        "dependents": [
+          "cycles//#/Service/cycles/web",
+          "cycles//#apps/Deployment/cycles/web"
+        ],
+        "wave": 1
+      },
+      {
+        "id": "cycles//#/Service/cycles/web",
+        "kind": "resource",
+        "type": "/Service",
+        "native_address": "/Service/cycles/web",
+        "class": "neutral",
+        "sources": [
+          "cycles//k8s/app.yaml"
+        ],
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "k8s/app.yaml",
+            "line": 36,
+            "excerpt": "kind: Service",
+            "source_kind": "kubernetes"
+          }
+        ],
+        "findings": [],
+        "risk": 0,
+        "weight": 1,
+        "dependents_count": 0,
+        "wave": 3
+      },
+      {
+        "id": "cycles//#apps/Deployment/cycles/web",
+        "kind": "resource",
+        "type": "apps/Deployment",
+        "native_address": "apps/Deployment/cycles/web",
+        "class": "neutral",
+        "sources": [
+          "cycles//k8s/app.yaml"
+        ],
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "k8s/app.yaml",
+            "line": 10,
+            "excerpt": "kind: Deployment",
+            "source_kind": "kubernetes"
+          }
+        ],
+        "findings": [],
+        "risk": 0,
+        "weight": 2,
+        "dependents_count": 1,
+        "dependents": [
+          "cycles//#/Service/cycles/web"
+        ],
+        "wave": 2
+      },
+      {
+        "id": "cycles//#aws_security_group.a",
+        "kind": "resource",
+        "type": "aws_security_group",
+        "native_address": "aws_security_group.a",
+        "service": "aws.vpc",
+        "class": "service",
+        "sources": [
+          "cycles//main.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "main.tf",
+            "line": 16,
+            "excerpt": "resource \"aws_security_group\" \"a\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "cycles//#aws_security_group.a::provider-network-construct",
+            "trait": "provider-network-construct",
+            "level": "medium",
+            "dimensions": [
+              "technical",
+              "operational"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "cycles",
+                "path": "main.tf",
+                "line": 16,
+                "excerpt": "resource \"aws_security_group\" \"a\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.45,
+        "risk_by_dimension": {
+          "operational": 0.5,
+          "technical": 0.5
+        },
+        "weight": 3,
+        "contribution": 1.35,
+        "dependents_count": 3,
+        "dependents": [
+          "cycles//#aws_security_group.b",
+          "cycles//#aws_security_group_rule.a_from_b",
+          "cycles//#aws_security_group_rule.b_from_a"
+        ],
+        "wave": 1,
+        "scc": 4
+      },
+      {
+        "id": "cycles//#aws_security_group.b",
+        "kind": "resource",
+        "type": "aws_security_group",
+        "native_address": "aws_security_group.b",
+        "service": "aws.vpc",
+        "class": "service",
+        "sources": [
+          "cycles//main.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "main.tf",
+            "line": 26,
+            "excerpt": "resource \"aws_security_group\" \"b\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "cycles//#aws_security_group.b::provider-network-construct",
+            "trait": "provider-network-construct",
+            "level": "medium",
+            "dimensions": [
+              "technical",
+              "operational"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "cycles",
+                "path": "main.tf",
+                "line": 26,
+                "excerpt": "resource \"aws_security_group\" \"b\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.45,
+        "risk_by_dimension": {
+          "operational": 0.5,
+          "technical": 0.5
+        },
+        "weight": 3,
+        "contribution": 1.35,
+        "dependents_count": 3,
+        "dependents": [
+          "cycles//#aws_security_group.a",
+          "cycles//#aws_security_group_rule.a_from_b",
+          "cycles//#aws_security_group_rule.b_from_a"
+        ],
+        "wave": 1,
+        "scc": 4
+      },
+      {
+        "id": "cycles//#aws_security_group_rule.a_from_b",
+        "kind": "resource",
+        "type": "aws_security_group_rule",
+        "native_address": "aws_security_group_rule.a_from_b",
+        "service": "aws.vpc",
+        "class": "service",
+        "sources": [
+          "cycles//main.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "main.tf",
+            "line": 38,
+            "excerpt": "resource \"aws_security_group_rule\" \"a_from_b\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "cycles//#aws_security_group_rule.a_from_b::provider-network-construct",
+            "trait": "provider-network-construct",
+            "level": "medium",
+            "dimensions": [
+              "technical",
+              "operational"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "cycles",
+                "path": "main.tf",
+                "line": 38,
+                "excerpt": "resource \"aws_security_group_rule\" \"a_from_b\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.45,
+        "risk_by_dimension": {
+          "operational": 0.5,
+          "technical": 0.5
+        },
+        "weight": 1,
+        "contribution": 0.45,
+        "dependents_count": 0,
+        "wave": 2
+      },
+      {
+        "id": "cycles//#aws_security_group_rule.b_from_a",
+        "kind": "resource",
+        "type": "aws_security_group_rule",
+        "native_address": "aws_security_group_rule.b_from_a",
+        "service": "aws.vpc",
+        "class": "service",
+        "sources": [
+          "cycles//main.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "main.tf",
+            "line": 47,
+            "excerpt": "resource \"aws_security_group_rule\" \"b_from_a\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "cycles//#aws_security_group_rule.b_from_a::provider-network-construct",
+            "trait": "provider-network-construct",
+            "level": "medium",
+            "dimensions": [
+              "technical",
+              "operational"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "cycles",
+                "path": "main.tf",
+                "line": 47,
+                "excerpt": "resource \"aws_security_group_rule\" \"b_from_a\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.45,
+        "risk_by_dimension": {
+          "operational": 0.5,
+          "technical": 0.5
+        },
+        "weight": 1,
+        "contribution": 0.45,
+        "dependents_count": 0,
+        "wave": 2
+      }
+    ],
+    "edges": [
+      {
+        "from": "cycles//#/Service/cycles/web",
+        "to": "cycles//#apps/Deployment/cycles/web",
+        "kind": "reference",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "k8s/app.yaml",
+            "line": 41,
+            "excerpt": "selector:",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "from": "cycles//#apps/Deployment/cycles/web",
+        "to": "cycles//#/ConfigMap/cycles/web-config",
+        "kind": "reference",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "k8s/app.yaml",
+            "line": 33,
+            "excerpt": "name: web-config",
+            "source_kind": "kubernetes"
+          }
+        ]
+      },
+      {
+        "from": "cycles//#aws_security_group.a",
+        "to": "cycles//#aws_security_group.b",
+        "kind": "reference",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "main.tf",
+            "line": 22,
+            "excerpt": "Peer = aws_security_group.b.id",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "cycles//#aws_security_group.b",
+        "to": "cycles//#aws_security_group.a",
+        "kind": "reference",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "main.tf",
+            "line": 32,
+            "excerpt": "Peer = aws_security_group.a.id",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "cycles//#aws_security_group_rule.a_from_b",
+        "to": "cycles//#aws_security_group.a",
+        "kind": "containment",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "main.tf",
+            "line": 43,
+            "excerpt": "security_group_id        = aws_security_group.a.id",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "cycles//#aws_security_group_rule.a_from_b",
+        "to": "cycles//#aws_security_group.b",
+        "kind": "reference",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "main.tf",
+            "line": 44,
+            "excerpt": "source_security_group_id = aws_security_group.b.id",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "cycles//#aws_security_group_rule.b_from_a",
+        "to": "cycles//#aws_security_group.a",
+        "kind": "reference",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "main.tf",
+            "line": 53,
+            "excerpt": "source_security_group_id = aws_security_group.a.id",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "cycles//#aws_security_group_rule.b_from_a",
+        "to": "cycles//#aws_security_group.b",
+        "kind": "containment",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "cycles",
+            "path": "main.tf",
+            "line": 52,
+            "excerpt": "security_group_id        = aws_security_group.b.id",
+            "source_kind": "terraform"
+          }
+        ]
+      }
+    ],
+    "groups": [],
+    "sccs": [
+      {
+        "id": 4,
+        "members": [
+          "cycles//#aws_security_group.a",
+          "cycles//#aws_security_group.b"
+        ]
+      }
+    ]
+  },
+  "analysis": {
+    "status": "ok",
+    "index": 26,
+    "index_without_exceptions": 26,
+    "grade": "C",
+    "confidence": "normal",
+    "dimensions": {
+      "data": 0,
+      "economic": null,
+      "operational": 29,
+      "skills": 0,
+      "technical": 29
+    },
+    "anchors": [
+      {
+        "rank": 1,
+        "node": "cycles//#aws_security_group.a",
+        "contribution": 1.35,
+        "dependents_count": 3,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "scaleway",
+            "name": "Scaleway",
+            "kind": "european-provider",
+            "difficulty": "low",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Scaleway VPC and Private Networks with Public Gateways map to VPCs, subnets and NAT."
+          }
+        ],
+        "reason": "Provider network construct + 3 dependent resources"
+      },
+      {
+        "rank": 2,
+        "node": "cycles//#aws_security_group.b",
+        "contribution": 1.35,
+        "dependents_count": 3,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "scaleway",
+            "name": "Scaleway",
+            "kind": "european-provider",
+            "difficulty": "low",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Scaleway VPC and Private Networks with Public Gateways map to VPCs, subnets and NAT."
+          }
+        ],
+        "reason": "Provider network construct + 3 dependent resources"
+      },
+      {
+        "rank": 3,
+        "node": "cycles//#aws_security_group_rule.a_from_b",
+        "contribution": 0.45,
+        "dependents_count": 0,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "scaleway",
+            "name": "Scaleway",
+            "kind": "european-provider",
+            "difficulty": "low",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Scaleway VPC and Private Networks with Public Gateways map to VPCs, subnets and NAT."
+          }
+        ],
+        "reason": "Provider network construct"
+      },
+      {
+        "rank": 4,
+        "node": "cycles//#aws_security_group_rule.b_from_a",
+        "contribution": 0.45,
+        "dependents_count": 0,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "scaleway",
+            "name": "Scaleway",
+            "kind": "european-provider",
+            "difficulty": "low",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Scaleway VPC and Private Networks with Public Gateways map to VPCs, subnets and NAT."
+          }
+        ],
+        "reason": "Provider network construct"
+      }
+    ],
+    "lever": {
+      "service": "aws.vpc",
+      "alternative": "scaleway",
+      "delta": 26
+    },
+    "coverage": {
+      "types": 1,
+      "resources": 1,
+      "weighted": 1,
+      "unknown_types": 0
+    },
+    "waves": [
+      {
+        "wave": 1,
+        "units": [
+          [
+            "cycles//#/ConfigMap/cycles/web-config"
+          ],
+          [
+            "cycles//#aws_security_group.a",
+            "cycles//#aws_security_group.b"
+          ]
+        ]
+      },
+      {
+        "wave": 2,
+        "units": [
+          [
+            "cycles//#apps/Deployment/cycles/web"
+          ],
+          [
+            "cycles//#aws_security_group_rule.a_from_b"
+          ],
+          [
+            "cycles//#aws_security_group_rule.b_from_a"
+          ]
+        ]
+      },
+      {
+        "wave": 3,
+        "units": [
+          [
+            "cycles//#/Service/cycles/web"
+          ]
+        ]
+      }
+    ],
+    "chains": [],
+    "exceptions": [],
+    "notes": [
+      "draft catalog entries were scored (development mode); results are unverified"
+    ]
+  }
+}

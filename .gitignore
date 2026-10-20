@@ -1,0 +1,30 @@
+# build output
+bin/
+dist/
+*.test
+*.out
+coverage.out
+*.exe
+
+# exitctl local results and generated reports
+.exitctl/
+exitctl-report.*
+exitctl-graph.*
+
+# OS / editors
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+.idea/
+.vscode/
+.claude/scheduled_tasks.lock
+
+# calibration runner output
+calibration-report.md
+
+# local tooling (spec-kit, Claude Code), kept out of the public repo
+.claude/
+.specify/
+living-specs.yml
+specs/

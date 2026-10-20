@@ -1,0 +1,49 @@
+schema: '1.0'
+kind: neutral
+id: kubernetes-ecosystem
+provider: kubernetes
+# Custom resources of open source Kubernetes projects that run on any
+# conformant cluster, plus legacy core API groups.
+resource_types:
+  kubernetes:
+  - {group: extensions, kind: '*'}
+  - {group: apiregistration.k8s.io, kind: '*'}
+  - {group: argoproj.io, kind: '*'}
+  - {group: dapr.io, kind: '*'}
+  - {group: karpenter.sh, kind: '*'}
+  - {group: kyverno.io, kind: '*'}
+  - {group: monitoring.coreos.com, kind: '*'}
+  - {group: networking.istio.io, kind: '*'}
+  - {group: security.istio.io, kind: '*'}
+  - {group: cert-manager.io, kind: '*'}
+  - {group: acme.cert-manager.io, kind: '*'}
+  - {group: opentelemetry.io, kind: '*'}
+  - {group: agones.dev, kind: '*'}
+  - {group: kro.run, kind: '*'}
+  - {group: servicecatalog.k8s.io, kind: '*'}
+  - {group: skaffold, kind: '*'}
+  - {group: keda.sh, kind: '*'}
+  - {group: external-secrets.io, kind: '*'}
+  - {group: traefik.io, kind: '*'}
+  - {group: projectcontour.io, kind: '*'}
+  - {group: kustomize.config.k8s.io, kind: '*'}
+  - {group: source.toolkit.fluxcd.io, kind: '*'}
+  - {group: kustomize.toolkit.fluxcd.io, kind: '*'}
+  - {group: helm.toolkit.fluxcd.io, kind: '*'}
+  - {group: notification.toolkit.fluxcd.io, kind: '*'}
+  - {group: image.toolkit.fluxcd.io, kind: '*'}
+  - {group: apiextensions.crossplane.io, kind: '*'}
+  - {group: pkg.crossplane.io, kind: '*'}
+  - {group: cilium.io, kind: '*'}
+  - {group: secrets-store.csi.x-k8s.io, kind: '*'}
+  - {group: trident.netapp.io, kind: '*'}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/
+  - https://landscape.cncf.io/
+  llm: {batch: 2026-10-07-coverage, model: claude-opus-5-5, prompt_version: catalog-coverage-v1, eval_passed: true}

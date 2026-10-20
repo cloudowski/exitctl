@@ -1,0 +1,75 @@
+schema: '1.0'
+kind: service
+id: aws.codepipeline
+provider: aws
+name: AWS CodePipeline (with CodeDeploy, CodeCommit, CodeArtifact)
+category: devops.ci
+resource_types:
+  terraform: [aws_codepipeline, aws_codepipeline_webhook, aws_codepipeline_custom_action_type, aws_codestarconnections_connection, aws_codestarconnections_host, aws_codedeploy_app, aws_codedeploy_deployment_group, aws_codedeploy_deployment_config, aws_codecommit_repository, aws_codecommit_trigger, aws_codecommit_approval_rule_template, aws_codecommit_approval_rule_template_association, aws_codeartifact_domain, aws_codeartifact_repository, aws_codeartifact_domain_permissions_policy, aws_codeartifact_repository_permissions_policy]
+  cloudformation: ['AWS::CodePipeline::Pipeline', 'AWS::CodePipeline::Webhook', 'AWS::CodePipeline::CustomActionType', 'AWS::CodeStarConnections::Connection', 'AWS::CodeDeploy::Application', 'AWS::CodeDeploy::DeploymentGroup', 'AWS::CodeDeploy::DeploymentConfig', 'AWS::CodeCommit::Repository', 'AWS::CodeArtifact::Domain', 'AWS::CodeArtifact::Repository']
+traits:
+- {id: operational-tooling-coupling, level: medium, reason: 'Pipelines, CodeDeploy appspec files and CodeCommit triggers are AWS developer-tool constructs.'}
+rules:
+- id: aws.codepipeline.codedeploy
+  match:
+    resource_type: [aws_codedeploy_deployment_group]
+  then: {add_trait: proprietary-workflow-definition, level: low, evidence: deployment_config_name}
+- id: aws.codepipeline.codecommit
+  match:
+    resource_type: [aws_codecommit_repository]
+  then: {add_trait: data-gravity, level: low, evidence: repository_name}
+- id: aws.codepipeline.codeartifact
+  match:
+    resource_type: [aws_codeartifact_repository]
+  then: {add_trait: provider-registry, level: low, evidence: repository}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-codepipeline', '@aws-sdk/client-codedeploy', '@aws-sdk/client-codecommit', '@aws-sdk/client-codeartifact']
+  imports: ['[''"]@aws-sdk/client-(codepipeline|codedeploy|codecommit|codeartifact)[''"/]']
+  usage: ['\bAWS\.(CodePipeline|CodeDeploy|CodeCommit)\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["''](codepipeline|codedeploy|codecommit|codeartifact)["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/codepipeline, github.com/aws/aws-sdk-go-v2/service/codedeploy, github.com/aws/aws-sdk-go-v2/service/codecommit, github.com/aws/aws-sdk-go-v2/service/codeartifact]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/(codepipeline|codedeploy|codecommit|codeartifact)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:codepipeline', 'software.amazon.awssdk:codedeploy', 'software.amazon.awssdk:codecommit', 'software.amazon.awssdk:codeartifact']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.(codepipeline|codedeploy|codecommit|codeartifact)\.']
+- ecosystem: nuget
+  packages: [AWSSDK.CodePipeline, AWSSDK.CodeDeploy, AWSSDK.CodeCommit, AWSSDK.CodeArtifact]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.(CodePipeline|CodeDeploy|CodeCommit|CodeArtifact)\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-codepipeline, aws-sdk-codedeploy, aws-sdk-codecommit, aws-sdk-codeartifact]
+  imports: ['^\s*require\s+["'']aws-sdk-(codepipeline|codedeploy|codecommit|codeartifact)["'']']
+  usage: ['(?i)\bAws::(codepipeline|codedeploy|codecommit|codeartifact)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-codepipeline, aws-sdk-codedeploy, aws-sdk-codecommit, aws-sdk-codeartifact]
+  imports: ['\baws_sdk_(codepipeline|codedeploy|codecommit|codeartifact)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(codepipeline|codedeploy|codecommit|codeartifact)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_codepipeline, attribute: role_arn, edge_kind: binding}
+- {resource_type: aws_codepipeline, attribute: artifact_store.location, edge_kind: data-flow}
+- {resource_type: aws_codepipeline_webhook, attribute: target_pipeline, edge_kind: binding}
+- {resource_type: aws_codedeploy_deployment_group, attribute: app_name, edge_kind: containment}
+- {resource_type: aws_codedeploy_deployment_group, attribute: service_role_arn, edge_kind: binding}
+- {resource_type: aws_codedeploy_deployment_group, attribute: ecs_service.service_name, edge_kind: data-flow}
+- {resource_type: aws_codecommit_trigger, attribute: repository_name, edge_kind: binding}
+- {resource_type: aws_codeartifact_repository, attribute: domain, edge_kind: containment}
+alternatives:
+- {ref: woodpecker, difficulty: low, compatibility: conceptual, notes: 'Pipeline stages become Woodpecker steps; deployments use kubectl, Helm or Argo CD instead of CodeDeploy.', approved_by: cloudowski}
+- {ref: forgejo, difficulty: low, compatibility: conceptual, notes: 'Forgejo hosts Git repositories and packages and runs Actions workflows, replacing CodeCommit and CodeArtifact.', approved_by: cloudowski}
+- {ref: gitea, difficulty: low, compatibility: conceptual, notes: Gitea hosts Git repositories and packages and runs Actions workflows., approved_by: cloudowski}
+- {ref: argo-workflows, difficulty: medium, compatibility: conceptual, notes: Argo Workflows runs multi-stage delivery pipelines on Kubernetes., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/codepipeline/latest/userguide/welcome.html', 'https://docs.aws.amazon.com/codedeploy/latest/userguide/welcome.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/codepipeline']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

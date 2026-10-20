@@ -1,0 +1,77 @@
+schema: '1.0'
+kind: service
+id: oci.vault
+provider: oci
+name: OCI Vault
+category: security.secrets
+resource_types:
+  terraform:
+  - oci_kms_vault
+  - oci_kms_key
+  - oci_kms_key_version
+  - oci_kms_vault_replication
+  - oci_kms_ekms_private_endpoint
+  - oci_kms_encrypted_data
+  - oci_kms_generated_key
+  - oci_kms_sign
+  - oci_kms_verify
+  - oci_vault_secret
+traits:
+- {id: proprietary-api, level: medium, reason: 'Secret retrieval and crypto operations use OCI Vault and KMS APIs.'}
+- {id: proprietary-iam-model, level: low, reason: Access is granted through OCI IAM policies on vaults and keys.}
+rules:
+- id: oci.vault.hsm-key
+  match: {resource_type: [oci_kms_key]}
+  when:
+    not: {attr: protection_mode, in: [SOFTWARE, EXTERNAL]}
+  then: {add_trait: non-exportable-data, level: high, evidence: protection_mode}
+kubernetes_bindings:
+- match: {kind: SecretProviderClass, field: spec.provider, equals: oci}
+- match: {kind: SecretStore, field: spec.provider.oracle, exists: true}
+- match: {kind: ClusterSecretStore, field: spec.provider.oracle, exists: true}
+sdk:
+- ecosystem: npm
+  packages: [oci-vault, oci-secrets, oci-keymanagement]
+  imports: ['[''"]oci-(vault|secrets|keymanagement)[''"]']
+- ecosystem: pypi
+  imports: ['^\s*from\s+oci\.(vault|secrets|key_management)\b', '^\s*from\s+oci\s+import\s+.*\b(vault|secrets|key_management)\b']
+  usage: ['\boci\.(vault|secrets|key_management)\.\w+Client\b']
+  gate: [oci]
+- ecosystem: go
+  packages: [github.com/oracle/oci-go-sdk/v65/vault, github.com/oracle/oci-go-sdk/v65/secrets, github.com/oracle/oci-go-sdk/v65/keymanagement]
+  imports: ['"github\.com/oracle/oci-go-sdk/v[0-9]+/(vault|secrets|keymanagement)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.oracle.oci.sdk:oci-java-sdk-vault', 'com.oracle.oci.sdk:oci-java-sdk-secrets', 'com.oracle.oci.sdk:oci-java-sdk-keymanagement']
+  imports: ['^\s*import\s+com\.oracle\.bmc\.(vault|secrets|keymanagement)\.']
+- ecosystem: nuget
+  packages: [OCI.DotNetSDK.Vault, OCI.DotNetSDK.Secrets, OCI.DotNetSDK.Keymanagement]
+  imports: ['^\s*using\s+Oci\.(Vault|Secrets|Keymanagement)Service\b']
+edge_hints:
+- {resource_type: oci_kms_vault, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_kms_key, attribute: management_endpoint, edge_kind: containment}
+- {resource_type: oci_kms_key_version, attribute: key_id, edge_kind: containment}
+- {resource_type: oci_vault_secret, attribute: vault_id, edge_kind: containment}
+- {resource_type: oci_vault_secret, attribute: key_id, edge_kind: reference}
+- {resource_type: oci_kms_ekms_private_endpoint, attribute: subnet_id, edge_kind: containment}
+alternatives:
+- ref: vault-openbao
+  difficulty: medium
+  compatibility: conceptual
+  notes: KV secrets and transit encryption replace Vault secrets and keys; access policies are rewritten.
+  approved_by: cloudowski
+- ref: sops
+  difficulty: low
+  compatibility: conceptual
+  notes: Encrypted secrets in Git with age or PGP keys; fits static configuration secrets, not runtime crypto.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.oracle.com/en-us/iaas/Content/KeyManagement/home.htm
+  - https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/vault_secret
+  - https://github.com/oracle-samples/oci-secrets-store-csi-driver-provider
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

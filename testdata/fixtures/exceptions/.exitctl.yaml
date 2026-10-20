@@ -1,0 +1,23 @@
+version: 1
+repo_name: exceptions
+exceptions:
+  # Active until 2027-01-01: all Cognito findings are accepted.
+  - id: keep-cognito
+    select:
+      service: aws.cognito
+    reason: Identity is shared with other products; replacement is planned for 2027.
+    owner: platform-team
+    expires: 2027-01-01
+  # Expired: the queue's findings count again and a notice names it.
+  - id: old-sqs
+    select:
+      resource: aws_sqs_queue.events
+    reason: Event bus replacement was scheduled for 2025.
+    owner: orders-team
+    expires: 2026-01-01
+  # Invalid: an empty reason is reported and the exception is ignored.
+  - id: no-reason
+    select:
+      service: aws.dynamodb
+    reason: ""
+    owner: data-team

@@ -1,0 +1,10 @@
+{
+  "name": "orders-app",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.600.0",
+    "express": "^4.19.2"
+  }
+}

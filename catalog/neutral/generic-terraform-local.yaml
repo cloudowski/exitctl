@@ -1,0 +1,31 @@
+schema: '1.0'
+kind: neutral
+id: generic-terraform-local
+provider: generic
+# Terraform types that only exist in state or on the machine running
+# Terraform (random values, local files and keys, sleeps, archives) or that
+# read data at plan time. They deploy nothing in a cloud. null_resource and
+# terraform_data may run provisioner scripts, which exitctl cannot see.
+resource_types:
+  terraform:
+  - random_*
+  - null_resource
+  - terraform_data
+  - tls_*
+  - local_*
+  - time_*
+  - archive_*
+  - http
+  - external
+scored: false
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://registry.terraform.io/providers/hashicorp/random/latest/docs
+  - https://developer.hashicorp.com/terraform/language/resources/terraform-data
+  - https://registry.terraform.io/providers/hashicorp/time/latest/docs
+  llm: {batch: 2026-10-07-coverage, model: claude-opus-5-5, prompt_version: catalog-coverage-v1, eval_passed: true}

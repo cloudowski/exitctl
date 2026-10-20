@@ -1,0 +1,74 @@
+schema: '1.0'
+kind: service
+id: azure.application-gateway
+provider: azure
+name: Azure Application Gateway
+category: network.load-balancer
+resource_types:
+  terraform:
+  - azurerm_application_gateway
+  - azurerm_web_application_firewall_policy
+  - azurerm_network_interface_application_gateway_backend_address_pool_association
+  - azurerm_application_load_balancer
+  - azurerm_application_load_balancer_frontend
+  - azurerm_application_load_balancer_subnet_association
+  kubernetes:
+  - {group: network.azure.com, kind: ApplicationGateway}
+  - {group: network.azure.com, kind: WebApplicationFirewallPolicy}
+  - {group: alb.networking.azure.io, kind: ApplicationLoadBalancer}
+  - {group: alb.networking.azure.io, kind: FrontendTLSPolicy}
+  - {group: alb.networking.azure.io, kind: HealthCheckPolicy}
+  - {group: alb.networking.azure.io, kind: RoutePolicy}
+  - {group: alb.networking.azure.io, kind: BackendTLSPolicy}
+  - {group: alb.networking.azure.io, kind: IngressExtension}
+  - {group: appgw.ingress.k8s.io, kind: AzureIngressProhibitedTarget}
+  - {group: appgw.ingress.k8s.io, kind: AzureApplicationGatewayRewrite}
+traits:
+- {id: provider-specific-annotations, level: medium, reason: 'AGIC and Application Gateway for Containers are configured through Azure ingress classes, annotations and CRDs.'}
+- {id: provider-network-construct, level: low, reason: Gateways live in dedicated VNet subnets with Azure WAF policies.}
+kubernetes_bindings:
+- match: {kind: Ingress, field: spec.ingressClassName, in: [azure-application-gateway, azure-alb-external]}
+- match: {kind: Ingress, annotation: kubernetes.io/ingress.class, in: [azure/application-gateway, azure-application-gateway]}
+- match: {kind: Ingress, annotation: appgw.ingress.kubernetes.io/*, exists: true}
+- match: {kind: Ingress, annotation: alb.networking.azure.io/*, exists: true}
+- match: {kind: IngressClass, field: spec.controller, in: [azure/application-gateway, alb.networking.azure.io/alb-controller]}
+- match: {kind: GatewayClass, group: gateway.networking.k8s.io, field: spec.controllerName, equals: alb.networking.azure.io/alb-controller}
+edge_hints:
+- {resource_type: azurerm_application_gateway, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_web_application_firewall_policy, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_application_gateway, attribute: gateway_ip_configuration.subnet_id, edge_kind: containment}
+- {resource_type: azurerm_application_gateway, attribute: firewall_policy_id, edge_kind: binding}
+- {resource_type: azurerm_application_load_balancer_frontend, attribute: application_load_balancer_id, edge_kind: containment}
+- {resource_type: azurerm_application_load_balancer_subnet_association, attribute: application_load_balancer_id, edge_kind: containment}
+alternatives:
+- ref: nginx
+  difficulty: low
+  compatibility: conceptual
+  notes: Ingress NGINX or NGINX Gateway Fabric replace AGIC; translate appgw annotations and WAF rules (e.g. ModSecurity).
+  approved_by: cloudowski
+- ref: envoy
+  difficulty: medium
+  compatibility: conceptual
+  notes: Envoy Gateway implements Gateway API; route and TLS policies are reconfigured.
+  approved_by: cloudowski
+- ref: traefik
+  difficulty: low
+  compatibility: conceptual
+  notes: Ingress or Gateway API controller; annotations map to middlewares.
+  approved_by: cloudowski
+- ref: haproxy
+  difficulty: low
+  compatibility: conceptual
+  notes: HAProxy ingress controller handles L7 routing; WAF rules need a separate module.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/application-gateway/ingress-controller-overview
+  - https://learn.microsoft.com/en-us/azure/application-gateway/for-containers/overview
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/application_gateway
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

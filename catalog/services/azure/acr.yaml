@@ -1,0 +1,63 @@
+schema: '1.0'
+kind: service
+id: azure.acr
+provider: azure
+name: Azure Container Registry
+category: devops.registry
+resource_types:
+  terraform:
+  - azurerm_container_registry
+  - azurerm_container_registry_webhook
+  - azurerm_container_registry_scope_map
+  - azurerm_container_registry_token
+  - azurerm_container_registry_token_password
+  - azurerm_container_registry_task
+  - azurerm_container_registry_task_schedule_run_now
+  - azurerm_container_registry_agent_pool
+  - azurerm_container_registry_cache_rule
+  - azurerm_container_registry_credential_set
+  - azurerm_container_connected_registry
+  kubernetes:
+  - {group: containerregistry.azure.com, kind: Registry}
+  - {group: containerregistry.azure.com, kind: RegistryReplication}
+  container_registry:
+  - '*.azurecr.io'
+traits:
+- {id: provider-registry, level: low, reason: Standard OCI distribution API; image references and pull authentication point at azurecr.io.}
+edge_hints:
+- {resource_type: azurerm_container_registry, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_container_registry_webhook, attribute: registry_name, edge_kind: containment}
+- {resource_type: azurerm_container_registry_scope_map, attribute: container_registry_name, edge_kind: containment}
+- {resource_type: azurerm_container_registry_token, attribute: container_registry_name, edge_kind: containment}
+- {resource_type: azurerm_container_registry_task, attribute: container_registry_id, edge_kind: containment}
+alternatives:
+- ref: harbor
+  difficulty: low
+  compatibility: api-compatible
+  notes: OCI registry with replication; retag images and update pull secrets. ACR Tasks become CI jobs.
+  approved_by: cloudowski
+- ref: forgejo
+  difficulty: low
+  compatibility: api-compatible
+  notes: Built-in OCI container registry next to Git hosting.
+  approved_by: cloudowski
+- ref: ovhcloud
+  difficulty: low
+  compatibility: api-compatible
+  notes: Managed Private Registry (Harbor based) in the EU.
+  approved_by: cloudowski
+- ref: scaleway
+  difficulty: low
+  compatibility: api-compatible
+  notes: Managed container registry in the EU.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/container-registry/container-registry-intro
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_registry
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

@@ -1,0 +1,95 @@
+schema: '1.0'
+kind: service
+id: aws.api-gateway
+provider: aws
+name: Amazon API Gateway
+category: integration
+resource_types:
+  terraform: [aws_api_gateway_rest_api, aws_api_gateway_rest_api_policy, aws_api_gateway_rest_api_put, aws_api_gateway_resource, aws_api_gateway_method, aws_api_gateway_method_response, aws_api_gateway_method_settings, aws_api_gateway_integration, aws_api_gateway_integration_response, aws_api_gateway_deployment, aws_api_gateway_stage, aws_api_gateway_api_key, aws_api_gateway_usage_plan, aws_api_gateway_usage_plan_key, aws_api_gateway_authorizer, aws_api_gateway_domain_name, aws_api_gateway_domain_name_access_association, aws_api_gateway_base_path_mapping, aws_api_gateway_model, aws_api_gateway_request_validator, aws_api_gateway_gateway_response, aws_api_gateway_vpc_link, aws_api_gateway_account, aws_api_gateway_client_certificate, aws_api_gateway_documentation_part, aws_api_gateway_documentation_version, aws_apigatewayv2_api, aws_apigatewayv2_api_mapping, aws_apigatewayv2_authorizer, aws_apigatewayv2_deployment, aws_apigatewayv2_domain_name, aws_apigatewayv2_integration, aws_apigatewayv2_integration_response, aws_apigatewayv2_model, aws_apigatewayv2_route, aws_apigatewayv2_route_response, aws_apigatewayv2_stage, aws_apigatewayv2_vpc_link]
+  cloudformation: ['AWS::ApiGateway::RestApi', 'AWS::ApiGateway::Resource', 'AWS::ApiGateway::Method', 'AWS::ApiGateway::Deployment', 'AWS::ApiGateway::Stage', 'AWS::ApiGateway::ApiKey', 'AWS::ApiGateway::UsagePlan', 'AWS::ApiGateway::UsagePlanKey', 'AWS::ApiGateway::Authorizer', 'AWS::ApiGateway::DomainName', 'AWS::ApiGateway::BasePathMapping', 'AWS::ApiGateway::Model', 'AWS::ApiGateway::RequestValidator', 'AWS::ApiGateway::GatewayResponse', 'AWS::ApiGateway::VpcLink', 'AWS::ApiGateway::Account', 'AWS::ApiGateway::ClientCertificate', 'AWS::ApiGateway::DocumentationPart', 'AWS::ApiGateway::DocumentationVersion', 'AWS::ApiGatewayV2::Api', 'AWS::ApiGatewayV2::ApiMapping', 'AWS::ApiGatewayV2::Authorizer', 'AWS::ApiGatewayV2::Deployment', 'AWS::ApiGatewayV2::DomainName', 'AWS::ApiGatewayV2::Integration', 'AWS::ApiGatewayV2::IntegrationResponse', 'AWS::ApiGatewayV2::Model', 'AWS::ApiGatewayV2::Route', 'AWS::ApiGatewayV2::RouteResponse', 'AWS::ApiGatewayV2::Stage', 'AWS::ApiGatewayV2::VpcLink', 'AWS::Serverless::Api', 'AWS::Serverless::HttpApi']
+  kubernetes:
+  - {group: apigatewayv2.services.k8s.aws, kind: API}
+  - {group: apigatewayv2.services.k8s.aws, kind: APIMapping}
+  - {group: apigatewayv2.services.k8s.aws, kind: Authorizer}
+  - {group: apigatewayv2.services.k8s.aws, kind: Deployment}
+  - {group: apigatewayv2.services.k8s.aws, kind: DomainName}
+  - {group: apigatewayv2.services.k8s.aws, kind: Integration}
+  - {group: apigatewayv2.services.k8s.aws, kind: Route}
+  - {group: apigatewayv2.services.k8s.aws, kind: Stage}
+  - {group: apigatewayv2.services.k8s.aws, kind: VPCLink}
+  - {group: apigateway.services.k8s.aws, kind: RestAPI}
+  - {group: apigateway.services.k8s.aws, kind: Resource}
+  - {group: apigateway.services.k8s.aws, kind: Integration}
+  - {group: apigateway.services.k8s.aws, kind: Stage}
+traits:
+- {id: proprietary-api, level: medium, reason: 'Routes, authorizers, usage plans and mapping templates use API Gateway constructs; OpenAPI definitions with x-amazon extensions partially port.'}
+- {id: proprietary-event-model, level: low, reason: Lambda proxy integrations pass an API Gateway specific request and response payload.}
+rules:
+- id: aws.api-gateway.vtl-mapping-templates
+  match:
+    resource_type: [aws_api_gateway_integration]
+  when: {attr: request_templates, exists: true}
+  then: {add_trait: managed-only-feature, level: medium, evidence: request_templates}
+- id: aws.api-gateway.lambda-authorizer
+  match:
+    resource_type: [aws_api_gateway_authorizer, aws_apigatewayv2_authorizer]
+  when: {attr: authorizer_uri, exists: true}
+  then: {add_trait: proprietary-event-model, level: medium, evidence: authorizer_uri}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-api-gateway', '@aws-sdk/client-apigatewayv2', '@aws-sdk/client-apigatewaymanagementapi']
+  imports: ['[''"]@aws-sdk/client-(api-gateway|apigatewayv2|apigatewaymanagementapi)[''"/]']
+  usage: ['\bAWS\.(APIGateway|ApiGatewayV2|ApiGatewayManagementApi)\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["''](apigateway|apigatewayv2|apigatewaymanagementapi)["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/apigateway, github.com/aws/aws-sdk-go-v2/service/apigatewayv2, github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/(apigateway|apigatewayv2|apigatewaymanagementapi)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:apigateway', 'software.amazon.awssdk:apigatewayv2', 'software.amazon.awssdk:apigatewaymanagementapi', 'com.amazonaws:aws-java-sdk-api-gateway']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.(apigateway|apigatewayv2|apigatewaymanagementapi)\.', '^\s*import\s+(static\s+)?com\.amazonaws\.services\.apigateway\.']
+- ecosystem: nuget
+  packages: [AWSSDK.APIGateway, AWSSDK.ApiGatewayV2, AWSSDK.ApiGatewayManagementApi]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.(APIGateway|ApiGatewayV2|ApiGatewayManagementApi)\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-apigateway, aws-sdk-apigatewayv2, aws-sdk-apigatewaymanagementapi]
+  imports: ['^\s*require\s+["'']aws-sdk-(apigateway|apigatewayv2|apigatewaymanagementapi)["'']']
+  usage: ['(?i)\bAws::(apigateway|apigatewayv2|apigatewaymanagementapi)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-apigateway, aws-sdk-apigatewayv2, aws-sdk-apigatewaymanagementapi]
+  imports: ['\baws_sdk_(apigateway|apigatewayv2|apigatewaymanagementapi)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(apigateway|apigatewayv2|apigatewaymanagementapi)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_api_gateway_resource, attribute: rest_api_id, edge_kind: containment}
+- {resource_type: aws_api_gateway_method, attribute: rest_api_id, edge_kind: containment}
+- {resource_type: aws_api_gateway_integration, attribute: rest_api_id, edge_kind: containment}
+- {resource_type: aws_api_gateway_integration, attribute: uri, edge_kind: data-flow}
+- {resource_type: aws_api_gateway_stage, attribute: rest_api_id, edge_kind: containment}
+- {resource_type: aws_api_gateway_deployment, attribute: rest_api_id, edge_kind: containment}
+- {resource_type: aws_api_gateway_authorizer, attribute: authorizer_uri, edge_kind: reference}
+- {resource_type: aws_api_gateway_authorizer, attribute: provider_arns, edge_kind: reference}
+- {resource_type: aws_api_gateway_vpc_link, attribute: target_arns, edge_kind: data-flow}
+- {resource_type: aws_apigatewayv2_route, attribute: api_id, edge_kind: containment}
+- {resource_type: aws_apigatewayv2_integration, attribute: api_id, edge_kind: containment}
+- {resource_type: aws_apigatewayv2_integration, attribute: integration_uri, edge_kind: data-flow}
+- {resource_type: aws_apigatewayv2_stage, attribute: api_id, edge_kind: containment}
+- {resource_type: aws_apigatewayv2_authorizer, attribute: authorizer_uri, edge_kind: reference}
+- {resource_type: aws_apigatewayv2_vpc_link, attribute: subnet_ids, edge_kind: containment}
+alternatives:
+- {ref: kong, difficulty: medium, compatibility: conceptual, notes: 'Kong routes, plugins and consumers cover auth, rate limiting and keys; mapping templates need plugins or code.', approved_by: cloudowski}
+- {ref: envoy, difficulty: medium, compatibility: conceptual, notes: 'Envoy (or Envoy Gateway) handles routing, JWT auth and rate limits; usage plans need extra components.', approved_by: cloudowski}
+- {ref: traefik, difficulty: medium, compatibility: conceptual, notes: Traefik routers and middlewares cover routing and auth on Kubernetes; API keys and quotas need add-ons., approved_by: cloudowski}
+- {ref: nginx, difficulty: medium, compatibility: conceptual, notes: NGINX reverse proxy covers routing and TLS; authorizers and usage plans need custom configuration., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/apigateway/latest/developerguide/welcome.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_rest_api', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_api']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

@@ -1,0 +1,37 @@
+# graph in every format (US4).
+exec exitctl scan $FIXTURES/shop-aws --include-drafts --as-of 2026-10-06 --repo-name shop-aws --emoji never --no-color
+
+exec exitctl graph --no-color
+stdout '^Dependency tree \([0-9]+ nodes, [0-9]+ edges\)'
+stdout 'aws_dynamodb_table\.orders'
+
+exec exitctl graph aws_dynamodb_table.orders --blast-radius --no-color
+stdout '^Blast radius of aws_dynamodb_table\.orders +dependents: [0-9]+'
+
+exec exitctl graph --waves --no-color
+stdout '\[wave [0-9]+\]'
+
+exec exitctl graph --expand --no-color
+stdout 'aws_subnet\.a'
+
+exec exitctl graph --format dot
+stdout '^digraph'
+
+exec exitctl graph --format json
+stdout '"kind": "graph"'
+
+exec exitctl graph --format svg -o g.svg
+stdout 'wrote g.svg'
+exists g.svg
+
+exec exitctl graph --format png -o g.png
+exists g.png
+
+! exec exitctl graph --format png
+stderr 'needs -o'
+
+! exec exitctl graph --format bmp
+stderr 'unknown --format'
+
+! exec exitctl graph aws_dynamodb_table.ordrs
+stderr 'did you mean'

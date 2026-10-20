@@ -1,0 +1,9 @@
+schema: "1.0"
+kind: trait
+id: proprietary-api
+name: Duplicate
+level: low
+dimensions: [technical]
+explanation: Duplicate trait id.
+exit_hint: None.
+provenance: { origin: maintainer, author: cloudowski, status: verified, reviewed_by: cloudowski, reviewed_on: 2026-10-06 }

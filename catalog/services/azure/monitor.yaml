@@ -1,0 +1,137 @@
+schema: '1.0'
+kind: service
+id: azure.monitor
+provider: azure
+name: Azure Monitor and Log Analytics
+category: observability
+resource_types:
+  terraform:
+  - azurerm_log_analytics_workspace
+  - azurerm_log_analytics_solution
+  - azurerm_log_analytics_saved_search
+  - azurerm_log_analytics_data_export_rule
+  - azurerm_log_analytics_linked_service
+  - azurerm_log_analytics_linked_storage_account
+  - azurerm_log_analytics_query_pack
+  - azurerm_log_analytics_query_pack_query
+  - azurerm_log_analytics_workspace_table
+  - azurerm_monitor_action_group
+  - azurerm_monitor_metric_alert
+  - azurerm_monitor_activity_log_alert
+  - azurerm_monitor_scheduled_query_rules_alert
+  - azurerm_monitor_scheduled_query_rules_alert_v2
+  - azurerm_monitor_scheduled_query_rules_log
+  - azurerm_monitor_diagnostic_setting
+  - azurerm_monitor_autoscale_setting
+  - azurerm_monitor_data_collection_rule
+  - azurerm_monitor_data_collection_endpoint
+  - azurerm_monitor_data_collection_rule_association
+  - azurerm_monitor_workspace
+  - azurerm_monitor_alert_prometheus_rule_group
+  - azurerm_monitor_private_link_scope
+  - azurerm_monitor_private_link_scoped_service
+  - azurerm_monitor_smart_detector_alert_rule
+  - azurerm_monitor_alert_processing_rule_action_group
+  - azurerm_monitor_alert_processing_rule_suppression
+  - azurerm_dashboard_grafana
+  - azurerm_portal_dashboard
+  - azurerm_sentinel_log_analytics_workspace_onboarding
+  kubernetes:
+  - {group: operationalinsights.azure.com, kind: Workspace}
+  - {group: insights.azure.com, kind: ActionGroup}
+  - {group: insights.azure.com, kind: MetricAlert}
+  - {group: insights.azure.com, kind: ScheduledQueryRule}
+  - {group: insights.azure.com, kind: DiagnosticSetting}
+  - {group: insights.azure.com, kind: AutoscaleSetting}
+  - {group: insights.azure.com, kind: DataCollectionRule}
+  - {group: insights.azure.com, kind: DataCollectionEndpoint}
+  - {group: insights.azure.com, kind: DataCollectionRuleAssociation}
+  - {group: monitor.azure.com, kind: Account}
+  - {group: alertsmanagement.azure.com, kind: PrometheusRuleGroup}
+  - {group: alertsmanagement.azure.com, kind: SmartDetectorAlertRule}
+  - {group: dashboard.azure.com, kind: Grafana}
+traits:
+- {id: proprietary-query-language, level: medium, reason: 'Log queries, alerts and workbooks are written in KQL.'}
+- {id: operational-tooling-coupling, level: medium, reason: 'Alerts, action groups, diagnostic settings and dashboards are tied to Azure Monitor.'}
+- {id: data-gravity, level: low, reason: Retained logs stay in the workspace; usually only recent data is migrated.}
+rules:
+- id: azure.monitor.prometheus-compatible
+  match: {resource_type: [azurerm_monitor_workspace, azurerm_monitor_alert_prometheus_rule_group, azurerm_dashboard_grafana]}
+  then: {set_level: {trait: proprietary-query-language, level: none}}
+sdk:
+- ecosystem: npm
+  packages:
+  - '@azure/monitor-query'
+  - '@azure/monitor-ingestion'
+  imports:
+  - '[''"]@azure/monitor-query(/[^''"]*)?[''"]'
+  - '[''"]@azure/monitor-ingestion(/[^''"]*)?[''"]'
+- ecosystem: pypi
+  packages:
+  - azure-monitor-query
+  - azure-monitor-ingestion
+  imports:
+  - ^\s*(from|import)\s+azure\.monitor\.query\b
+  - ^\s*(from|import)\s+azure\.monitor\.ingestion\b
+- ecosystem: go
+  packages:
+  - github.com/Azure/azure-sdk-for-go/sdk/monitor/azquery
+  - github.com/Azure/azure-sdk-for-go/sdk/monitor/query/azlogs
+  - github.com/Azure/azure-sdk-for-go/sdk/monitor/azingest
+  imports:
+  - '"github\.com/Azure/azure-sdk-for-go/sdk/monitor/azquery(/[^"]*)?"'
+  - '"github\.com/Azure/azure-sdk-for-go/sdk/monitor/query/azlogs(/[^"]*)?"'
+  - '"github\.com/Azure/azure-sdk-for-go/sdk/monitor/azingest(/[^"]*)?"'
+- ecosystem: maven
+  packages:
+  - com.azure:azure-monitor-query
+  - com.azure:azure-monitor-ingestion
+  imports:
+  - ^\s*import\s+(static\s+)?com\.azure\.monitor\.query\.
+  - ^\s*import\s+(static\s+)?com\.azure\.monitor\.ingestion\.
+- ecosystem: nuget
+  packages:
+  - Azure.Monitor.Query
+  - Azure.Monitor.Ingestion
+  imports:
+  - ^\s*using\s+(static\s+)?Azure\.Monitor\.Query\b
+  - ^\s*using\s+(static\s+)?Azure\.Monitor\.Ingestion\b
+edge_hints:
+- {resource_type: azurerm_log_analytics_workspace, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_monitor_action_group, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_monitor_diagnostic_setting, attribute: target_resource_id, edge_kind: data-flow}
+- {resource_type: azurerm_monitor_diagnostic_setting, attribute: log_analytics_workspace_id, edge_kind: data-flow}
+- {resource_type: azurerm_monitor_metric_alert, attribute: scopes, edge_kind: containment}
+- {resource_type: azurerm_log_analytics_solution, attribute: workspace_resource_id, edge_kind: containment}
+alternatives:
+- ref: prometheus
+  difficulty: medium
+  compatibility: conceptual
+  notes: Metrics and alert rules move to PromQL; Azure Managed Prometheus rules port directly.
+  approved_by: cloudowski
+- ref: grafana
+  difficulty: low
+  compatibility: conceptual
+  notes: Dashboards rebuilt in Grafana; Azure Managed Grafana dashboards export as JSON.
+  approved_by: cloudowski
+- ref: opensearch
+  difficulty: medium
+  compatibility: conceptual
+  notes: Log search and alerting; KQL queries must be rewritten.
+  approved_by: cloudowski
+- ref: opentelemetry
+  difficulty: low
+  compatibility: conceptual
+  notes: Collect with the OpenTelemetry Collector to keep the backend replaceable.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/azure-monitor/overview
+  - https://learn.microsoft.com/en-us/azure/azure-monitor/logs/log-analytics-overview
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

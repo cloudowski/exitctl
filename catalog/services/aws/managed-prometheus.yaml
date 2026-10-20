@@ -1,0 +1,56 @@
+schema: '1.0'
+kind: service
+id: aws.managed-prometheus
+provider: aws
+name: Amazon Managed Service for Prometheus
+category: observability
+resource_types:
+  terraform: [aws_prometheus_workspace, aws_prometheus_workspaces, aws_prometheus_rule_group_namespace, aws_prometheus_alert_manager_definition, aws_prometheus_scraper, aws_prometheus_workspace_configuration]
+  cloudformation: ['AWS::APS::Workspace', 'AWS::APS::RuleGroupsNamespace', 'AWS::APS::Scraper']
+  kubernetes:
+  - {group: prometheusservice.services.k8s.aws, kind: Workspace}
+  - {group: prometheusservice.services.k8s.aws, kind: RuleGroupsNamespace}
+  - {group: prometheusservice.services.k8s.aws, kind: AlertManagerDefinition}
+  - {group: prometheusservice.services.k8s.aws, kind: LoggingConfiguration}
+traits:
+- {id: proprietary-iam-model, level: low, reason: 'Remote write and queries are signed with AWS SigV4 and authorized by IAM; other backends use basic auth, tokens or mTLS.'}
+- {id: operational-tooling-coupling, level: low, reason: 'PromQL, rules and Alertmanager config are standard Prometheus; managed scrapers and workspace setup are AWS-specific.'}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-amp']
+  imports: ['[''"]@aws-sdk/client-amp[''"/]']
+- ecosystem: pypi
+  usage: ['\.client\(\s*(service_name\s*=\s*)?["'']amp["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/amp]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/amp(/[^"]*)?"']
+- ecosystem: rubygems
+  packages: [aws-sdk-amp]
+  imports: ['^\s*require\s+["'']aws-sdk-(amp)["'']']
+  usage: ['(?i)\bAws::(amp)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-amp]
+  imports: ['\baws_sdk_(amp)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(amp)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_prometheus_rule_group_namespace, attribute: workspace_id, edge_kind: containment}
+- {resource_type: aws_prometheus_alert_manager_definition, attribute: workspace_id, edge_kind: containment}
+- {resource_type: aws_prometheus_scraper, attribute: destination.amp.workspace_arn, edge_kind: data-flow}
+alternatives:
+- {ref: prometheus, difficulty: low, compatibility: api-compatible, notes: 'Same query, remote write and rules APIs; a long-term store such as Thanos or Mimir replaces the managed workspace.', recommended: true, approved_by: cloudowski}
+- {ref: grafana, difficulty: low, compatibility: api-compatible, notes: 'Grafana Mimir accepts Prometheus remote write and serves PromQL.', approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.aws.amazon.com/prometheus/latest/userguide/what-is-Amazon-Managed-Service-Prometheus.html
+  - https://aws-controllers-k8s.github.io/community/docs/community/services/
+  - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/prometheus_workspace
+  llm: {batch: 2026-10-07-eks-workshop, model: claude-opus-5-5, prompt_version: catalog-coverage-v1, eval_passed: true}

@@ -1,0 +1,33 @@
+version: "2"
+linters:
+  enable:
+    - govet
+    - staticcheck
+    - errcheck
+    - depguard
+    - forbidigo
+  settings:
+    depguard:
+      rules:
+        no-network-in-scan-path:
+          files:
+            - "**/internal/**"
+            - "!**/internal/cli/open.go"
+          deny:
+            - pkg: "net/http"
+              desc: "exitctl is offline: no network access in internal packages (constitution I)"
+            - pkg: "net/url"
+              desc: "exitctl is offline: no network access in internal packages (constitution I)"
+            - pkg: "net"
+              desc: "exitctl is offline: no network access in internal packages (constitution I)"
+            - pkg: "os/exec"
+              desc: "exitctl never executes external programs (only internal/cli/open.go may)"
+    forbidigo:
+      analyze-types: false
+      forbid:
+        - pattern: "[–—]"
+          msg: "do not use en/em dashes, use a plain '-'"
+formatters:
+  enable:
+    - gofmt
+    - goimports

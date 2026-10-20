@@ -1,0 +1,12 @@
+Dependency tree (7 nodes, 8 edges)
+Service/cycles/web
+`-- apps/Deployment/cycles/web
+    `-- ConfigMap/cycles/web-config
+aws_security_group_rule.a_from_b
+|-- aws_security_group.a
+|   `-- aws_security_group.b
+|       `-- aws_security_group.a (see above)
+`-- aws_security_group.b (see above)
+aws_security_group_rule.b_from_a
+|-- aws_security_group.a (see above)
+`-- aws_security_group.b (see above)

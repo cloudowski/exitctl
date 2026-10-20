@@ -1,0 +1,120 @@
+schema: '1.0'
+kind: service
+id: azure.openai
+provider: azure
+name: Azure OpenAI and Azure AI Foundry
+category: ai-ml
+resource_types:
+  terraform:
+  - azurerm_cognitive_account
+  - azurerm_cognitive_deployment
+  - azurerm_cognitive_account_customer_managed_key
+  - azurerm_cognitive_account_rai_policy
+  - azurerm_cognitive_account_rai_blocklist
+  - azurerm_ai_services
+  - azurerm_ai_foundry
+  - azurerm_ai_foundry_project
+  - azurerm_search_service
+  kubernetes:
+  - {group: cognitiveservices.azure.com, kind: Account}
+  - {group: cognitiveservices.azure.com, kind: Deployment}
+  - {group: search.azure.com, kind: SearchService}
+traits:
+- {id: managed-only-feature, level: high, reason: OpenAI GPT model weights are not available for self-hosting; only open-weight models can be run elsewhere.}
+- {id: proprietary-api, level: low, reason: 'The inference API follows the OpenAI API; deployments, content filters and auth are Azure specific.'}
+rules:
+- id: azure.openai.ai-search
+  match: {resource_type: [azurerm_search_service]}
+  then: {add_trait: proprietary-query-language, level: medium, evidence: sku}
+sdk:
+- ecosystem: npm
+  packages:
+  - '@azure/openai'
+  - '@azure-rest/ai-inference'
+  - '@azure/search-documents'
+  - '@azure/ai-projects'
+  imports:
+  - '[''"]@azure/openai[''"]'
+  - '[''"]@azure-rest/ai-inference[''"]'
+  - '[''"]@azure/search-documents[''"]'
+  - '[''"]@azure/ai-projects[''"]'
+- ecosystem: npm
+  usage:
+  - \bAzureOpenAI\s*\(
+  - new\s+AzureOpenAI\b
+  gate:
+  - openai
+- ecosystem: pypi
+  packages:
+  - azure-ai-inference
+  - azure-search-documents
+  - azure-ai-projects
+  - azure-ai-agents
+  imports:
+  - ^\s*(from|import)\s+azure\.ai\.(inference|projects|agents)\b
+  - ^\s*(from|import)\s+azure\.search\.documents\b
+- ecosystem: pypi
+  usage:
+  - \bAzureOpenAI\s*\(
+  - \bAsyncAzureOpenAI\s*\(
+  - \bAzureChatOpenAI\s*\(
+  gate:
+  - openai
+  - langchain-openai
+- ecosystem: go
+  packages:
+  - github.com/Azure/azure-sdk-for-go/sdk/ai/azopenai
+  imports:
+  - '"github\.com/Azure/azure-sdk-for-go/sdk/ai/azopenai"'
+- ecosystem: maven
+  packages:
+  - com.azure:azure-ai-openai
+  - com.azure:azure-ai-inference
+  - com.azure:azure-search-documents
+  imports:
+  - ^\s*import\s+com\.azure\.ai\.(openai|inference)\.
+  - ^\s*import\s+com\.azure\.search\.documents\.
+- ecosystem: nuget
+  packages:
+  - Azure.AI.OpenAI
+  - Azure.AI.Inference
+  - Azure.Search.Documents
+  - Azure.AI.Projects
+  imports:
+  - ^\s*using\s+Azure\.AI\.(OpenAI|Inference|Projects)\b
+  - ^\s*using\s+Azure\.Search\.Documents\b
+edge_hints:
+- {resource_type: azurerm_cognitive_account, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_cognitive_deployment, attribute: cognitive_account_id, edge_kind: containment}
+- {resource_type: azurerm_ai_foundry_project, attribute: ai_services_hub_id, edge_kind: containment}
+alternatives:
+- ref: vllm
+  difficulty: medium
+  compatibility: api-compatible
+  notes: OpenAI-compatible server for open-weight models; quality must be re-evaluated against GPT models.
+  approved_by: cloudowski
+- ref: ollama
+  difficulty: medium
+  compatibility: api-compatible
+  notes: OpenAI-compatible API for open-weight models, suited to small and medium deployments.
+  approved_by: cloudowski
+- ref: scaleway
+  difficulty: medium
+  compatibility: api-compatible
+  notes: Generative APIs in the EU expose open-weight models over an OpenAI-compatible API.
+  approved_by: cloudowski
+- ref: ovhcloud
+  difficulty: medium
+  compatibility: api-compatible
+  notes: AI Endpoints in the EU expose open-weight models over an OpenAI-compatible API.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/ai-foundry/openai/overview
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cognitive_deployment
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

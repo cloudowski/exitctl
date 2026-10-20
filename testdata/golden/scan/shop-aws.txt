@@ -1,0 +1,18 @@
+Offline, read-only scan: 14 Terraform resources, 8 K8s objects, 2 images, 3 CI actions, 1 component
+  Lock-in index  33/100  grade C
+  technical ███░░░░░░░  data █░░░░░░░░░  operational ███░░░░░░░  skills ░░░░░░░░░░
+  economic: not assessed
+
+  Top anchors                             dependents  alternatives
+  1. aws_dynamodb_table.orders                     4  ScyllaDB, Apache Cassandra +2
+     + 3 files in 1 component use Amazon DynamoDB SDK
+  2. aws_lambda_function.order_processor           2  Knative, OpenFaaS +1
+  3. aws_iam_role.lambda                           7  [R] Keycloak, OpenBao +1
+  4. aws_vpc.main                                  6  Scaleway
+  5. aws_cognito_user_pool.main                    1  Keycloak, ZITADEL
+  ... 14 more anchors: exitctl scan --all
+
+  Biggest lever: Amazon Virtual Private Cloud (VPC) -> Scaleway lowers the index by 9 pts
+  Coverage: 100% of types, 100% of resources
+  Explain #1: exitctl explain 1  |  Report: exitctl report --format html --open
+  exitctl 0.1.0-dev · catalog 2026.10.1 · rules 1.1.0 · config 8d36fc36 (draft catalog)

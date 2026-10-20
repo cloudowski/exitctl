@@ -1,0 +1,77 @@
+schema: '1.0'
+kind: service
+id: oci.block-volume
+provider: oci
+name: OCI Block Volume
+category: storage.block
+resource_types:
+  terraform:
+  - oci_core_volume
+  - oci_core_volume_attachment
+  - oci_core_volume_backup
+  - oci_core_volume_backup_policy
+  - oci_core_volume_backup_policy_assignment
+  - oci_core_volume_group
+  - oci_core_volume_group_backup
+  - oci_core_boot_volume
+  - oci_core_boot_volume_backup
+traits:
+- {id: proprietary-api, level: low, reason: 'Plain block devices; only provisioning, backups and volume groups are OCI specific.'}
+- {id: data-gravity, level: low, reason: Disk images or file-level copies move the data; size drives transfer time.}
+kubernetes_bindings:
+- match: {kind: StorageClass, field: provisioner, in: [blockvolume.csi.oraclecloud.com, oracle.com/oci]}
+- match: {kind: PersistentVolume, field: spec.csi.driver, in: [blockvolume.csi.oraclecloud.com]}
+sdk:
+- ecosystem: npm
+  usage: ['\bcore\.BlockstorageClient\b']
+  gate: [oci-core, oci-sdk]
+- ecosystem: pypi
+  usage: ['\boci\.core\.BlockstorageClient\b']
+  gate: [oci]
+- ecosystem: go
+  usage: ['\bcore\.NewBlockstorageClientWithConfigurationProvider\b']
+  gate: [github.com/oracle/oci-go-sdk/v65]
+- ecosystem: maven
+  usage: ['\bBlockstorageClient\b']
+  gate: ['com.oracle.oci.sdk:oci-java-sdk-core']
+- ecosystem: nuget
+  usage: ['\bBlockstorageClient\b']
+  gate: [OCI.DotNetSDK.Core]
+edge_hints:
+- {resource_type: oci_core_volume, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_core_volume, attribute: kms_key_id, edge_kind: reference}
+- {resource_type: oci_core_volume_attachment, attribute: instance_id, edge_kind: binding}
+- {resource_type: oci_core_volume_attachment, attribute: volume_id, edge_kind: binding}
+- {resource_type: oci_core_volume_backup, attribute: volume_id, edge_kind: containment}
+- {resource_type: oci_core_volume_backup_policy_assignment, attribute: asset_id, edge_kind: binding}
+- {resource_type: oci_core_volume_backup_policy_assignment, attribute: policy_id, edge_kind: binding}
+- {resource_type: oci_core_volume_group, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_core_boot_volume, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_core_boot_volume_backup, attribute: boot_volume_id, edge_kind: containment}
+alternatives:
+- ref: ceph
+  difficulty: medium
+  compatibility: conceptual
+  notes: RBD volumes via ceph-csi replace block volumes; backups and encryption are reconfigured.
+  approved_by: cloudowski
+- ref: hetzner
+  difficulty: low
+  compatibility: conceptual
+  notes: Hetzner Cloud Volumes with a CSI driver provide equivalent block storage.
+  approved_by: cloudowski
+- ref: ovhcloud
+  difficulty: low
+  compatibility: conceptual
+  notes: Block storage volumes with a Cinder CSI driver provide equivalent block storage.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.oracle.com/en-us/iaas/Content/Block/home.htm
+  - https://docs.oracle.com/en-us/iaas/Content/ContEng/Tasks/contengcreatingpersistentvolumeclaim.htm
+  - https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/core_volume
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

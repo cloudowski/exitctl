@@ -1,0 +1,85 @@
+schema: '1.0'
+kind: service
+id: aws.cloudfront
+provider: aws
+name: Amazon CloudFront
+category: network.cdn
+resource_types:
+  terraform: [aws_cloudfront_distribution, aws_cloudfront_origin_access_identity, aws_cloudfront_origin_access_control, aws_cloudfront_cache_policy, aws_cloudfront_origin_request_policy, aws_cloudfront_response_headers_policy, aws_cloudfront_function, aws_cloudfront_key_group, aws_cloudfront_public_key, aws_cloudfront_realtime_log_config, aws_cloudfront_field_level_encryption_config, aws_cloudfront_field_level_encryption_profile, aws_cloudfront_monitoring_subscription, aws_cloudfront_continuous_deployment_policy, aws_cloudfront_key_value_store, aws_cloudfrontkeyvaluestore_key, aws_cloudfront_vpc_origin]
+  cloudformation: ['AWS::CloudFront::Distribution', 'AWS::CloudFront::CloudFrontOriginAccessIdentity', 'AWS::CloudFront::OriginAccessControl', 'AWS::CloudFront::CachePolicy', 'AWS::CloudFront::OriginRequestPolicy', 'AWS::CloudFront::ResponseHeadersPolicy', 'AWS::CloudFront::Function', 'AWS::CloudFront::KeyGroup', 'AWS::CloudFront::PublicKey', 'AWS::CloudFront::RealtimeLogConfig', 'AWS::CloudFront::ContinuousDeploymentPolicy', 'AWS::CloudFront::KeyValueStore', 'AWS::CloudFront::MonitoringSubscription', 'AWS::CloudFront::VpcOrigin', 'AWS::CloudFront::StreamingDistribution']
+  kubernetes:
+  - {group: cloudfront.services.k8s.aws, kind: Distribution}
+  - {group: cloudfront.services.k8s.aws, kind: CachePolicy}
+  - {group: cloudfront.services.k8s.aws, kind: Function}
+  - {group: cloudfront.services.k8s.aws, kind: OriginRequestPolicy}
+  - {group: cloudfront.services.k8s.aws, kind: ResponseHeadersPolicy}
+traits:
+- {id: provider-network-construct, level: low, reason: 'Caching HTTP in front of origins is a commodity; behaviours, policies and origin access controls are CloudFront objects.'}
+rules:
+- id: aws.cloudfront.functions
+  match:
+    resource_type: [aws_cloudfront_function]
+  then: {add_trait: proprietary-runtime, level: medium, evidence: runtime}
+- id: aws.cloudfront.lambda-at-edge
+  match:
+    resource_type: [aws_cloudfront_distribution]
+  when: {attr: default_cache_behavior.lambda_function_association, exists: true}
+  then: {add_trait: proprietary-runtime, level: medium, evidence: lambda_function_association}
+- id: aws.cloudfront.signed-urls
+  match:
+    resource_type: [aws_cloudfront_key_group]
+  then: {add_trait: managed-only-feature, level: medium, evidence: items}
+- id: aws.cloudfront.origin-access-control
+  match:
+    resource_type: [aws_cloudfront_origin_access_control, aws_cloudfront_origin_access_identity]
+  then: {add_trait: proprietary-iam-model, level: low, evidence: origin_access_control_origin_type}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-cloudfront', '@aws-sdk/cloudfront-signer', '@aws-sdk/client-cloudfront-keyvaluestore']
+  imports: ['[''"]@aws-sdk/(client-cloudfront|cloudfront-signer|client-cloudfront-keyvaluestore)[''"/]']
+  usage: ['\bAWS\.CloudFront\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["''](cloudfront|cloudfront-keyvaluestore)["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/cloudfront, github.com/aws/aws-sdk-go-v2/feature/cloudfront/sign]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/(cloudfront|cloudfrontkeyvaluestore)(/[^"]*)?"', '"github\.com/aws/aws-sdk-go-v2/feature/cloudfront/sign"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:cloudfront', 'com.amazonaws:aws-java-sdk-cloudfront']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.cloudfront\.', '^\s*import\s+(static\s+)?com\.amazonaws\.services\.cloudfront\.']
+- ecosystem: nuget
+  packages: [AWSSDK.CloudFront, AWSSDK.CloudFrontKeyValueStore]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.(CloudFront|CloudFrontKeyValueStore)\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-cloudfront]
+  imports: ['^\s*require\s+["'']aws-sdk-(cloudfront)["'']']
+  usage: ['(?i)\bAws::(cloudfront)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-cloudfront]
+  imports: ['\baws_sdk_(cloudfront)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(cloudfront)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_cloudfront_distribution, attribute: origin.domain_name, edge_kind: data-flow}
+- {resource_type: aws_cloudfront_distribution, attribute: origin.origin_access_control_id, edge_kind: reference}
+- {resource_type: aws_cloudfront_distribution, attribute: web_acl_id, edge_kind: binding}
+- {resource_type: aws_cloudfront_distribution, attribute: viewer_certificate.acm_certificate_arn, edge_kind: reference}
+- {resource_type: aws_cloudfront_distribution, attribute: default_cache_behavior.cache_policy_id, edge_kind: reference}
+- {resource_type: aws_cloudfront_distribution, attribute: default_cache_behavior.function_association.function_arn, edge_kind: reference}
+- {resource_type: aws_cloudfront_distribution, attribute: default_cache_behavior.lambda_function_association.lambda_arn, edge_kind: reference}
+- {resource_type: aws_cloudfront_distribution, attribute: logging_config.bucket, edge_kind: data-flow}
+- {resource_type: aws_cloudfront_key_group, attribute: items, edge_kind: reference}
+alternatives:
+- {ref: scaleway, difficulty: low, compatibility: conceptual, notes: 'Scaleway Edge Services cache content in front of buckets and load balancers; edge functions need a separate solution.', approved_by: cloudowski}
+- {ref: nginx, difficulty: medium, compatibility: conceptual, notes: 'Self-hosted NGINX caching proxies replace a CDN only for limited regions, without a global edge network.', approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudfront_distribution']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

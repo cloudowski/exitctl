@@ -1,0 +1,48 @@
+schema: '1.0'
+kind: service
+id: gcp.app-engine
+provider: gcp
+name: App Engine
+category: compute.serverless
+resource_types:
+  terraform: [google_app_engine_application, google_app_engine_standard_app_version, google_app_engine_flexible_app_version, google_app_engine_service_split_traffic, google_app_engine_service_network_settings, google_app_engine_domain_mapping, google_app_engine_firewall_rule, google_app_engine_application_url_dispatch_rules]
+traits:
+- {id: proprietary-runtime, level: medium, reason: 'Apps follow App Engine runtime conventions (app.yaml, handlers, scaling); bundled legacy services are App Engine only.'}
+- {id: operational-tooling-coupling, level: medium, reason: 'Versions, traffic splitting and dispatch rules are managed only through App Engine tooling.'}
+rules:
+- id: gcp.app-engine.bundled-services
+  match:
+    resource_type: [google_app_engine_standard_app_version]
+  when: {attr: app_engine_apis, equals: true}
+  then: {add_trait: proprietary-runtime, level: high, evidence: app_engine_apis}
+sdk:
+- ecosystem: npm
+  packages: ['@google-cloud/appengine-admin']
+  imports: ['[''"]@google-cloud/(appengine-admin)[''"/]']
+- ecosystem: pypi
+  packages: [appengine-python-standard, google-cloud-appengine-admin]
+  imports: [^\s*from\s+google\.cloud\s+import\s+.*\b(appengine_admin\w*)\b, ^\s*(from|import)\s+google\.cloud\.(appengine_admin\w*)\b, ^\s*(from|import)\s+google\.appengine\b]
+- ecosystem: go
+  packages: [google.golang.org/appengine, google.golang.org/appengine/v2, cloud.google.com/go/appengine]
+  imports: ['"cloud\.google\.com/go/(appengine)(/[^"]*)?"', '"google\.golang\.org/appengine(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.google.appengine:appengine-api-1.0-sdk', 'com.google.cloud:google-cloud-appengine-admin']
+  imports: ['^\s*import\s+(static\s+)?com\.google\.(appengine\.api|cloud\.appengine)\b']
+- ecosystem: nuget
+  packages: [Google.Cloud.AppEngine.V1]
+  imports: ['^\s*using\s+(static\s+)?Google\.Cloud\.(AppEngine)\b']
+edge_hints:
+- {resource_type: google_app_engine_standard_app_version, attribute: vpc_access_connector.name, edge_kind: containment}
+- {resource_type: google_app_engine_flexible_app_version, attribute: network.subnetwork, edge_kind: containment}
+alternatives:
+- {ref: kubernetes, difficulty: medium, compatibility: conceptual, notes: Containerize the app and run it as a Deployment; app.yaml settings map to manifests and an Ingress., approved_by: cloudowski}
+- {ref: knative, difficulty: medium, compatibility: conceptual, notes: 'Knative Serving gives revisions, traffic splitting and scale-to-zero similar to App Engine.', approved_by: cloudowski}
+- {ref: scaleway, difficulty: medium, compatibility: conceptual, notes: Scaleway Serverless Containers can run the containerized app., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/appengine/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/app_engine_standard_app_version']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

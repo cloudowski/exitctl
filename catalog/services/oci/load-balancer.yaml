@@ -1,0 +1,107 @@
+schema: '1.0'
+kind: service
+id: oci.load-balancer
+provider: oci
+name: OCI Load Balancer
+category: network.load-balancer
+resource_types:
+  terraform:
+  - oci_load_balancer_load_balancer
+  - oci_load_balancer
+  - oci_load_balancer_backend
+  - oci_load_balancer_backend_set
+  - oci_load_balancer_backendset
+  - oci_load_balancer_listener
+  - oci_load_balancer_certificate
+  - oci_load_balancer_hostname
+  - oci_load_balancer_path_route_set
+  - oci_load_balancer_rule_set
+  - oci_load_balancer_load_balancer_routing_policy
+  - oci_load_balancer_ssl_cipher_suite
+  - oci_network_load_balancer_network_load_balancer
+  - oci_network_load_balancer_backend
+  - oci_network_load_balancer_backend_set
+  - oci_network_load_balancer_listener
+  - oci_network_load_balancer_network_load_balancers_backend_sets_unified
+  kubernetes:
+  - {group: ingress.oraclecloud.com, kind: IngressClassParameters}
+traits:
+- {id: provider-specific-annotations, level: low, reason: Kubernetes Services and Ingresses carry OCI-specific annotations for shapes and subnets.}
+- {id: proprietary-api, level: low, reason: 'Standard HTTP/TCP load balancing; listeners, rule sets and routing policies use OCI configuration.'}
+kubernetes_bindings:
+- match: {kind: Service, annotation: 'service.beta.kubernetes.io/oci-*', exists: true}
+- match: {kind: Service, annotation: 'oci.oraclecloud.com/*', exists: true}
+- match: {kind: Service, annotation: 'oci-network-load-balancer.oraclecloud.com/*', exists: true}
+- match: {kind: Ingress, annotation: 'oci-native-ingress.oraclecloud.com/*', exists: true}
+- match: {kind: IngressClass, field: spec.controller, equals: oci.oraclecloud.com/native-ingress-controller}
+sdk:
+- ecosystem: npm
+  packages: [oci-loadbalancer, oci-networkloadbalancer]
+  imports: ['[''"]oci-(loadbalancer|networkloadbalancer)[''"]']
+- ecosystem: pypi
+  imports: ['^\s*from\s+oci\.(load_balancer|network_load_balancer)\b', '^\s*from\s+oci\s+import\s+.*\b(load_balancer|network_load_balancer)\b']
+  usage: ['\boci\.(load_balancer|network_load_balancer)\.\w+Client\b']
+  gate: [oci]
+- ecosystem: go
+  packages: [github.com/oracle/oci-go-sdk/v65/loadbalancer, github.com/oracle/oci-go-sdk/v65/networkloadbalancer]
+  imports: ['"github\.com/oracle/oci-go-sdk/v[0-9]+/(loadbalancer|networkloadbalancer)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.oracle.oci.sdk:oci-java-sdk-loadbalancer', 'com.oracle.oci.sdk:oci-java-sdk-networkloadbalancer']
+  imports: ['^\s*import\s+com\.oracle\.bmc\.(loadbalancer|networkloadbalancer)\.']
+- ecosystem: nuget
+  packages: [OCI.DotNetSDK.Loadbalancer, OCI.DotNetSDK.Networkloadbalancer]
+  imports: ['^\s*using\s+Oci\.(Loadbalancer|Networkloadbalancer)Service\b']
+edge_hints:
+- {resource_type: oci_load_balancer_load_balancer, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_load_balancer_load_balancer, attribute: subnet_ids, edge_kind: containment}
+- {resource_type: oci_load_balancer_load_balancer, attribute: network_security_group_ids, edge_kind: binding}
+- {resource_type: oci_load_balancer_backend_set, attribute: load_balancer_id, edge_kind: containment}
+- {resource_type: oci_load_balancer_backend, attribute: load_balancer_id, edge_kind: containment}
+- {resource_type: oci_load_balancer_backend, attribute: backendset_name, edge_kind: containment}
+- {resource_type: oci_load_balancer_backend, attribute: ip_address, edge_kind: data-flow}
+- {resource_type: oci_load_balancer_listener, attribute: load_balancer_id, edge_kind: containment}
+- {resource_type: oci_load_balancer_listener, attribute: default_backend_set_name, edge_kind: binding}
+- {resource_type: oci_load_balancer_certificate, attribute: load_balancer_id, edge_kind: containment}
+- {resource_type: oci_load_balancer_hostname, attribute: load_balancer_id, edge_kind: containment}
+- {resource_type: oci_load_balancer_path_route_set, attribute: load_balancer_id, edge_kind: containment}
+- {resource_type: oci_load_balancer_rule_set, attribute: load_balancer_id, edge_kind: containment}
+- {resource_type: oci_load_balancer_load_balancer_routing_policy, attribute: load_balancer_id, edge_kind: containment}
+- {resource_type: oci_network_load_balancer_network_load_balancer, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_network_load_balancer_network_load_balancer, attribute: subnet_id, edge_kind: containment}
+- {resource_type: oci_network_load_balancer_network_load_balancer, attribute: network_security_group_ids, edge_kind: binding}
+- {resource_type: oci_network_load_balancer_backend_set, attribute: network_load_balancer_id, edge_kind: containment}
+- {resource_type: oci_network_load_balancer_backend, attribute: network_load_balancer_id, edge_kind: containment}
+- {resource_type: oci_network_load_balancer_backend, attribute: target_id, edge_kind: data-flow}
+- {resource_type: oci_network_load_balancer_listener, attribute: network_load_balancer_id, edge_kind: containment}
+alternatives:
+- ref: haproxy
+  difficulty: low
+  compatibility: conceptual
+  notes: Self-managed L4/L7 load balancing; listeners, backend sets and health checks map to frontends and backends.
+  approved_by: cloudowski
+- ref: envoy
+  difficulty: medium
+  compatibility: conceptual
+  notes: L4/L7 proxy with dynamic config; routing policies and rule sets map to routes and filters.
+  approved_by: cloudowski
+- ref: nginx
+  difficulty: low
+  compatibility: conceptual
+  notes: HTTP and stream load balancing; path route sets map to location blocks.
+  approved_by: cloudowski
+- ref: hetzner
+  difficulty: low
+  compatibility: conceptual
+  notes: Managed Load Balancers with a cloud controller for Kubernetes Services; annotations are remapped.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.oracle.com/en-us/iaas/Content/Balance/home.htm
+  - https://docs.oracle.com/en-us/iaas/Content/ContEng/Tasks/contengcreatingloadbalancer.htm
+  - https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/load_balancer_load_balancer
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

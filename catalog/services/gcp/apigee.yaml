@@ -1,0 +1,35 @@
+schema: '1.0'
+kind: service
+id: gcp.apigee
+provider: gcp
+name: Apigee
+category: integration
+resource_types:
+  terraform: [google_apigee_organization, google_apigee_instance, google_apigee_environment, google_apigee_envgroup, google_apigee_envgroup_attachment, google_apigee_instance_attachment, google_apigee_nat_address, google_apigee_endpoint_attachment, google_apigee_sharedflow, google_apigee_sharedflow_deployment, google_apigee_flowhook, google_apigee_target_server, google_apigee_sync_authorization, google_apigee_addons_config, google_apigee_developer, google_apigee_app_group, google_apigee_keystores_aliases_self_signed_cert, google_apigee_env_keystore, google_apigee_env_references, google_apigee_environment_iam_binding, google_apigee_environment_iam_member, google_apigee_environment_iam_policy]
+  kubernetes:
+  - {group: apigee.cnrm.cloud.google.com, kind: ApigeeOrganization}
+  - {group: apigee.cnrm.cloud.google.com, kind: ApigeeEnvironment}
+  - {group: apigee.cnrm.cloud.google.com, kind: ApigeeEnvgroup}
+  - {group: apigee.cnrm.cloud.google.com, kind: ApigeeInstance}
+traits:
+- {id: proprietary-api, level: high, reason: 'API proxies are built from Apigee XML policies, shared flows and JavaScript callouts that run only on Apigee and must be rebuilt.'}
+- {id: skills-specialization, level: medium, reason: Apigee policy development and operations require product-specific expertise.}
+- {id: managed-only-feature, level: medium, reason: 'Monetization, developer portal and analytics are tied to the Apigee platform.'}
+edge_hints:
+- {resource_type: google_apigee_organization, attribute: authorized_network, edge_kind: containment}
+- {resource_type: google_apigee_instance, attribute: org_id, edge_kind: containment}
+- {resource_type: google_apigee_environment, attribute: org_id, edge_kind: containment}
+- {resource_type: google_apigee_envgroup, attribute: org_id, edge_kind: containment}
+- {resource_type: google_apigee_instance_attachment, attribute: instance_id, edge_kind: reference}
+- {resource_type: google_apigee_envgroup_attachment, attribute: envgroup_id, edge_kind: reference}
+alternatives:
+- {ref: kong, difficulty: high, compatibility: conceptual, notes: Kong routes and plugins replace proxies and policies; custom policies need rewriting as plugins., approved_by: cloudowski}
+- {ref: envoy, difficulty: high, compatibility: conceptual, notes: 'Envoy-based gateways cover routing, auth and rate limiting; policy logic must be reimplemented.', approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/apigee/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/apigee_organization']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

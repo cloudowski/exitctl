@@ -1,0 +1,15 @@
+schema: "1.0"
+kind: trait
+id: acme-widget-protocol
+name: Acme widget protocol
+level: high
+dimensions: [technical, data]
+explanation: Widgets are created and read only through the Acme widget API and its data format.
+exit_hint: Export widgets in an open format and move them to a self-hosted widget server.
+provenance:
+  origin: maintainer
+  author: cloudowski
+  status: verified
+  reviewed_by: cloudowski
+  reviewed_on: 2026-10-06
+  sources: []

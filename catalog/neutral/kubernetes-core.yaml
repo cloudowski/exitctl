@@ -1,0 +1,34 @@
+schema: '1.0'
+kind: neutral
+id: kubernetes-core
+provider: kubernetes
+resource_types:
+  kubernetes:
+  - {group: '', kind: '*'}
+  - {group: apps, kind: '*'}
+  - {group: batch, kind: '*'}
+  - {group: autoscaling, kind: '*'}
+  - {group: policy, kind: '*'}
+  - {group: rbac.authorization.k8s.io, kind: '*'}
+  - {group: networking.k8s.io, kind: NetworkPolicy}
+  - {group: networking.k8s.io, kind: Ingress}
+  - {group: networking.k8s.io, kind: IngressClass}
+  - {group: storage.k8s.io, kind: '*'}
+  - {group: discovery.k8s.io, kind: '*'}
+  - {group: coordination.k8s.io, kind: '*'}
+  - {group: scheduling.k8s.io, kind: '*'}
+  - {group: admissionregistration.k8s.io, kind: '*'}
+  - {group: certificates.k8s.io, kind: '*'}
+  - {group: node.k8s.io, kind: '*'}
+  - {group: gateway.networking.k8s.io, kind: '*'}
+  - {group: apiextensions.k8s.io, kind: '*'}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://kubernetes.io/docs/reference/kubernetes-api/
+  - https://kubernetes.io/docs/concepts/services-networking/ingress/
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

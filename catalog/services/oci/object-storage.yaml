@@ -1,0 +1,89 @@
+schema: '1.0'
+kind: service
+id: oci.object-storage
+provider: oci
+name: OCI Object Storage
+category: storage.object
+resource_types:
+  terraform:
+  - oci_objectstorage_bucket
+  - oci_objectstorage_object
+  - oci_objectstorage_object_lifecycle_policy
+  - oci_objectstorage_preauthrequest
+  - oci_objectstorage_replication_policy
+  - oci_objectstorage_namespace_metadata
+  - oci_objectstorage_private_endpoint
+traits:
+- {id: proprietary-api, level: medium, reason: 'The native API and SDKs are OCI specific; an S3-compatible API exists for most object operations.'}
+- {id: data-gravity, level: medium, reason: Large buckets take time and egress to copy out.}
+rules:
+- id: oci.object-storage.preauth-requests
+  match: {resource_type: [oci_objectstorage_preauthrequest]}
+  then: {add_trait: managed-only-feature, level: low, evidence: oci_objectstorage_preauthrequest}
+- id: oci.object-storage.replication
+  match: {resource_type: [oci_objectstorage_replication_policy]}
+  then: {add_trait: operational-tooling-coupling, level: low, evidence: oci_objectstorage_replication_policy}
+sdk:
+- ecosystem: npm
+  packages: [oci-objectstorage]
+  imports: ['[''"]oci-objectstorage[''"]']
+  usage: ['\bobjectstorage\.(ObjectStorageClient|UploadManager)\b']
+  gate: [oci-sdk]
+- ecosystem: pypi
+  imports: ['^\s*from\s+oci\.object_storage\b', '^\s*from\s+oci\s+import\s+.*\bobject_storage\b']
+  usage: ['\boci\.object_storage\.(ObjectStorageClient|UploadManager)\b']
+  gate: [oci]
+- ecosystem: go
+  packages: [github.com/oracle/oci-go-sdk/v65/objectstorage]
+  imports: ['"github\.com/oracle/oci-go-sdk/v[0-9]+/objectstorage(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.oracle.oci.sdk:oci-java-sdk-objectstorage', 'com.oracle.oci.sdk:oci-java-sdk-objectstorage-*']
+  imports: ['^\s*import\s+com\.oracle\.bmc\.objectstorage\.']
+- ecosystem: nuget
+  packages: [OCI.DotNetSDK.Objectstorage]
+  imports: ['^\s*using\s+Oci\.ObjectstorageService\b']
+edge_hints:
+- {resource_type: oci_objectstorage_bucket, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_objectstorage_bucket, attribute: kms_key_id, edge_kind: reference}
+- {resource_type: oci_objectstorage_object, attribute: bucket, edge_kind: containment}
+- {resource_type: oci_objectstorage_object_lifecycle_policy, attribute: bucket, edge_kind: containment}
+- {resource_type: oci_objectstorage_preauthrequest, attribute: bucket, edge_kind: containment}
+- {resource_type: oci_objectstorage_replication_policy, attribute: bucket, edge_kind: containment}
+- {resource_type: oci_objectstorage_private_endpoint, attribute: subnet_id, edge_kind: containment}
+alternatives:
+- ref: minio
+  difficulty: low
+  compatibility: api-compatible
+  notes: S3 API target; code using the S3-compatible endpoint moves with config changes, native OCI SDK calls need porting.
+  approved_by: cloudowski
+- ref: ceph
+  difficulty: medium
+  compatibility: api-compatible
+  notes: RADOS Gateway exposes an S3 API; native OCI SDK calls and pre-authenticated requests need porting.
+  approved_by: cloudowski
+- ref: garage
+  difficulty: medium
+  compatibility: api-compatible
+  notes: Lightweight S3-compatible store; check support for lifecycle and versioning features in use.
+  approved_by: cloudowski
+- ref: scaleway
+  difficulty: low
+  compatibility: api-compatible
+  notes: Managed S3-compatible Object Storage; native OCI SDK calls need porting to S3 clients.
+  approved_by: cloudowski
+- ref: ovhcloud
+  difficulty: low
+  compatibility: api-compatible
+  notes: Managed S3-compatible Object Storage; native OCI SDK calls need porting to S3 clients.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.oracle.com/en-us/iaas/Content/Object/home.htm
+  - https://docs.oracle.com/en-us/iaas/Content/Object/Tasks/s3compatibleapi.htm
+  - https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/objectstorage_bucket
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

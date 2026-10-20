@@ -1,0 +1,52 @@
+schema: '1.0'
+kind: service
+id: gcp.cloud-logging
+provider: gcp
+name: Cloud Logging
+category: observability
+resource_types:
+  terraform: [google_logging_project_sink, google_logging_folder_sink, google_logging_organization_sink, google_logging_billing_account_sink, google_logging_metric, google_logging_project_bucket_config, google_logging_folder_bucket_config, google_logging_organization_bucket_config, google_logging_billing_account_bucket_config, google_logging_project_exclusion, google_logging_folder_exclusion, google_logging_organization_exclusion, google_logging_billing_account_exclusion, google_logging_log_view, google_logging_linked_dataset, google_logging_folder_settings, google_logging_organization_settings]
+  kubernetes:
+  - {group: logging.cnrm.cloud.google.com, kind: LoggingLogSink}
+  - {group: logging.cnrm.cloud.google.com, kind: LoggingLogMetric}
+  - {group: logging.cnrm.cloud.google.com, kind: LoggingLogBucket}
+  - {group: logging.cnrm.cloud.google.com, kind: LoggingLogExclusion}
+  - {group: logging.cnrm.cloud.google.com, kind: LoggingLogView}
+traits:
+- {id: operational-tooling-coupling, level: medium, reason: 'Log routing, retention buckets, log-based metrics and dashboards are built on Google tooling.'}
+- {id: proprietary-query-language, level: low, reason: Saved queries and alerts use the Logging query language; Log Analytics also supports SQL.}
+sdk:
+- ecosystem: npm
+  packages: ['@google-cloud/logging', '@google-cloud/logging-winston', '@google-cloud/logging-bunyan']
+  imports: ['[''"]@google-cloud/(logging[\w-]*)[''"/]']
+- ecosystem: pypi
+  packages: [google-cloud-logging]
+  imports: [^\s*from\s+google\.cloud\s+import\s+.*\b(logging|logging_v2)\b, ^\s*(from|import)\s+google\.cloud\.(logging|logging_v2)\b]
+- ecosystem: go
+  packages: [cloud.google.com/go/logging]
+  imports: ['"cloud\.google\.com/go/(logging)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.google.cloud:google-cloud-logging', 'com.google.cloud:google-cloud-logging-logback']
+  imports: ['^\s*import\s+(static\s+)?com\.google\.(cloud\.logging)\b']
+- ecosystem: nuget
+  packages: [Google.Cloud.Logging.V2, Google.Cloud.Logging.Log4Net, Google.Cloud.Logging.NLog, Google.Cloud.Diagnostics.*]
+  imports: ['^\s*using\s+(static\s+)?Google\.Cloud\.(Logging|Diagnostics)\b']
+edge_hints:
+- {resource_type: google_logging_project_sink, attribute: destination, edge_kind: data-flow}
+- {resource_type: google_logging_folder_sink, attribute: destination, edge_kind: data-flow}
+- {resource_type: google_logging_organization_sink, attribute: destination, edge_kind: data-flow}
+- {resource_type: google_logging_billing_account_sink, attribute: destination, edge_kind: data-flow}
+- {resource_type: google_logging_linked_dataset, attribute: bucket, edge_kind: containment}
+- {resource_type: google_logging_log_view, attribute: bucket, edge_kind: containment}
+alternatives:
+- {ref: opentelemetry, difficulty: low, compatibility: conceptual, notes: OpenTelemetry Collector ships logs to any backend; replaces Google logging agents and libraries., approved_by: cloudowski}
+- {ref: opensearch, difficulty: medium, compatibility: conceptual, notes: Log storage and search; Logging queries and log-based metrics need rewriting., approved_by: cloudowski}
+- {ref: grafana, difficulty: medium, compatibility: conceptual, notes: Grafana with Loki stores and queries logs; queries move to LogQL., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/logging/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/logging_project_sink']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

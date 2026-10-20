@@ -1,0 +1,18 @@
+schema: "1.0"
+kind: service
+id: aws.cognito
+provider: aws
+name: Amazon Cognito
+category: identity.user-directory
+resource_types:
+  terraform: [aws_cognito_user_pool]
+traits:
+  - id: proprietary-iam-model
+alternatives:
+  - { ref: keycloak, difficulty: high, compatibility: conceptual }
+provenance:
+  origin: llm
+  author: claude
+  status: draft
+  sources: []
+  llm: { batch: test-batch-1, model: test-model, prompt_version: catalog-draft-v1, eval_passed: false }

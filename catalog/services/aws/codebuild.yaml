@@ -1,0 +1,60 @@
+schema: '1.0'
+kind: service
+id: aws.codebuild
+provider: aws
+name: AWS CodeBuild
+category: devops.ci
+resource_types:
+  terraform: [aws_codebuild_project, aws_codebuild_report_group, aws_codebuild_source_credential, aws_codebuild_webhook, aws_codebuild_resource_policy, aws_codebuild_fleet]
+  cloudformation: ['AWS::CodeBuild::Project', 'AWS::CodeBuild::ReportGroup', 'AWS::CodeBuild::SourceCredential', 'AWS::CodeBuild::Fleet']
+  ci_action: [aws-actions/aws-codebuild-run-build]
+traits:
+- {id: operational-tooling-coupling, level: medium, reason: 'Builds are defined in buildspec.yml with CodeBuild phases, environment images and AWS-specific variables.'}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-codebuild']
+  imports: ['[''"]@aws-sdk/client-codebuild[''"/]']
+  usage: ['\bAWS\.CodeBuild\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["'']codebuild["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/codebuild]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/codebuild(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:codebuild']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.codebuild\.']
+- ecosystem: nuget
+  packages: [AWSSDK.CodeBuild]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.CodeBuild\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-codebuild]
+  imports: ['^\s*require\s+["'']aws-sdk-(codebuild)["'']']
+  usage: ['(?i)\bAws::(codebuild)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-codebuild]
+  imports: ['\baws_sdk_(codebuild)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(codebuild)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_codebuild_project, attribute: service_role, edge_kind: binding}
+- {resource_type: aws_codebuild_project, attribute: vpc_config.subnets, edge_kind: containment}
+- {resource_type: aws_codebuild_project, attribute: artifacts.location, edge_kind: data-flow}
+- {resource_type: aws_codebuild_project, attribute: environment.image, edge_kind: reference}
+- {resource_type: aws_codebuild_webhook, attribute: project_name, edge_kind: binding}
+- {resource_type: aws_codebuild_report_group, attribute: export_config.s3_destination.bucket, edge_kind: data-flow}
+alternatives:
+- {ref: woodpecker, difficulty: low, compatibility: conceptual, notes: 'Container-based pipelines; buildspec phases map to pipeline steps.', approved_by: cloudowski}
+- {ref: forgejo, difficulty: low, compatibility: conceptual, notes: Forgejo Actions runs GitHub Actions-style workflows on self-hosted runners., approved_by: cloudowski}
+- {ref: gitea, difficulty: low, compatibility: conceptual, notes: Gitea Actions runs GitHub Actions-style workflows on self-hosted runners., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/codebuild/latest/userguide/welcome.html', 'https://github.com/aws-actions/aws-codebuild-run-build', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/codebuild_project']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

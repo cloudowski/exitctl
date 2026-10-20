@@ -1,0 +1,110 @@
+schema: '1.0'
+kind: service
+id: azure.dns
+provider: azure
+name: Azure DNS
+category: network.dns
+resource_types:
+  terraform:
+  - azurerm_dns_zone
+  - azurerm_dns_a_record
+  - azurerm_dns_aaaa_record
+  - azurerm_dns_caa_record
+  - azurerm_dns_cname_record
+  - azurerm_dns_mx_record
+  - azurerm_dns_ns_record
+  - azurerm_dns_ptr_record
+  - azurerm_dns_srv_record
+  - azurerm_dns_txt_record
+  - azurerm_private_dns_zone
+  - azurerm_private_dns_zone_virtual_network_link
+  - azurerm_private_dns_a_record
+  - azurerm_private_dns_aaaa_record
+  - azurerm_private_dns_cname_record
+  - azurerm_private_dns_mx_record
+  - azurerm_private_dns_ptr_record
+  - azurerm_private_dns_srv_record
+  - azurerm_private_dns_txt_record
+  - azurerm_private_dns_resolver
+  - azurerm_private_dns_resolver_inbound_endpoint
+  - azurerm_private_dns_resolver_outbound_endpoint
+  - azurerm_private_dns_resolver_dns_forwarding_ruleset
+  - azurerm_private_dns_resolver_forwarding_rule
+  - azurerm_private_dns_resolver_virtual_network_link
+  kubernetes:
+  - {group: network.azure.com, kind: DnsZone}
+  - {group: network.azure.com, kind: DnsZonesARecord}
+  - {group: network.azure.com, kind: DnsZonesAAAARecord}
+  - {group: network.azure.com, kind: DnsZonesCAARecord}
+  - {group: network.azure.com, kind: DnsZonesCNAMERecord}
+  - {group: network.azure.com, kind: DnsZonesMXRecord}
+  - {group: network.azure.com, kind: DnsZonesNSRecord}
+  - {group: network.azure.com, kind: DnsZonesPTRRecord}
+  - {group: network.azure.com, kind: DnsZonesSRVRecord}
+  - {group: network.azure.com, kind: DnsZonesTXTRecord}
+  - {group: network.azure.com, kind: PrivateDnsZone}
+  - {group: network.azure.com, kind: PrivateDnsZonesARecord}
+  - {group: network.azure.com, kind: PrivateDnsZonesAAAARecord}
+  - {group: network.azure.com, kind: PrivateDnsZonesCNAMERecord}
+  - {group: network.azure.com, kind: PrivateDnsZonesMXRecord}
+  - {group: network.azure.com, kind: PrivateDnsZonesPTRRecord}
+  - {group: network.azure.com, kind: PrivateDnsZonesSRVRecord}
+  - {group: network.azure.com, kind: PrivateDnsZonesTXTRecord}
+  - {group: network.azure.com, kind: PrivateDnsZonesVirtualNetworkLink}
+  - {group: network.azure.com, kind: DnsResolver}
+  - {group: network.azure.com, kind: DnsForwardingRuleset}
+traits:
+- {id: proprietary-api, level: low, reason: Standard DNS; zones export as zone files. Alias records and private zones are Azure specific.}
+edge_hints:
+- {resource_type: azurerm_dns_zone, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_private_dns_zone, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_dns_a_record, attribute: zone_name, edge_kind: containment}
+- {resource_type: azurerm_dns_aaaa_record, attribute: zone_name, edge_kind: containment}
+- {resource_type: azurerm_dns_caa_record, attribute: zone_name, edge_kind: containment}
+- {resource_type: azurerm_dns_cname_record, attribute: zone_name, edge_kind: containment}
+- {resource_type: azurerm_dns_mx_record, attribute: zone_name, edge_kind: containment}
+- {resource_type: azurerm_dns_ns_record, attribute: zone_name, edge_kind: containment}
+- {resource_type: azurerm_dns_ptr_record, attribute: zone_name, edge_kind: containment}
+- {resource_type: azurerm_dns_srv_record, attribute: zone_name, edge_kind: containment}
+- {resource_type: azurerm_dns_txt_record, attribute: zone_name, edge_kind: containment}
+- {resource_type: azurerm_private_dns_a_record, attribute: zone_name, edge_kind: containment}
+- {resource_type: azurerm_private_dns_aaaa_record, attribute: zone_name, edge_kind: containment}
+- {resource_type: azurerm_private_dns_cname_record, attribute: zone_name, edge_kind: containment}
+- {resource_type: azurerm_private_dns_mx_record, attribute: zone_name, edge_kind: containment}
+- {resource_type: azurerm_private_dns_ptr_record, attribute: zone_name, edge_kind: containment}
+- {resource_type: azurerm_private_dns_srv_record, attribute: zone_name, edge_kind: containment}
+- {resource_type: azurerm_private_dns_txt_record, attribute: zone_name, edge_kind: containment}
+- {resource_type: azurerm_private_dns_zone_virtual_network_link, attribute: private_dns_zone_name, edge_kind: containment}
+- {resource_type: azurerm_private_dns_zone_virtual_network_link, attribute: virtual_network_id, edge_kind: binding}
+alternatives:
+- ref: coredns
+  difficulty: medium
+  compatibility: protocol-compatible
+  notes: Serves zone files for private DNS; alias records and VNet links need redesign.
+  approved_by: cloudowski
+- ref: ovhcloud
+  difficulty: low
+  compatibility: protocol-compatible
+  notes: Public DNS zones import from zone files; works with external-dns.
+  approved_by: cloudowski
+- ref: hetzner
+  difficulty: low
+  compatibility: protocol-compatible
+  notes: Public DNS zones import from zone files; works with external-dns.
+  approved_by: cloudowski
+- ref: scaleway
+  difficulty: low
+  compatibility: protocol-compatible
+  notes: Public DNS zones import from zone files; works with external-dns.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/dns/dns-overview
+  - https://learn.microsoft.com/en-us/azure/dns/private-dns-overview
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/dns_zone
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

@@ -1,0 +1,44 @@
+schema: '1.0'
+kind: service
+id: azure.container-instances
+provider: azure
+name: Azure Container Instances
+category: compute.container
+resource_types:
+  terraform:
+  - azurerm_container_group
+  kubernetes:
+  - {group: containerinstance.azure.com, kind: ContainerGroup}
+  ci_action:
+  - azure/aci-deploy
+traits:
+- {id: proprietary-runtime, level: low, reason: Runs standard OCI images; the container group definition is Azure specific.}
+edge_hints:
+- {resource_type: azurerm_container_group, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_container_group, attribute: subnet_ids, edge_kind: containment}
+alternatives:
+- ref: kubernetes
+  difficulty: low
+  compatibility: conceptual
+  notes: A container group maps to a Pod; volumes and networking need adjusting.
+  approved_by: cloudowski
+- ref: scaleway
+  difficulty: low
+  compatibility: conceptual
+  notes: Serverless Containers in the EU run the same images.
+  approved_by: cloudowski
+- ref: knative
+  difficulty: low
+  compatibility: conceptual
+  notes: Run the image as a Knative Service or Kubernetes Job.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/container-instances/container-instances-overview
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_group
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

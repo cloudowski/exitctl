@@ -1,0 +1,75 @@
+schema: '1.0'
+kind: service
+id: aws.documentdb
+provider: aws
+name: Amazon DocumentDB (with MongoDB compatibility)
+category: database.nosql.document
+resource_types:
+  terraform: [aws_docdb_cluster, aws_docdb_cluster_instance, aws_docdb_cluster_parameter_group, aws_docdb_subnet_group, aws_docdb_cluster_snapshot, aws_docdb_event_subscription, aws_docdb_global_cluster, aws_docdbelastic_cluster]
+  cloudformation: ['AWS::DocDB::DBCluster', 'AWS::DocDB::DBInstance', 'AWS::DocDB::DBClusterParameterGroup', 'AWS::DocDB::DBSubnetGroup', 'AWS::DocDB::EventSubscription', 'AWS::DocDBElastic::Cluster']
+  kubernetes:
+  - {group: documentdb.services.k8s.aws, kind: DBCluster}
+  - {group: documentdb.services.k8s.aws, kind: DBInstance}
+  - {group: documentdb.services.k8s.aws, kind: DBSubnetGroup}
+traits:
+- {id: proprietary-api, level: medium, reason: 'Implements a subset of the MongoDB wire API with documented functional differences; it is not MongoDB.'}
+- {id: operational-tooling-coupling, level: low, reason: 'Cluster, backup and scaling operations use DocumentDB-specific tooling.'}
+- {id: data-gravity, level: medium, reason: 'Documents leave through mongodump or change-stream based replication with a planned cutover; snapshots restore only on AWS.'}
+rules:
+- id: aws.documentdb.elastic
+  match:
+    resource_type: [aws_docdbelastic_cluster]
+  then: {add_trait: managed-only-feature, level: medium, evidence: shard_count}
+- id: aws.documentdb.global-cluster
+  match:
+    resource_type: [aws_docdb_global_cluster]
+  then: {add_trait: data-gravity, level: high, evidence: global_cluster_identifier}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-docdb', '@aws-sdk/client-docdb-elastic']
+  imports: ['[''"]@aws-sdk/client-docdb(-elastic)?[''"/]']
+  usage: ['\bAWS\.DocDB\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["''](docdb|docdb-elastic)["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/docdb, github.com/aws/aws-sdk-go-v2/service/docdbelastic]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/(docdb|docdbelastic)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:docdb', 'software.amazon.awssdk:docdbelastic']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.(docdb|docdbelastic)\.']
+- ecosystem: nuget
+  packages: [AWSSDK.DocDB, AWSSDK.DocDBElastic]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.(DocDB|DocDBElastic)\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-docdb, aws-sdk-docdbelastic]
+  imports: ['^\s*require\s+["'']aws-sdk-(docdb|docdbelastic)["'']']
+  usage: ['(?i)\bAws::(docdb|docdbelastic)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-docdb, aws-sdk-docdbelastic]
+  imports: ['\baws_sdk_(docdb|docdbelastic)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(docdb|docdbelastic)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_docdb_cluster_instance, attribute: cluster_identifier, edge_kind: containment}
+- {resource_type: aws_docdb_cluster, attribute: db_subnet_group_name, edge_kind: containment}
+- {resource_type: aws_docdb_cluster, attribute: vpc_security_group_ids, edge_kind: containment}
+- {resource_type: aws_docdb_cluster, attribute: db_cluster_parameter_group_name, edge_kind: reference}
+- {resource_type: aws_docdb_cluster, attribute: global_cluster_identifier, edge_kind: containment}
+- {resource_type: aws_docdb_subnet_group, attribute: subnet_ids, edge_kind: containment}
+- {resource_type: aws_docdbelastic_cluster, attribute: subnet_ids, edge_kind: containment}
+alternatives:
+- {ref: mongodb, difficulty: low, compatibility: protocol-compatible, notes: 'MongoDB drivers already in use connect to MongoDB; migrate with mongodump/mongorestore or change streams.', approved_by: cloudowski}
+- {ref: ferretdb, difficulty: medium, compatibility: protocol-compatible, notes: FerretDB serves the MongoDB wire protocol on PostgreSQL; verify supported commands and aggregation stages., approved_by: cloudowski}
+- {ref: ovhcloud, difficulty: low, compatibility: protocol-compatible, notes: OVHcloud Public Cloud Databases include managed MongoDB., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/documentdb/latest/developerguide/what-is.html', 'https://docs.aws.amazon.com/documentdb/latest/developerguide/functional-differences.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/docdb_cluster']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

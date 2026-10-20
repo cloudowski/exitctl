@@ -1,0 +1,19 @@
+schema: '1.0'
+kind: trait
+id: provider-ci-auth
+name: Provider CI authentication
+level: low
+dimensions:
+- operational
+explanation: CI pipelines authenticate to the provider with provider-specific actions or federation settings.
+exit_hint: Switch CI credentials to the target platform's OIDC federation or secret store; update pipeline steps that call the provider.
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://github.com/aws-actions/configure-aws-credentials
+  - https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/about-security-hardening-with-openid-connect
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

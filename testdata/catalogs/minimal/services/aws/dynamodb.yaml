@@ -1,0 +1,44 @@
+schema: "1.0"
+kind: service
+id: aws.dynamodb
+provider: aws
+name: Amazon DynamoDB
+category: database.nosql.key-value
+resource_types:
+  terraform: [aws_dynamodb_table]
+  cloudformation: ["AWS::DynamoDB::Table"]
+traits:
+  - id: proprietary-api
+  - id: proprietary-data-model
+rules:
+  - id: aws.dynamodb.streams
+    match: { resource_type: [aws_dynamodb_table] }
+    when: { attr: stream_enabled, equals: true }
+    then: { add_trait: managed-change-stream, level: high, evidence: stream_enabled }
+sdk:
+  - ecosystem: npm
+    packages: ["@aws-sdk/client-dynamodb", "@aws-sdk/lib-dynamodb"]
+    imports: ['@aws-sdk/client-dynamodb']
+  - ecosystem: pypi
+    usage: ['boto3\.(client|resource)\(\s*["'']dynamodb["'']']
+    gate: [boto3]
+edge_hints:
+  - { resource_type: aws_lambda_event_source_mapping, attribute: event_source_arn, edge_kind: data-flow }
+alternatives:
+  - ref: scylladb
+    difficulty: medium
+    compatibility: api-compatible
+    recommended: true
+    approved_by: cloudowski
+    notes: Alternator offers a DynamoDB-compatible API.
+  - ref: yugabytedb
+    difficulty: high
+    compatibility: conceptual
+    approved_by: cloudowski
+provenance:
+  origin: maintainer
+  author: cloudowski
+  status: verified
+  reviewed_by: cloudowski
+  reviewed_on: 2026-10-06
+  sources: []

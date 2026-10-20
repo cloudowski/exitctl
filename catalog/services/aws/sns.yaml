@@ -1,0 +1,73 @@
+schema: '1.0'
+kind: service
+id: aws.sns
+provider: aws
+name: Amazon Simple Notification Service (SNS)
+category: messaging.pubsub
+resource_types:
+  terraform: [aws_sns_topic, aws_sns_topic_subscription, aws_sns_topic_policy, aws_sns_topic_data_protection_policy, aws_sns_platform_application, aws_sns_sms_preferences]
+  cloudformation: ['AWS::SNS::Topic', 'AWS::SNS::Subscription', 'AWS::SNS::TopicPolicy', 'AWS::SNS::TopicInlinePolicy']
+  kubernetes:
+  - {group: sns.services.k8s.aws, kind: Topic}
+  - {group: sns.services.k8s.aws, kind: Subscription}
+  - {group: sns.services.k8s.aws, kind: PlatformApplication}
+traits:
+- {id: proprietary-api, level: medium, reason: 'SNS publish and subscription API is AWS-specific; fan-out maps to topics in Kafka, NATS or RabbitMQ.'}
+- {id: proprietary-event-model}
+- {id: proprietary-sdk}
+rules:
+- id: aws.sns.mobile-sms
+  match:
+    resource_type: [aws_sns_topic_subscription]
+  when: {attr: protocol, in: [sms, application, firehose]}
+  then: {add_trait: managed-only-feature, level: medium, evidence: protocol}
+- id: aws.sns.platform-application
+  match:
+    resource_type: [aws_sns_platform_application]
+  then: {add_trait: managed-only-feature, level: medium, evidence: platform}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-sns']
+  imports: ['[''"]@aws-sdk/client-sns[''"/]']
+  usage: ['\bAWS\.SNS\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["'']sns["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/sns]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/sns(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:sns', 'com.amazonaws:aws-java-sdk-sns', 'io.awspring.cloud:spring-cloud-aws-starter-sns']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.sns\.', '^\s*import\s+(static\s+)?com\.amazonaws\.services\.sns\.', '^\s*import\s+(static\s+)?io\.awspring\.cloud\.sns\.']
+- ecosystem: nuget
+  packages: [AWSSDK.SimpleNotificationService]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.SimpleNotificationService\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-sns]
+  imports: ['^\s*require\s+["'']aws-sdk-(sns)["'']']
+  usage: ['(?i)\bAws::(sns)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-sns]
+  imports: ['\baws_sdk_(sns)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(sns)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_sns_topic_subscription, attribute: topic_arn, edge_kind: data-flow}
+- {resource_type: aws_sns_topic_subscription, attribute: endpoint, edge_kind: data-flow}
+- {resource_type: aws_sns_topic_policy, attribute: arn, edge_kind: binding}
+- {resource_type: aws_sns_topic_data_protection_policy, attribute: arn, edge_kind: binding}
+alternatives:
+- {ref: nats, difficulty: medium, compatibility: conceptual, notes: NATS subjects provide fan-out; HTTP push and SMS delivery need separate components., approved_by: cloudowski}
+- {ref: rabbitmq, difficulty: medium, compatibility: conceptual, notes: Fanout and topic exchanges model SNS to SQS fan-out; message filtering moves to bindings., approved_by: cloudowski}
+- {ref: apache-kafka, difficulty: medium, compatibility: conceptual, notes: Topics with consumer groups replace fan-out; push endpoints need connectors or bridges., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/sns/latest/dg/welcome.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic_subscription']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

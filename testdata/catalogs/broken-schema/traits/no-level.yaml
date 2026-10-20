@@ -1,0 +1,8 @@
+schema: "1.0"
+kind: trait
+id: no-level
+name: Missing level
+dimensions: []
+explanation: Fixture trait without a level.
+exit_hint: None.
+provenance: { origin: maintainer, author: cloudowski, status: verified, reviewed_by: cloudowski, reviewed_on: 2026-10-06 }

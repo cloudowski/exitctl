@@ -1,0 +1,67 @@
+schema: '1.0'
+kind: service
+id: aws.ssm-parameter-store
+provider: aws
+name: AWS Systems Manager (Parameter Store)
+category: security.secrets
+resource_types:
+  terraform: [aws_ssm_parameter, aws_ssm_document, aws_ssm_association, aws_ssm_maintenance_window, aws_ssm_maintenance_window_target, aws_ssm_maintenance_window_task, aws_ssm_patch_baseline, aws_ssm_patch_group, aws_ssm_default_patch_baseline, aws_ssm_activation, aws_ssm_resource_data_sync, aws_ssm_service_setting]
+  cloudformation: ['AWS::SSM::Parameter', 'AWS::SSM::Document', 'AWS::SSM::Association', 'AWS::SSM::MaintenanceWindow', 'AWS::SSM::MaintenanceWindowTarget', 'AWS::SSM::MaintenanceWindowTask', 'AWS::SSM::PatchBaseline', 'AWS::SSM::ResourceDataSync', 'AWS::SSM::ResourcePolicy']
+  kubernetes:
+  - {group: ssm.services.k8s.aws, kind: Document}
+  - {group: ssm.services.k8s.aws, kind: PatchBaseline}
+traits:
+- {id: proprietary-api, level: low, reason: 'Parameters are plain key-value configuration; the hierarchical path API and SecureString handling are AWS-specific.'}
+- {id: proprietary-sdk}
+rules:
+- id: aws.ssm.fleet-management
+  match:
+    resource_type: [aws_ssm_document, aws_ssm_association, aws_ssm_maintenance_window, aws_ssm_maintenance_window_task, aws_ssm_patch_baseline]
+  then: {add_trait: operational-tooling-coupling, level: medium, evidence: name}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-ssm']
+  imports: ['[''"]@aws-sdk/client-ssm[''"/]']
+  usage: ['\bAWS\.SSM\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["'']ssm["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/ssm]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/ssm(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:ssm', 'com.amazonaws:aws-java-sdk-ssm', 'io.awspring.cloud:spring-cloud-aws-starter-parameter-store']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.ssm\.', '^\s*import\s+(static\s+)?com\.amazonaws\.services\.simplesystemsmanagement\.']
+- ecosystem: nuget
+  packages: [AWSSDK.SimpleSystemsManagement, Amazon.Extensions.Configuration.SystemsManager]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.(SimpleSystemsManagement|Extensions\.Configuration\.SystemsManager)\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-ssm]
+  imports: ['^\s*require\s+["'']aws-sdk-(ssm)["'']']
+  usage: ['(?i)\bAws::(ssm)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-ssm]
+  imports: ['\baws_sdk_(ssm)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(ssm)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_ssm_parameter, attribute: key_id, edge_kind: reference}
+- {resource_type: aws_ssm_association, attribute: name, edge_kind: reference}
+- {resource_type: aws_ssm_maintenance_window_target, attribute: window_id, edge_kind: containment}
+- {resource_type: aws_ssm_maintenance_window_task, attribute: window_id, edge_kind: containment}
+- {resource_type: aws_ssm_patch_group, attribute: baseline_id, edge_kind: binding}
+alternatives:
+- {ref: vault-openbao, difficulty: low, compatibility: conceptual, notes: KV secrets engine stores hierarchical configuration and secrets; lookups in code change., approved_by: cloudowski}
+- {ref: sops, difficulty: low, compatibility: conceptual, notes: Encrypted configuration files in Git replace static parameters; no runtime API., approved_by: cloudowski}
+- {ref: kubernetes, difficulty: low, compatibility: conceptual, notes: ConfigMaps and Secrets provide configuration to workloads running on Kubernetes., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_parameter']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

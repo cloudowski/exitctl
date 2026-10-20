@@ -1,0 +1,19 @@
+schema: '1.0'
+kind: trait
+id: proprietary-workflow-definition
+name: Proprietary workflow definition
+level: medium
+dimensions:
+- technical
+explanation: Workflows are defined in a provider-specific language or format, so definitions must be rewritten for another engine.
+exit_hint: Rewrite workflows for an open engine such as Temporal or Argo Workflows, starting with the most used flows.
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.aws.amazon.com/step-functions/latest/dg/concepts-amazon-states-language.html
+  - https://cloud.google.com/workflows/docs/reference/syntax
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

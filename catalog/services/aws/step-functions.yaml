@@ -1,0 +1,67 @@
+schema: '1.0'
+kind: service
+id: aws.step-functions
+provider: aws
+name: AWS Step Functions
+category: integration
+resource_types:
+  terraform: [aws_sfn_state_machine, aws_sfn_activity, aws_sfn_alias]
+  cloudformation: ['AWS::StepFunctions::StateMachine', 'AWS::StepFunctions::Activity', 'AWS::StepFunctions::StateMachineAlias', 'AWS::StepFunctions::StateMachineVersion', 'AWS::Serverless::StateMachine']
+  kubernetes:
+  - {group: sfn.services.k8s.aws, kind: StateMachine}
+  - {group: sfn.services.k8s.aws, kind: Activity}
+traits:
+- {id: proprietary-workflow-definition, level: high, reason: 'Workflows are written in Amazon States Language with direct AWS service integrations; no OSS engine runs ASL.'}
+- {id: proprietary-api}
+rules:
+- id: aws.step-functions.service-integrations
+  match:
+    resource_type: [aws_sfn_state_machine]
+  when: {attr: definition, matches: 'arn:aws[a-z-]*:states:::'}
+  then: {add_trait: managed-only-feature, level: medium, evidence: definition}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-sfn']
+  imports: ['[''"]@aws-sdk/client-sfn[''"/]']
+  usage: ['\bAWS\.StepFunctions\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  packages: [stepfunctions]
+  imports: ['^\s*(from|import)\s+stepfunctions\b']
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["'']stepfunctions["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/sfn]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/sfn(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:sfn', 'com.amazonaws:aws-java-sdk-stepfunctions']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.sfn\.', '^\s*import\s+(static\s+)?com\.amazonaws\.services\.stepfunctions\.']
+- ecosystem: nuget
+  packages: [AWSSDK.StepFunctions]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.StepFunctions\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-sfn]
+  imports: ['^\s*require\s+["'']aws-sdk-(sfn)["'']']
+  usage: ['(?i)\bAws::(sfn)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-sfn]
+  imports: ['\baws_sdk_(sfn)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(sfn)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_sfn_state_machine, attribute: role_arn, edge_kind: binding}
+- {resource_type: aws_sfn_state_machine, attribute: logging_configuration.log_destination, edge_kind: data-flow}
+- {resource_type: aws_sfn_alias, attribute: routing_configuration.state_machine_version_arn, edge_kind: reference}
+alternatives:
+- {ref: temporal, difficulty: high, compatibility: conceptual, notes: 'Workflows become code with durable execution; each ASL state and service integration is reimplemented.', approved_by: cloudowski}
+- {ref: argo-workflows, difficulty: high, compatibility: conceptual, notes: Container-based DAGs and steps on Kubernetes; suits batch flows more than low-latency express workflows., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/step-functions/latest/dg/welcome.html', 'https://states-language.net/spec.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sfn_state_machine']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

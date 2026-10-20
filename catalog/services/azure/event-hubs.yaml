@@ -1,0 +1,103 @@
+schema: '1.0'
+kind: service
+id: azure.event-hubs
+provider: azure
+name: Azure Event Hubs
+category: messaging.stream
+resource_types:
+  terraform:
+  - azurerm_eventhub_namespace
+  - azurerm_eventhub
+  - azurerm_eventhub_consumer_group
+  - azurerm_eventhub_authorization_rule
+  - azurerm_eventhub_namespace_authorization_rule
+  - azurerm_eventhub_namespace_disaster_recovery_config
+  - azurerm_eventhub_namespace_schema_group
+  - azurerm_eventhub_namespace_customer_managed_key
+  - azurerm_eventhub_cluster
+  kubernetes:
+  - {group: eventhub.azure.com, kind: Namespace}
+  - {group: eventhub.azure.com, kind: NamespacesEventhub}
+  - {group: eventhub.azure.com, kind: NamespacesEventhubsConsumerGroup}
+  - {group: eventhub.azure.com, kind: NamespacesAuthorizationRule}
+  - {group: eventhub.azure.com, kind: NamespacesEventhubsAuthorizationRule}
+traits:
+- {id: proprietary-api, level: low, reason: Standard and higher tiers expose an Apache Kafka compatible endpoint next to AMQP.}
+- {id: proprietary-sdk}
+rules:
+- id: azure.event-hubs.basic-tier
+  match: {resource_type: [azurerm_eventhub_namespace]}
+  when: {attr: sku, equals: Basic}
+  then: {set_level: {trait: proprietary-api, level: medium}, evidence: sku}
+- id: azure.event-hubs.capture
+  match: {resource_type: [azurerm_eventhub]}
+  when: {attr: capture_description.enabled, equals: true}
+  then: {add_trait: managed-only-feature, level: low, evidence: capture_description.enabled}
+sdk:
+- ecosystem: npm
+  packages:
+  - '@azure/event-hubs'
+  - '@azure/eventhubs-checkpointstore-blob'
+  imports:
+  - '[''"]@azure/event-hubs(/[^''"]*)?[''"]'
+  - '[''"]@azure/eventhubs-checkpointstore-blob(/[^''"]*)?[''"]'
+- ecosystem: pypi
+  packages:
+  - azure-eventhub
+  - azure-eventhub-checkpointstoreblob*
+  imports:
+  - ^\s*(from|import)\s+azure\.eventhub\b
+- ecosystem: go
+  packages:
+  - github.com/Azure/azure-sdk-for-go/sdk/messaging/azeventhubs
+  imports:
+  - '"github\.com/Azure/azure-sdk-for-go/sdk/messaging/azeventhubs(/[^"]*)?"'
+- ecosystem: maven
+  packages:
+  - com.azure:azure-messaging-eventhubs
+  - com.azure:azure-messaging-eventhubs-checkpointstore-blob
+  - com.microsoft.azure:azure-eventhubs
+  imports:
+  - ^\s*import\s+(static\s+)?com\.azure\.messaging\.eventhubs\.
+  - ^\s*import\s+(static\s+)?com\.microsoft\.azure\.eventhubs\.
+- ecosystem: nuget
+  packages:
+  - Azure.Messaging.EventHubs
+  - Azure.Messaging.EventHubs.Processor
+  - Microsoft.Azure.EventHubs*
+  imports:
+  - ^\s*using\s+(static\s+)?Azure\.Messaging\.EventHubs\b
+  - ^\s*using\s+(static\s+)?Microsoft\.Azure\.EventHubs\b
+edge_hints:
+- {resource_type: azurerm_eventhub_namespace, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_eventhub, attribute: namespace_id, edge_kind: containment}
+- {resource_type: azurerm_eventhub, attribute: namespace_name, edge_kind: containment}
+- {resource_type: azurerm_eventhub_consumer_group, attribute: eventhub_name, edge_kind: containment}
+- {resource_type: azurerm_eventhub_authorization_rule, attribute: eventhub_name, edge_kind: containment}
+alternatives:
+- ref: apache-kafka
+  difficulty: low
+  compatibility: protocol-compatible
+  notes: Kafka clients work against both; capture, schema groups and checkpointing in Blob storage need replacing.
+  approved_by: cloudowski
+- ref: redpanda
+  difficulty: low
+  compatibility: protocol-compatible
+  notes: Kafka API compatible; Event Hubs native SDK consumers must move to Kafka clients.
+  approved_by: cloudowski
+- ref: apache-pulsar
+  difficulty: medium
+  compatibility: conceptual
+  notes: Partitioned topics and subscriptions map over; Kafka-on-Pulsar or client changes required.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/event-hubs/event-hubs-about
+  - https://learn.microsoft.com/en-us/azure/event-hubs/azure-event-hubs-kafka-overview
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/eventhub_namespace
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

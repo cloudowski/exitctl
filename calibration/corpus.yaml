@@ -1,0 +1,373 @@
+# exitctl calibration corpus (T098, FR-041, SC-004, SC-005, research R21)
+#
+# Consumed by the developer-only tool `go run ./tools/calibrate --corpus calibration/corpus.yaml`
+# (T099). The tool may use the network: it clones each repository at the pinned commit into a
+# cache directory and runs the scoring engine in-process with the built-in catalog. The product
+# binary itself never fetches anything.
+#
+# Fields of each entry under `repos`:
+#   url                   Public HTTPS clone URL (GitHub). No credentials, no private repos.
+#   commit                Full 40-character commit SHA the repository is pinned to. Never a
+#                         branch or tag: results must be reproducible. SHAs were taken from
+#                         `git ls-remote <url> HEAD` on 2026-10-06. To refresh an entry, re-run
+#                         that command and re-confirm the expected band.
+#   expected_band         Inclusive grade range "X-Y" over the grade scale A, B, C, D, E
+#                         (data model grade_bands: A 0-9, B 10-24, C 25-39, D 40-54, E 55-100).
+#                         "C-D" means grade C or D is "within band". A single
+#                         grade such as "A" is also valid. SC-004 counts a repo as off by more
+#                         than one grade when the actual grade is two or more steps outside the
+#                         band (for example actual A against "C-D").
+#   expected_band_status  "unconfirmed" = initial estimate made from the repository contents
+#                         (managed-service heavy -> D-E, mostly Kubernetes/OSS -> A-B), not yet
+#                         reviewed by a maintainer. "confirmed" = a maintainer reviewed the repo
+#                         and agrees with the band. The calibration gate is only meaningful once
+#                         every entry is confirmed: the MAINTAINER MUST CONFIRM EXPECTED BANDS.
+#   clouds                Providers expected in the scan: aws, gcp, azure, oci, kubernetes.
+#   notes                 What the repository contains and why the band was chosen.
+#
+# Grade bands changed on 2026-10-11 (A 0-9, B 10-24, C 25-39, D 40-54, E 55-100), so every
+# expected_band below was converted from the old scale (A 0-19, B 20-39, C 40-59, D 60-79,
+# F 80-100; the top grade was then called F). A new letter is part of the converted band when
+# at least half of its own range lay inside the old numeric range: A-B -> A-C, B-C -> C-D,
+# C-D -> D-E, D-F -> E. Because the meaning of the letters changed, every entry is
+# "unconfirmed" again; entries that were confirmed before the change can be found in the git
+# history of this file.
+#
+# Release gate (quickstart V11, not run on every commit): at least 20 repos, >= 90% within the
+# expected band, none off by more than one grade, median weighted coverage >= 90%.
+
+version: 1
+
+repos:
+  # ---------------------------------------------------------------- AWS
+  - url: https://github.com/aws-samples/eks-workshop-v2
+    commit: 1b0f95ab8d3650f9396e01c0cc5d78d2fa61f3e4
+    expected_band: C-D
+    expected_band_status: confirmed
+    clouds: [aws, kubernetes]
+    notes: >-
+      EKS workshop: Terraform/CloudFormation for EKS plus Kubernetes manifests using AWS Load
+      Balancer Controller, EBS/EFS CSI, IRSA/Pod Identity, ACK, DynamoDB, RDS. Kubernetes core
+      is portable, but many lab modules bind to AWS-managed services.
+
+  - url: https://github.com/terraform-aws-modules/terraform-aws-eks
+    commit: e07246207174bd1ad8ed250f3bb54a9494342e80
+    expected_band: C-D
+    expected_band_status: confirmed
+    clouds: [aws]
+    notes: >-
+      Community EKS module (Terraform): EKS cluster, node groups, Fargate profiles, IAM, KMS,
+      security groups. One managed Kubernetes service with moderate IAM/KMS coupling and no
+      data services.
+
+  - url: https://github.com/terraform-aws-modules/terraform-aws-lambda
+    commit: 3a1405b98f47d1cb45acfa9e10a2fef2f02266df
+    expected_band: D-E
+    expected_band_status: confirmed
+    clouds: [aws]
+    notes: >-
+      Lambda module and examples (Terraform): Lambda functions, layers, aliases, event source
+      mappings (SQS, DynamoDB streams, Kinesis), API Gateway, S3. Serverless runtime is highly
+      proprietary.
+
+  - url: https://github.com/aws-samples/serverless-test-samples
+    commit: a801c92eda191dc1ed0caa4a866500775a861f0f
+    expected_band: E
+    expected_band_status: confirmed
+    clouds: [aws]
+    notes: >-
+      SAM/CloudFormation serverless samples: Lambda, API Gateway, DynamoDB, SQS, SNS,
+      EventBridge, Step Functions, Kinesis, plus SDK usage in Python/TypeScript/Java/.NET.
+      Expect high lock-in. Large repo (about 50 MB); some samples use CDK, which may lower
+      coverage.
+
+  - url: https://github.com/aws-containers/retail-store-sample-app
+    commit: d7a380b843e0759e58754f74188ea18252a51415
+    expected_band: C-D
+    expected_band_status: confirmed
+    clouds: [aws, kubernetes]
+    notes: >-
+      Retail store sample: Helm charts for microservices plus Terraform for EKS/ECS/App Runner
+      with DynamoDB, Aurora, ElastiCache, Amazon MQ. Services also run on plain Kubernetes with
+      OSS backends, so lock-in is mixed.
+
+  # ---------------------------------------------------------------- GCP
+  - url: https://github.com/GoogleCloudPlatform/microservices-demo
+    commit: 38e7348eb289eb5b87c0c6e8cb19ced0449dc389
+    expected_band: A-C
+    expected_band_status: confirmed
+    clouds: [gcp, kubernetes]
+    notes: >-
+      Online Boutique: Kubernetes manifests, Kustomize components, Helm chart; Redis in
+      cluster. Optional Terraform for GKE and Kustomize components for Memorystore/Spanner/
+      AlloyDB that may raise the score slightly.
+      Confirmed against the calibration run of 2026-10-07: index 12, grade A.
+
+  - url: https://github.com/GoogleCloudPlatform/bank-of-anthos
+    commit: db35fea9fd090150e2398106aadb475576f80d94
+    expected_band: A-C
+    expected_band_status: confirmed
+    clouds: [gcp, kubernetes]
+    notes: >-
+      Bank of Anthos: Kubernetes manifests with in-cluster PostgreSQL by default; Terraform for
+      GKE, Cloud SQL variant, Cloud Operations (tracing/metrics) integration in Java/Python.
+      Band changed from B-C to A-B after the calibration run of 2026-10-07: index 18, grade A.
+
+  - url: https://github.com/terraform-google-modules/terraform-google-kubernetes-engine
+    commit: 068af04e164ab3d0061d70b809ff603027e944b8
+    expected_band: C-D
+    expected_band_status: confirmed
+    clouds: [gcp, kubernetes]
+    notes: >-
+      GKE module (Terraform): GKE clusters (standard/autopilot), node pools, Workload Identity,
+      ASM/Config Sync submodules. Managed Kubernetes plus GCP-specific features.
+      Confirmed against the calibration run of 2026-10-07: index 39, grade B.
+
+  - url: https://github.com/GoogleCloudPlatform/terraform-google-three-tier-web-app
+    commit: 69885ccd8aaa9b2e9ab2307fbe6b7242aa1a2b17
+    expected_band: C-D
+    expected_band_status: confirmed
+    clouds: [gcp]
+    notes: >-
+      Jump Start Solution: Cloud Run frontend/API, Cloud SQL (PostgreSQL/MySQL), Memorystore
+      Redis, Secret Manager, VPC connector. Engines are OSS-compatible, runtime is managed.
+      Band changed from C-D to B-C after the calibration run of 2026-10-07: index 33, grade B.
+
+  - url: https://github.com/GoogleCloudPlatform/terraform-dynamic-python-webapp
+    commit: 7c9e8fb8f0d4d57f0564c70917ae06a07c176d17
+    expected_band: C-D
+    expected_band_status: confirmed
+    clouds: [gcp]
+    notes: >-
+      Jump Start Solution: Django on Cloud Run, Cloud SQL, Firebase Hosting, Cloud Storage,
+      Secret Manager, Cloud Build jobs. Firebase and Cloud Build add proprietary coupling.
+      Band changed from D-F to B-C after the calibration run of 2026-10-07: index 38, grade B.
+
+  # ---------------------------------------------------------------- Azure
+  - url: https://github.com/Azure-Samples/aks-store-demo
+    commit: 3c3ba3bd999d0b2d78eece1adac84b712b7d9c4f
+    expected_band: A-C
+    expected_band_status: confirmed
+    clouds: [azure, kubernetes]
+    notes: >-
+      AKS Store demo: Kubernetes manifests and Helm, with Terraform (and Bicep, not scanned)
+      for AKS, Cosmos DB, Service Bus, Azure OpenAI, Key Vault. In-cluster RabbitMQ/MongoDB are
+      the default, managed services are optional.
+      Band changed from C-D to A-B after the calibration run of 2026-10-07: index 16, grade A.
+
+  - url: https://github.com/Azure-Samples/azure-voting-app-redis
+    commit: 1705b177447819f5cc163cdfb448dd28d84452fc
+    expected_band: A-C
+    expected_band_status: confirmed
+    clouds: [azure, kubernetes]
+    notes: >-
+      Classic AKS tutorial app: Python front end and Redis as plain Kubernetes manifests plus
+      docker compose. Little or no Azure-specific infrastructure in the repo. Small repo, low
+      evidence: confidence may be reduced.
+      Confirmed against the calibration run of 2026-10-07: index 0, grade A.
+
+  - url: https://github.com/Azure/terraform-azurerm-avm-res-documentdb-databaseaccount
+    commit: 355234c3c1e27937245063533dcf965c19e0e8a4
+    expected_band: D-E
+    expected_band_status: confirmed
+    clouds: [azure]
+    notes: >-
+      Azure Verified Module for Cosmos DB accounts (SQL, MongoDB, Gremlin, Table APIs), private
+      endpoints, diagnostic settings. A single proprietary data service; Mongo API examples may
+      pull the score down.
+      Band changed from D-F to C-D after the calibration run of 2026-10-07: index 56, grade C.
+
+  # ---------------------------------------------------------------- OCI
+  - url: https://github.com/oracle-terraform-modules/terraform-oci-oke
+    commit: 08c93f3d2d44934cd455cdece2b4393f68bf6538
+    expected_band: C-D
+    expected_band_status: confirmed
+    clouds: [oci, kubernetes]
+    notes: >-
+      OKE module (Terraform): VCN, OKE cluster, node pools, bastion/operator hosts, IAM
+      policies, optional cluster add-ons. Managed Kubernetes with OCI networking and IAM.
+      Confirmed against the calibration run of 2026-10-07: index 37, grade B.
+
+  - url: https://github.com/oracle-quickstart/oci-cloudnative
+    commit: 899cf7489e91daf8f42e6f54ecebb6674f7b7ac8
+    expected_band: A-C
+    expected_band_status: confirmed
+    clouds: [oci, kubernetes]
+    notes: >-
+      MuShop: Helm charts on OKE plus Terraform with Autonomous Database, Object Storage,
+      Streaming, OCI Functions, Email Delivery, and OCI SDK usage in services. Mixed portable
+      and proprietary components.
+      Band changed from C-D to A-B after the calibration run of 2026-10-07: index 16, grade A.
+
+  - url: https://github.com/oracle-devrel/terraform-oci-arch-adb
+    commit: 694b81729910347733936a2ae21e74e5495e24eb
+    expected_band: C-D
+    expected_band_status: confirmed
+    clouds: [oci]
+    notes: >-
+      OCI reference architecture: Autonomous Database (ATP/ADW) with networking and compute.
+      Autonomous Database is a highly proprietary managed service. Small repo.
+      Band changed from D-F to B-C after the calibration run of 2026-10-07: index 39, grade B.
+
+  # ---------------------------------------------------------------- Kubernetes / OSS
+  - url: https://github.com/argoproj/argocd-example-apps
+    commit: 8088f4c0d970abb09e250248cc97e35623447cb5
+    expected_band: A-C
+    expected_band_status: confirmed
+    clouds: [kubernetes]
+    notes: >-
+      Argo CD examples: plain manifests, Helm, Kustomize, Jsonnet apps. No cloud services. Low
+      evidence may reduce confidence.
+      Confirmed against the calibration run of 2026-10-07: index 0, grade A.
+
+  - url: https://github.com/kubernetes/examples
+    commit: d6b8cd27eacb51e651a1aa6f7c190a28713eff6e
+    expected_band: A-C
+    expected_band_status: confirmed
+    clouds: [kubernetes]
+    notes: >-
+      Upstream Kubernetes examples: stateful apps, storage, networking. A few examples use
+      cloud volume types or cloud LoadBalancer annotations (AWS EBS, GCE PD, Azure Disk), so B
+      is possible.
+      Confirmed against the calibration run of 2026-10-07: index 1, grade A.
+
+  - url: https://github.com/open-telemetry/opentelemetry-demo
+    commit: 7ea09b865a9b9d411b59459b15133d84f8c2784a
+    expected_band: A-C
+    expected_band_status: confirmed
+    clouds: [kubernetes]
+    notes: >-
+      OpenTelemetry Astronomy Shop: about 15 polyglot services, Kafka, PostgreSQL, Valkey,
+      docker compose and Kubernetes manifests (Helm chart lives in a separate repo). All OSS.
+      Confirmed against the calibration run of 2026-10-07: index 1, grade A.
+
+  - url: https://github.com/stefanprodan/podinfo
+    commit: 3e0ff8ae123b710bc91de1315cba0f996a8896c2
+    expected_band: A-C
+    expected_band_status: confirmed
+    clouds: [kubernetes]
+    notes: >-
+      Small Go web app with Kustomize, Helm chart, Timoni module. Pure Kubernetes and OSS.
+      Confirmed against the calibration run of 2026-10-07: index 0, grade A.
+
+  - url: https://github.com/dapr/quickstarts
+    commit: 4a966840d6effed04ad2ec09cf18b413fe61d04f
+    expected_band: A-C
+    expected_band_status: confirmed
+    clouds: [kubernetes]
+    notes: >-
+      Dapr quickstarts: apps in many languages using Dapr building blocks with Redis, Kafka,
+      PostgreSQL components and Kubernetes deploy manifests. Dapr abstracts the backends; any
+      cloud-specific component files may move it toward B.
+      Confirmed against the calibration run of 2026-10-07: index 0, grade A.
+
+  # ------------------------------------------- Real-world infrastructure (added 2026-10-08)
+  # Production or platform-team repositories rather than vendor samples. All bands are initial
+  # estimates: the MAINTAINER MUST CONFIRM them after a calibration run.
+  - url: https://github.com/alphagov/govuk-infrastructure
+    commit: 669543694aa2eb6b2a6deaee77062b93d97267cd
+    expected_band: C-D
+    expected_band_status: confirmed
+    clouds: [aws, kubernetes]
+    notes: >-
+      GOV.UK platform: Terraform for EKS, RDS, ElastiCache, MSK, S3, Route 53 plus Kubernetes
+      manifests and Helm. Managed Kubernetes with several AWS data services.
+
+  - url: https://github.com/ministryofjustice/cloud-platform-infrastructure
+    commit: 0de4199ce312aefaf7d60db457d29867eeb2e9d8
+    expected_band: C-D
+    expected_band_status: confirmed
+    clouds: [aws, kubernetes]
+    notes: >-
+      Ministry of Justice Cloud Platform: EKS cluster, IAM/IRSA, Route 53, ACM, OpenSearch,
+      Kubernetes add-ons through Helm. Large real-world platform repo.
+
+  - url: https://github.com/cds-snc/notification-terraform
+    commit: 3df505540882ef088f8a43861b2afb80ce4756ee
+    expected_band: E
+    expected_band_status: confirmed
+    clouds: [aws]
+    notes: >-
+      GC Notify infrastructure: Lambda, SQS, SNS, SES, RDS/Aurora, CloudFront, WAF, Pinpoint.
+      Event-driven and managed-service heavy, expect high lock-in.
+
+  - url: https://github.com/cloud-gov/cg-provision
+    commit: 32eaa1eba363396e66b9a1f4099e6018e16b379a
+    expected_band: D-E
+    expected_band_status: confirmed
+    clouds: [aws]
+    notes: >-
+      cloud.gov provisioning: VPC, RDS, S3, IAM, ELB and supporting AWS services for a
+      Cloud Foundry based PaaS. Mostly IaaS plus a few managed services.
+
+  - url: https://github.com/kubernetes/k8s.io
+    commit: fd05762f2df6c2f4fda4e6358082c7244a11bf65
+    expected_band: C-D
+    expected_band_status: confirmed
+    clouds: [gcp, aws, kubernetes]
+    notes: >-
+      Kubernetes project infrastructure: GCP projects, GKE, Cloud DNS, GCS, Artifact Registry,
+      IAM, plus AWS resources, mixed with plain Kubernetes manifests.
+
+  - url: https://github.com/hmcts/cnp-flux-config
+    commit: 47332537f6df4070eb6bba8f3afdee480303c9a1
+    expected_band: A-C
+    expected_band_status: confirmed
+    clouds: [azure, kubernetes]
+    notes: >-
+      HMCTS Flux GitOps config for AKS: HelmReleases and Kustomize for many services. Mostly
+      portable Kubernetes, with some Azure identity and Key Vault references.
+
+  - url: https://github.com/Azure/terraform-azurerm-caf-enterprise-scale
+    commit: 651a585c7fc113315477b957bbd9e8d09e4ff60f
+    expected_band: D-E
+    expected_band_status: confirmed
+    clouds: [azure]
+    notes: >-
+      Azure landing zone module: management groups, Azure Policy, role assignments, Log
+      Analytics, Defender, hub networking. Governance-heavy and Azure-specific.
+
+  - url: https://github.com/GoogleCloudPlatform/cloud-foundation-fabric
+    commit: 7c93e0134906fa204e2f427587b812730284e3ed
+    expected_band: D-E
+    expected_band_status: confirmed
+    clouds: [gcp, kubernetes]
+    notes: >-
+      Fabric modules and blueprints: broad mix of GCP services (BigQuery, Pub/Sub, Cloud Run,
+      Cloud Functions, Spanner, GKE) in one large repository.
+
+  - url: https://github.com/terraform-google-modules/terraform-example-foundation
+    commit: c49d0c1c6bc7e246bc18c50ed4655c43297ab2cf
+    expected_band: C-D
+    expected_band_status: confirmed
+    clouds: [gcp]
+    notes: >-
+      GCP organization foundation: folders, projects, org policy, shared VPC, logging sinks,
+      IAM. Platform scaffolding with moderate coupling and few data services.
+
+  - url: https://github.com/aws-ia/terraform-aws-eks-blueprints
+    commit: fc40e64615785b3dc4db88e57c45a6687ca026b5
+    expected_band: C-D
+    expected_band_status: confirmed
+    clouds: [aws, kubernetes]
+    notes: >-
+      EKS blueprints: patterns for EKS with add-ons (Karpenter, Load Balancer Controller,
+      IRSA, Pod Identity, EBS/EFS CSI). Portable workloads over AWS-integrated cluster setup.
+
+  - url: https://github.com/sourcegraph/deploy-sourcegraph-helm
+    commit: 82837d477809901afac11c83fc0140bfd85aab9c
+    expected_band: A-C
+    expected_band_status: confirmed
+    clouds: [kubernetes]
+    notes: >-
+      Sourcegraph Helm chart: in-cluster PostgreSQL, Redis, and application services. Pure
+      Kubernetes with optional cloud-specific storage class and ingress annotations.
+
+  - url: https://github.com/Azure-Samples/todo-python-mongo-terraform
+    commit: 2f7a3cbe05f5c8812a61d61587f3658382330c0c
+    expected_band: D-E
+    expected_band_status: confirmed
+    clouds: [azure]
+    notes: >-
+      azd template: App Service, Cosmos DB for MongoDB API, Key Vault, Application Insights,
+      Terraform. Small repo; Mongo API may soften the data lock-in.

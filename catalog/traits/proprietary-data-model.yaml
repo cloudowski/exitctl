@@ -1,0 +1,20 @@
+schema: '1.0'
+kind: trait
+id: proprietary-data-model
+name: Proprietary data model
+level: high
+dimensions:
+- technical
+- data
+explanation: Data is organized around a provider-specific model (keys, partitions, consistency, indexes) that other engines implement differently or not at all.
+exit_hint: Map access patterns to the target model first; plan schema redesign and a dual-write or backfill period.
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.CoreComponents.html
+  - https://cloud.google.com/spanner/docs/schema-and-data-model
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

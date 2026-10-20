@@ -1,0 +1,73 @@
+schema: '1.0'
+kind: service
+id: aws.efs
+provider: aws
+name: Amazon Elastic File System (EFS)
+category: storage.file
+resource_types:
+  terraform: [aws_efs_file_system, aws_efs_mount_target, aws_efs_access_point, aws_efs_file_system_policy, aws_efs_backup_policy, aws_efs_replication_configuration]
+  cloudformation: ['AWS::EFS::FileSystem', 'AWS::EFS::MountTarget', 'AWS::EFS::AccessPoint']
+  kubernetes:
+  - {group: efs.services.k8s.aws, kind: FileSystem}
+  - {group: efs.services.k8s.aws, kind: MountTarget}
+  - {group: efs.services.k8s.aws, kind: AccessPoint}
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'Clients mount EFS over standard NFSv4.1; access points, IAM authorization and the CSI driver are AWS-specific.'}
+- {id: data-gravity, level: medium, reason: 'Shared file data is copied out with rsync or DataSync while clients keep writing; large file systems need staged syncs.'}
+rules:
+- id: aws.efs.iam-authorization
+  match:
+    resource_type: [aws_efs_file_system_policy]
+  then: {add_trait: proprietary-iam-model, level: low, evidence: policy}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-efs']
+  imports: ['[''"]@aws-sdk/client-efs[''"/]']
+  usage: ['\bAWS\.EFS\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["'']efs["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/efs]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/efs(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:efs', 'com.amazonaws:aws-java-sdk-efs']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.efs\.', '^\s*import\s+(static\s+)?com\.amazonaws\.services\.elasticfilesystem\.']
+- ecosystem: nuget
+  packages: [AWSSDK.ElasticFileSystem]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.ElasticFileSystem\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-efs]
+  imports: ['^\s*require\s+["'']aws-sdk-(efs)["'']']
+  usage: ['(?i)\bAws::(efs)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-efs]
+  imports: ['\baws_sdk_(efs)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(efs)\\']
+  gate: [aws/aws-sdk-php]
+kubernetes_bindings:
+- match: {kind: StorageClass, field: provisioner, equals: efs.csi.aws.com}
+- match: {kind: CSIDriver, field: metadata.name, equals: efs.csi.aws.com}
+edge_hints:
+- {resource_type: aws_efs_mount_target, attribute: file_system_id, edge_kind: containment}
+- {resource_type: aws_efs_mount_target, attribute: subnet_id, edge_kind: containment}
+- {resource_type: aws_efs_mount_target, attribute: security_groups, edge_kind: containment}
+- {resource_type: aws_efs_access_point, attribute: file_system_id, edge_kind: containment}
+- {resource_type: aws_efs_file_system_policy, attribute: file_system_id, edge_kind: binding}
+- {resource_type: aws_efs_backup_policy, attribute: file_system_id, edge_kind: containment}
+- {resource_type: aws_efs_replication_configuration, attribute: source_file_system_id, edge_kind: data-flow}
+alternatives:
+- {ref: ceph, difficulty: low, compatibility: protocol-compatible, notes: CephFS (or Ceph NFS gateway) provides shared POSIX storage with a Kubernetes CSI driver., approved_by: cloudowski}
+- {ref: ovhcloud, difficulty: low, compatibility: protocol-compatible, notes: OVHcloud File Storage offers managed NFS shares., approved_by: cloudowski}
+- {ref: seaweedfs, difficulty: medium, compatibility: conceptual, notes: SeaweedFS Filer offers a POSIX-like FUSE mount and CSI driver; semantics differ from NFS., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/efs/latest/ug/whatisefs.html', 'https://github.com/kubernetes-sigs/aws-efs-csi-driver', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/efs_file_system']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

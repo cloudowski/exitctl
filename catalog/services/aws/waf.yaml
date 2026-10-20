@@ -1,0 +1,75 @@
+schema: '1.0'
+kind: service
+id: aws.waf
+provider: aws
+name: AWS WAF
+category: network
+resource_types:
+  terraform: [aws_wafv2_web_acl, aws_wafv2_web_acl_association, aws_wafv2_web_acl_logging_configuration, aws_wafv2_rule_group, aws_wafv2_ip_set, aws_wafv2_regex_pattern_set, aws_waf_web_acl, aws_waf_rule, aws_waf_rule_group, aws_waf_rate_based_rule, aws_waf_ipset, aws_waf_byte_match_set, aws_waf_geo_match_set, aws_waf_regex_match_set, aws_waf_regex_pattern_set, aws_waf_size_constraint_set, aws_waf_sql_injection_match_set, aws_waf_xss_match_set, aws_wafregional_web_acl, aws_wafregional_web_acl_association, aws_wafregional_rule, aws_wafregional_rule_group, aws_wafregional_rate_based_rule, aws_wafregional_ipset, aws_wafregional_byte_match_set, aws_wafregional_geo_match_set, aws_wafregional_regex_match_set, aws_wafregional_regex_pattern_set, aws_wafregional_size_constraint_set, aws_wafregional_sql_injection_match_set, aws_wafregional_xss_match_set, aws_fms_policy, aws_fms_admin_account]
+  cloudformation: ['AWS::WAFv2::WebACL', 'AWS::WAFv2::WebACLAssociation', 'AWS::WAFv2::LoggingConfiguration', 'AWS::WAFv2::RuleGroup', 'AWS::WAFv2::IPSet', 'AWS::WAFv2::RegexPatternSet', 'AWS::WAF::WebACL', 'AWS::WAF::Rule', 'AWS::WAF::IPSet', 'AWS::WAF::ByteMatchSet', 'AWS::WAF::SizeConstraintSet', 'AWS::WAF::SqlInjectionMatchSet', 'AWS::WAF::XssMatchSet', 'AWS::WAFRegional::WebACL', 'AWS::WAFRegional::WebACLAssociation', 'AWS::WAFRegional::Rule', 'AWS::WAFRegional::IPSet', 'AWS::FMS::Policy']
+  kubernetes:
+  - {group: wafv2.services.k8s.aws, kind: WebACL}
+  - {group: wafv2.services.k8s.aws, kind: RuleGroup}
+  - {group: wafv2.services.k8s.aws, kind: IPSet}
+traits:
+- {id: proprietary-api, level: medium, reason: 'Rules use the WAF JSON rule language and AWS Managed Rules groups; concepts map to ModSecurity/Coraza rule sets.'}
+rules:
+- id: aws.waf.managed-rule-groups
+  match:
+    resource_type: [aws_wafv2_web_acl]
+  when: {attr: rule.statement.managed_rule_group_statement, exists: true}
+  then: {add_trait: managed-only-feature, level: medium, evidence: managed_rule_group_statement}
+- id: aws.waf.bot-control
+  match:
+    resource_type: [aws_wafv2_web_acl]
+  when: {attr: rule.statement.managed_rule_group_statement.name, in: [AWSManagedRulesBotControlRuleSet, AWSManagedRulesATPRuleSet, AWSManagedRulesACFPRuleSet]}
+  then: {add_trait: managed-only-feature, level: high, evidence: managed_rule_group_statement.name}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-wafv2', '@aws-sdk/client-waf', '@aws-sdk/client-waf-regional', '@aws-sdk/client-fms']
+  imports: ['[''"]@aws-sdk/client-(wafv2|waf|waf-regional|fms)[''"/]']
+  usage: ['\bAWS\.(WAFV2|WAF|WAFRegional)\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["''](wafv2|waf|waf-regional|fms)["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/wafv2, github.com/aws/aws-sdk-go-v2/service/waf, github.com/aws/aws-sdk-go-v2/service/wafregional, github.com/aws/aws-sdk-go-v2/service/fms]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/(wafv2|waf|wafregional|fms)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:wafv2', 'software.amazon.awssdk:waf', 'software.amazon.awssdk:fms']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.(wafv2|waf|fms)\.']
+- ecosystem: nuget
+  packages: [AWSSDK.WAFV2, AWSSDK.WAF, AWSSDK.WAFRegional, AWSSDK.FMS]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.(WAFV2|WAF|WAFRegional|FMS)\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-wafv2, aws-sdk-waf, aws-sdk-wafregional, aws-sdk-fms]
+  imports: ['^\s*require\s+["'']aws-sdk-(wafv2|waf|wafregional|fms)["'']']
+  usage: ['(?i)\bAws::(wafv2|waf|wafregional|fms)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-wafv2, aws-sdk-waf, aws-sdk-wafregional, aws-sdk-fms]
+  imports: ['\baws_sdk_(wafv2|waf|wafregional|fms)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(wafv2|waf|wafregional|fms)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_wafv2_web_acl_association, attribute: resource_arn, edge_kind: binding}
+- {resource_type: aws_wafv2_web_acl_association, attribute: web_acl_arn, edge_kind: binding}
+- {resource_type: aws_wafv2_web_acl_logging_configuration, attribute: resource_arn, edge_kind: binding}
+- {resource_type: aws_wafv2_web_acl_logging_configuration, attribute: log_destination_configs, edge_kind: data-flow}
+- {resource_type: aws_wafv2_web_acl, attribute: rule.statement.ip_set_reference_statement.arn, edge_kind: reference}
+- {resource_type: aws_wafv2_web_acl, attribute: rule.statement.rule_group_reference_statement.arn, edge_kind: reference}
+- {resource_type: aws_wafregional_web_acl_association, attribute: resource_arn, edge_kind: binding}
+alternatives:
+- {ref: nginx, difficulty: medium, compatibility: conceptual, notes: 'NGINX with ModSecurity or Coraza and the OWASP Core Rule Set replaces common WAF rules; managed bot rules have no equivalent.', approved_by: cloudowski}
+- {ref: envoy, difficulty: medium, compatibility: conceptual, notes: Envoy with the Coraza WASM filter applies OWASP CRS rules at the proxy., approved_by: cloudowski}
+- {ref: haproxy, difficulty: medium, compatibility: conceptual, notes: 'HAProxy ACLs, rate limits and a SPOE WAF agent cover IP, rate and signature rules.', approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/waf/latest/developerguide/what-is-aws-waf.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

@@ -1,0 +1,15 @@
+schema: '1.0'
+kind: neutral
+id: gcp-data-sources
+provider: gcp
+resource_types:
+  terraform: [google_iam_policy, google_storage_project_service_account, google_compute_default_service_account]
+scored: false
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-08'
+  status: verified
+  sources: ['https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/iam_policy']
+  llm: {batch: 2026-10-08-coverage, model: claude-sonnet-5-5, prompt_version: catalog-coverage-v1, eval_passed: true}

@@ -1,0 +1,30 @@
+schema: '1.0'
+kind: service
+id: gcp.cloud-cdn
+provider: gcp
+name: Cloud CDN
+category: network.cdn
+resource_types:
+  terraform: [google_compute_backend_bucket, google_compute_backend_bucket_signed_url_key, google_compute_backend_service_signed_url_key, google_compute_backend_bucket_iam_binding, google_compute_backend_bucket_iam_member, google_compute_backend_bucket_iam_policy, google_network_services_edge_cache_service, google_network_services_edge_cache_origin, google_network_services_edge_cache_keyset]
+  kubernetes:
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeBackendBucket}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeBackendBucketSignedURLKey}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeBackendServiceSignedURLKey}
+traits:
+- {id: proprietary-api, level: low, reason: 'Caching is standard HTTP; cache modes, signed URLs and keys are configured with Google-specific resources.'}
+- {id: operational-tooling-coupling, level: low, reason: Cache invalidation and logs go through Google tooling.}
+edge_hints:
+- {resource_type: google_compute_backend_bucket, attribute: bucket_name, edge_kind: reference}
+- {resource_type: google_compute_backend_bucket_signed_url_key, attribute: backend_bucket, edge_kind: containment}
+- {resource_type: google_compute_backend_service_signed_url_key, attribute: backend_service, edge_kind: containment}
+alternatives:
+- {ref: nginx, difficulty: medium, compatibility: conceptual, notes: NGINX proxy_cache provides caching at origin; a global edge network is not included., approved_by: cloudowski}
+- {ref: ovhcloud, difficulty: low, compatibility: conceptual, notes: OVHcloud CDN provides edge caching in front of HTTP origins; signed URL schemes differ., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/cdn/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_backend_bucket']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

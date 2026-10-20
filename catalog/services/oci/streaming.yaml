@@ -1,0 +1,74 @@
+schema: '1.0'
+kind: service
+id: oci.streaming
+provider: oci
+name: OCI Streaming
+category: messaging.stream
+resource_types:
+  terraform:
+  - oci_streaming_stream
+  - oci_streaming_stream_pool
+  - oci_streaming_connect_harness
+  kubernetes:
+  - {group: oci.oracle.com, kind: Stream}
+traits:
+- {id: proprietary-api, level: medium, reason: 'Native API and SDKs are OCI specific; a Kafka-compatible endpoint covers producers and consumers.'}
+- {id: operational-tooling-coupling, level: low, reason: Stream pools and Connect harnesses are managed through OCI tooling.}
+sdk:
+- ecosystem: npm
+  packages: [oci-streaming]
+  imports: ['[''"]oci-streaming[''"]']
+  usage: ['\bstreaming\.(StreamClient|StreamAdminClient)\b']
+  gate: [oci-sdk]
+- ecosystem: pypi
+  imports: ['^\s*from\s+oci\.streaming\b', '^\s*from\s+oci\s+import\s+.*\bstreaming\b']
+  usage: ['\boci\.streaming\.(StreamClient|StreamAdminClient)\b']
+  gate: [oci]
+- ecosystem: go
+  packages: [github.com/oracle/oci-go-sdk/v65/streaming]
+  imports: ['"github\.com/oracle/oci-go-sdk/v[0-9]+/streaming(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.oracle.oci.sdk:oci-java-sdk-streaming']
+  imports: ['^\s*import\s+com\.oracle\.bmc\.streaming\.']
+- ecosystem: nuget
+  packages: [OCI.DotNetSDK.Streaming]
+  imports: ['^\s*using\s+Oci\.StreamingService\b']
+edge_hints:
+- {resource_type: oci_streaming_stream, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_streaming_stream, attribute: stream_pool_id, edge_kind: containment}
+- {resource_type: oci_streaming_stream_pool, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_streaming_stream_pool, attribute: private_endpoint_settings.subnet_id, edge_kind: containment}
+- {resource_type: oci_streaming_stream_pool, attribute: custom_encryption_key.kms_key_id, edge_kind: reference}
+- {resource_type: oci_streaming_connect_harness, attribute: compartment_id, edge_kind: containment}
+alternatives:
+- ref: apache-kafka
+  difficulty: low
+  compatibility: protocol-compatible
+  notes: Clients already using the Kafka-compatible endpoint switch brokers and SASL settings; native SDK use needs porting.
+  approved_by: cloudowski
+- ref: redpanda
+  difficulty: low
+  compatibility: protocol-compatible
+  notes: Kafka API compatible; same path as Kafka for clients on the Kafka-compatible endpoint.
+  approved_by: cloudowski
+- ref: apache-pulsar
+  difficulty: medium
+  compatibility: conceptual
+  notes: Partitioned topics replace streams; clients are rewritten or use the Kafka protocol handler.
+  approved_by: cloudowski
+- ref: nats
+  difficulty: medium
+  compatibility: conceptual
+  notes: JetStream streams replace OCI streams; producers and consumers are rewritten.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.oracle.com/en-us/iaas/Content/Streaming/home.htm
+  - https://docs.oracle.com/en-us/iaas/Content/Streaming/Tasks/kafkacompatibility.htm
+  - https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/streaming_stream
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

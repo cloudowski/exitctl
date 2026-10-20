@@ -1,0 +1,22 @@
+schema: '1.0'
+kind: trait
+id: non-exportable-data
+name: Non-exportable data
+level: high
+dimensions:
+- data
+explanation: Some data cannot leave the service at all (key material, password hashes, tuned model weights), so it must be regenerated or re-enrolled on the target.
+exit_hint: Plan re-encryption, password resets or lazy migration at sign-in, and retraining; prefer imported (BYOK) keys and open model weights.
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-08'
+  status: verified
+  sources:
+  - https://docs.aws.amazon.com/kms/latest/developerguide/importing-keys.html
+  - https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-import-using-lambda.html
+  - https://cloud.google.com/kms/docs/key-import
+  - https://learn.microsoft.com/en-us/azure/key-vault/keys/about-keys
+  - https://docs.aws.amazon.com/bedrock/latest/userguide/custom-models.html
+  llm: {batch: 2026-10-08-v02, model: claude-opus-5-5, prompt_version: catalog-levels-v1, eval_passed: true}

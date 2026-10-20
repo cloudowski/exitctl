@@ -1,0 +1,133 @@
+schema: '1.0'
+kind: service
+id: azure.vnet
+provider: azure
+name: Azure Virtual Network
+category: network
+resource_types:
+  terraform:
+  - azurerm_virtual_network
+  - azurerm_subnet
+  - azurerm_network_security_group
+  - azurerm_network_security_rule
+  - azurerm_subnet_network_security_group_association
+  - azurerm_route_table
+  - azurerm_route
+  - azurerm_subnet_route_table_association
+  - azurerm_virtual_network_peering
+  - azurerm_public_ip
+  - azurerm_public_ip_prefix
+  - azurerm_nat_gateway
+  - azurerm_nat_gateway_public_ip_association
+  - azurerm_nat_gateway_public_ip_prefix_association
+  - azurerm_subnet_nat_gateway_association
+  - azurerm_network_interface
+  - azurerm_network_interface_security_group_association
+  - azurerm_network_interface_application_security_group_association
+  - azurerm_application_security_group
+  - azurerm_private_endpoint
+  - azurerm_private_link_service
+  - azurerm_subnet_service_endpoint_storage_policy
+  - azurerm_virtual_network_gateway
+  - azurerm_virtual_network_gateway_connection
+  - azurerm_local_network_gateway
+  - azurerm_express_route_circuit
+  - azurerm_express_route_circuit_peering
+  - azurerm_express_route_gateway
+  - azurerm_express_route_connection
+  - azurerm_firewall
+  - azurerm_firewall_policy
+  - azurerm_firewall_policy_rule_collection_group
+  - azurerm_firewall_network_rule_collection
+  - azurerm_firewall_application_rule_collection
+  - azurerm_firewall_nat_rule_collection
+  - azurerm_bastion_host
+  - azurerm_network_watcher
+  - azurerm_network_watcher_flow_log
+  - azurerm_virtual_wan
+  - azurerm_virtual_hub
+  - azurerm_virtual_hub_connection
+  - azurerm_vpn_gateway
+  - azurerm_vpn_site
+  - azurerm_network_ddos_protection_plan
+  - azurerm_network_manager
+  - azurerm_ip_group
+  kubernetes:
+  - {group: network.azure.com, kind: VirtualNetwork}
+  - {group: network.azure.com, kind: VirtualNetworksSubnet}
+  - {group: network.azure.com, kind: VirtualNetworksVirtualNetworkPeering}
+  - {group: network.azure.com, kind: NetworkSecurityGroup}
+  - {group: network.azure.com, kind: NetworkSecurityGroupsSecurityRule}
+  - {group: network.azure.com, kind: RouteTable}
+  - {group: network.azure.com, kind: RouteTablesRoute}
+  - {group: network.azure.com, kind: PublicIPAddress}
+  - {group: network.azure.com, kind: PublicIPPrefix}
+  - {group: network.azure.com, kind: NatGateway}
+  - {group: network.azure.com, kind: NetworkInterface}
+  - {group: network.azure.com, kind: ApplicationSecurityGroup}
+  - {group: network.azure.com, kind: PrivateEndpoint}
+  - {group: network.azure.com, kind: PrivateEndpointsPrivateDnsZoneGroup}
+  - {group: network.azure.com, kind: PrivateLinkService}
+  - {group: network.azure.com, kind: VirtualNetworkGateway}
+  - {group: network.azure.com, kind: BastionHost}
+traits:
+- {id: provider-network-construct, level: medium, reason: 'VNets, NSGs, private endpoints and peering are Azure constructs that every dependent resource references.'}
+edge_hints:
+- {resource_type: azurerm_virtual_network, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_subnet, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_network_security_group, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_route_table, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_public_ip, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_nat_gateway, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_network_interface, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_private_endpoint, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_firewall, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_bastion_host, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_virtual_network_gateway, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_subnet, attribute: virtual_network_name, edge_kind: containment}
+- {resource_type: azurerm_network_security_rule, attribute: network_security_group_name, edge_kind: containment}
+- {resource_type: azurerm_route, attribute: route_table_name, edge_kind: containment}
+- {resource_type: azurerm_virtual_network_peering, attribute: virtual_network_name, edge_kind: containment}
+- {resource_type: azurerm_virtual_network_peering, attribute: remote_virtual_network_id, edge_kind: reference}
+- {resource_type: azurerm_subnet_network_security_group_association, attribute: subnet_id, edge_kind: binding}
+- {resource_type: azurerm_subnet_route_table_association, attribute: subnet_id, edge_kind: binding}
+- {resource_type: azurerm_subnet_nat_gateway_association, attribute: subnet_id, edge_kind: binding}
+- {resource_type: azurerm_network_interface, attribute: ip_configuration.subnet_id, edge_kind: containment}
+- {resource_type: azurerm_private_endpoint, attribute: subnet_id, edge_kind: containment}
+- {resource_type: azurerm_private_link_service, attribute: nat_ip_configuration.subnet_id, edge_kind: containment}
+- {resource_type: azurerm_bastion_host, attribute: ip_configuration.subnet_id, edge_kind: containment}
+- {resource_type: azurerm_firewall, attribute: ip_configuration.subnet_id, edge_kind: containment}
+- {resource_type: azurerm_virtual_network_gateway, attribute: ip_configuration.subnet_id, edge_kind: containment}
+- {resource_type: azurerm_firewall_policy_rule_collection_group, attribute: firewall_policy_id, edge_kind: containment}
+alternatives:
+- ref: hetzner
+  difficulty: medium
+  compatibility: conceptual
+  notes: Private networks and firewalls cover basic segmentation; private endpoints and peering are redesigned.
+  approved_by: cloudowski
+- ref: ovhcloud
+  difficulty: medium
+  compatibility: conceptual
+  notes: vRack and private networks with security groups; network topology is rebuilt.
+  approved_by: cloudowski
+- ref: scaleway
+  difficulty: medium
+  compatibility: conceptual
+  notes: VPC and Private Networks with security groups; network topology is rebuilt.
+  approved_by: cloudowski
+- ref: kubernetes
+  difficulty: medium
+  compatibility: conceptual
+  notes: Inside clusters, NetworkPolicy replaces NSG rules between workloads.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

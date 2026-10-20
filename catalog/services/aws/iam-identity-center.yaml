@@ -1,0 +1,31 @@
+schema: '1.0'
+kind: service
+id: aws.iam-identity-center
+provider: aws
+name: AWS IAM Identity Center
+category: identity.user-directory
+resource_types:
+  terraform: [aws_ssoadmin_instances, aws_ssoadmin_permission_set, aws_ssoadmin_permission_sets, aws_ssoadmin_permission_set_inline_policy, aws_ssoadmin_managed_policy_attachment, aws_ssoadmin_customer_managed_policy_attachment, aws_ssoadmin_permissions_boundary_attachment, aws_ssoadmin_account_assignment, aws_ssoadmin_application, aws_ssoadmin_application_assignment, aws_ssoadmin_instance_access_control_attributes, aws_identitystore_user, aws_identitystore_users, aws_identitystore_group, aws_identitystore_groups, aws_identitystore_group_membership, aws_identitystore_group_memberships]
+  cloudformation: ['AWS::SSO::Instance', 'AWS::SSO::PermissionSet', 'AWS::SSO::Assignment', 'AWS::SSO::Application', 'AWS::SSO::ApplicationAssignment', 'AWS::SSO::InstanceAccessControlAttributeConfiguration', 'AWS::IdentityStore::Group', 'AWS::IdentityStore::GroupMembership']
+traits:
+- {id: proprietary-iam-model, level: medium, reason: 'Permission sets become IAM roles in each account; access must be redesigned for the target platform.'}
+- {id: data-gravity, level: low, reason: 'Users and groups sync over SCIM and federate over SAML; an external identity provider can stay the source of truth.'}
+edge_hints:
+- {resource_type: aws_ssoadmin_account_assignment, attribute: permission_set_arn, edge_kind: binding}
+- {resource_type: aws_ssoadmin_account_assignment, attribute: principal_id, edge_kind: binding}
+- {resource_type: aws_identitystore_group_membership, attribute: group_id, edge_kind: containment}
+alternatives:
+- {ref: keycloak, difficulty: medium, compatibility: conceptual, notes: 'Keycloak provides users, groups and SAML/OIDC single sign-on; cloud account access is mapped in each target system.', recommended: true, approved_by: cloudowski}
+- {ref: authentik, difficulty: medium, compatibility: conceptual, notes: 'authentik provides users, groups and SAML/OIDC single sign-on; cloud account access is mapped in each target system.', approved_by: cloudowski}
+- {ref: zitadel, difficulty: medium, compatibility: conceptual, notes: 'ZITADEL provides users, groups and OIDC/SAML single sign-on; cloud account access is mapped in each target system.', approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html
+  - https://docs.aws.amazon.com/singlesignon/latest/userguide/provision-automatically.html
+  - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_permission_set
+  llm: {batch: 2026-10-07-eks-workshop, model: claude-opus-5-5, prompt_version: catalog-coverage-v1, eval_passed: true}

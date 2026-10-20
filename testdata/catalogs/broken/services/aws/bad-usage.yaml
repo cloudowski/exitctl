@@ -1,0 +1,17 @@
+schema: "1.0"
+kind: service
+id: aws.bad-usage
+provider: aws
+name: Invalid RE2 usage pattern
+category: messaging.queue
+resource_types:
+  terraform: [aws_bad_usage]
+traits:
+  - id: proprietary-api
+sdk:
+  - ecosystem: pypi
+    usage: ['boto3\.client\(\s*["'']sqs["'']\s*(']
+    gate: [boto3]
+alternatives:
+  - { ref: rabbitmq, difficulty: medium, compatibility: conceptual, approved_by: cloudowski }
+provenance: { origin: maintainer, author: cloudowski, status: verified, reviewed_by: cloudowski, reviewed_on: 2026-10-06 }

@@ -1,0 +1,19 @@
+schema: '1.0'
+kind: trait
+id: provider-registry
+name: Provider registry
+level: low
+dimensions:
+- operational
+explanation: Container images are pulled from a provider-hosted registry, so image references and pull credentials are tied to that provider.
+exit_hint: Mirror images to a portable registry (for example Harbor) and update image references and pull secrets.
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.aws.amazon.com/AmazonECR/latest/userguide/what-is-ecr.html
+  - https://cloud.google.com/artifact-registry/docs/overview
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

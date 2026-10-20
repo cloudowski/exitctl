@@ -1,0 +1,93 @@
+schema: '1.0'
+kind: service
+id: aws.vpc
+provider: aws
+name: Amazon Virtual Private Cloud (VPC)
+category: network
+resource_types:
+  terraform: [aws_vpc, aws_default_vpc, aws_subnet, aws_default_subnet, aws_security_group, aws_default_security_group, aws_security_group_rule, aws_vpc_security_group_ingress_rule, aws_vpc_security_group_egress_rule, aws_route_table, aws_default_route_table, aws_route, aws_route_table_association, aws_main_route_table_association, aws_internet_gateway, aws_internet_gateway_attachment, aws_egress_only_internet_gateway, aws_nat_gateway, aws_eip, aws_eip_association, aws_vpc_endpoint, aws_vpc_endpoint_service, aws_vpc_endpoint_service_allowed_principal, aws_vpc_endpoint_route_table_association, aws_vpc_endpoint_subnet_association, aws_vpc_endpoint_security_group_association, aws_vpc_endpoint_policy, aws_vpc_endpoint_connection_notification, aws_network_acl, aws_default_network_acl, aws_network_acl_rule, aws_network_acl_association, aws_vpc_peering_connection, aws_vpc_peering_connection_accepter, aws_vpc_peering_connection_options, aws_flow_log, aws_vpc_ipv4_cidr_block_association, aws_vpc_ipv6_cidr_block_association, aws_vpc_dhcp_options, aws_default_vpc_dhcp_options, aws_vpc_dhcp_options_association, aws_network_interface, aws_network_interface_attachment, aws_network_interface_sg_attachment, aws_ec2_managed_prefix_list, aws_ec2_managed_prefix_list_entry, aws_vpc_ipam, aws_vpc_ipam_pool, aws_vpc_ipam_pool_cidr, aws_vpc_ipam_pool_cidr_allocation, aws_vpc_ipam_scope, aws_ec2_transit_gateway, aws_ec2_transit_gateway_vpc_attachment, aws_ec2_transit_gateway_vpc_attachment_accepter, aws_ec2_transit_gateway_peering_attachment, aws_ec2_transit_gateway_route, aws_ec2_transit_gateway_route_table, aws_ec2_transit_gateway_route_table_association, aws_ec2_transit_gateway_route_table_propagation, aws_vpn_gateway, aws_vpn_gateway_attachment, aws_vpn_gateway_route_propagation, aws_vpn_connection, aws_vpn_connection_route, aws_customer_gateway, aws_ec2_client_vpn_endpoint, aws_ec2_client_vpn_network_association, aws_ec2_client_vpn_authorization_rule, aws_ec2_client_vpn_route, aws_dx_connection, aws_dx_gateway, aws_dx_gateway_association, aws_dx_private_virtual_interface, aws_dx_transit_virtual_interface, aws_networkfirewall_firewall, aws_networkfirewall_firewall_policy, aws_networkfirewall_rule_group, aws_networkfirewall_logging_configuration, aws_vpcs, aws_subnets, aws_security_groups, aws_route_tables, aws_nat_gateways, aws_network_interfaces, aws_network_acls, aws_eips, aws_vpc_peering_connections]
+  cloudformation: ['AWS::EC2::VPC', 'AWS::EC2::Subnet', 'AWS::EC2::SecurityGroup', 'AWS::EC2::SecurityGroupIngress', 'AWS::EC2::SecurityGroupEgress', 'AWS::EC2::RouteTable', 'AWS::EC2::Route', 'AWS::EC2::SubnetRouteTableAssociation', 'AWS::EC2::InternetGateway', 'AWS::EC2::VPCGatewayAttachment', 'AWS::EC2::EgressOnlyInternetGateway', 'AWS::EC2::NatGateway', 'AWS::EC2::EIP', 'AWS::EC2::EIPAssociation', 'AWS::EC2::VPCEndpoint', 'AWS::EC2::VPCEndpointService', 'AWS::EC2::VPCEndpointServicePermissions', 'AWS::EC2::VPCEndpointConnectionNotification', 'AWS::EC2::NetworkAcl', 'AWS::EC2::NetworkAclEntry', 'AWS::EC2::SubnetNetworkAclAssociation', 'AWS::EC2::VPCPeeringConnection', 'AWS::EC2::FlowLog', 'AWS::EC2::VPCCidrBlock', 'AWS::EC2::DHCPOptions', 'AWS::EC2::VPCDHCPOptionsAssociation', 'AWS::EC2::NetworkInterface', 'AWS::EC2::NetworkInterfaceAttachment', 'AWS::EC2::PrefixList', 'AWS::EC2::IPAM', 'AWS::EC2::IPAMPool', 'AWS::EC2::IPAMScope', 'AWS::EC2::TransitGateway', 'AWS::EC2::TransitGatewayAttachment', 'AWS::EC2::TransitGatewayVpcAttachment', 'AWS::EC2::TransitGatewayPeeringAttachment', 'AWS::EC2::TransitGatewayRoute', 'AWS::EC2::TransitGatewayRouteTable', 'AWS::EC2::TransitGatewayRouteTableAssociation', 'AWS::EC2::TransitGatewayRouteTablePropagation', 'AWS::EC2::VPNGateway', 'AWS::EC2::VPNGatewayRoutePropagation', 'AWS::EC2::VPNConnection', 'AWS::EC2::VPNConnectionRoute', 'AWS::EC2::CustomerGateway', 'AWS::EC2::ClientVpnEndpoint', 'AWS::EC2::ClientVpnTargetNetworkAssociation', 'AWS::EC2::ClientVpnAuthorizationRule', 'AWS::EC2::ClientVpnRoute', 'AWS::DirectConnect::Connection', 'AWS::DirectConnect::PrivateVirtualInterface', 'AWS::DirectConnect::TransitVirtualInterface', 'AWS::NetworkFirewall::Firewall', 'AWS::NetworkFirewall::FirewallPolicy', 'AWS::NetworkFirewall::RuleGroup', 'AWS::NetworkFirewall::LoggingConfiguration']
+  kubernetes:
+  - {group: ec2.services.k8s.aws, kind: VPC}
+  - {group: ec2.services.k8s.aws, kind: Subnet}
+  - {group: ec2.services.k8s.aws, kind: SecurityGroup}
+  - {group: ec2.services.k8s.aws, kind: RouteTable}
+  - {group: ec2.services.k8s.aws, kind: InternetGateway}
+  - {group: ec2.services.k8s.aws, kind: NATGateway}
+  - {group: ec2.services.k8s.aws, kind: ElasticIPAddress}
+  - {group: ec2.services.k8s.aws, kind: VPCEndpoint}
+  - {group: ec2.services.k8s.aws, kind: VPCPeeringConnection}
+  - {group: ec2.services.k8s.aws, kind: TransitGateway}
+  - {group: ec2.services.k8s.aws, kind: DHCPOptions}
+  - {group: ec2.services.k8s.aws, kind: FlowLog}
+traits:
+- {id: provider-network-construct, level: medium, reason: 'Subnets, security groups, route tables and endpoints are AWS constructs that every dependent resource references; equivalents exist elsewhere.'}
+rules:
+- id: aws.vpc.transit-gateway
+  match:
+    resource_type: [aws_ec2_transit_gateway]
+  then: {add_trait: provider-network-construct, level: medium, evidence: description}
+- id: aws.vpc.privatelink-service
+  match:
+    resource_type: [aws_vpc_endpoint_service]
+  then: {add_trait: provider-network-construct, level: medium, evidence: network_load_balancer_arns}
+- id: aws.vpc.direct-connect
+  match:
+    resource_type: [aws_dx_connection]
+  then: {add_trait: provider-network-construct, level: medium, evidence: location}
+- id: aws.vpc.security-group-references
+  match:
+    resource_type: [aws_vpc_security_group_ingress_rule, aws_security_group_rule]
+  when:
+    any:
+    - {attr: referenced_security_group_id, exists: true}
+    - {attr: source_security_group_id, exists: true}
+  then: {add_trait: provider-network-construct, level: low, evidence: referenced_security_group_id}
+edge_hints:
+- {resource_type: aws_subnet, attribute: vpc_id, edge_kind: containment}
+- {resource_type: aws_security_group, attribute: vpc_id, edge_kind: containment}
+- {resource_type: aws_route_table, attribute: vpc_id, edge_kind: containment}
+- {resource_type: aws_internet_gateway, attribute: vpc_id, edge_kind: containment}
+- {resource_type: aws_network_acl, attribute: vpc_id, edge_kind: containment}
+- {resource_type: aws_vpc_endpoint, attribute: vpc_id, edge_kind: containment}
+- {resource_type: aws_vpc_endpoint, attribute: subnet_ids, edge_kind: containment}
+- {resource_type: aws_vpc_endpoint, attribute: security_group_ids, edge_kind: containment}
+- {resource_type: aws_nat_gateway, attribute: subnet_id, edge_kind: containment}
+- {resource_type: aws_nat_gateway, attribute: allocation_id, edge_kind: binding}
+- {resource_type: aws_route_table_association, attribute: subnet_id, edge_kind: binding}
+- {resource_type: aws_route_table_association, attribute: route_table_id, edge_kind: binding}
+- {resource_type: aws_route, attribute: route_table_id, edge_kind: containment}
+- {resource_type: aws_security_group_rule, attribute: security_group_id, edge_kind: containment}
+- {resource_type: aws_vpc_security_group_ingress_rule, attribute: security_group_id, edge_kind: containment}
+- {resource_type: aws_vpc_security_group_egress_rule, attribute: security_group_id, edge_kind: containment}
+- {resource_type: aws_flow_log, attribute: vpc_id, edge_kind: containment}
+- {resource_type: aws_flow_log, attribute: log_destination, edge_kind: data-flow}
+- {resource_type: aws_ec2_transit_gateway_vpc_attachment, attribute: vpc_id, edge_kind: binding}
+- {resource_type: aws_ec2_transit_gateway_vpc_attachment, attribute: subnet_ids, edge_kind: containment}
+- {resource_type: aws_network_interface, attribute: subnet_id, edge_kind: containment}
+- {resource_type: aws_network_interface, attribute: security_groups, edge_kind: containment}
+- {resource_type: aws_instance, attribute: subnet_id, edge_kind: containment}
+- {resource_type: aws_instance, attribute: vpc_security_group_ids, edge_kind: containment}
+- {resource_type: aws_launch_template, attribute: vpc_security_group_ids, edge_kind: containment}
+- {resource_type: aws_autoscaling_group, attribute: vpc_zone_identifier, edge_kind: containment}
+- {resource_type: aws_lambda_function, attribute: vpc_config.subnet_ids, edge_kind: containment}
+- {resource_type: aws_lambda_function, attribute: vpc_config.security_group_ids, edge_kind: containment}
+- {resource_type: aws_db_instance, attribute: vpc_security_group_ids, edge_kind: containment}
+- {resource_type: aws_db_subnet_group, attribute: subnet_ids, edge_kind: containment}
+- {resource_type: aws_eks_cluster, attribute: vpc_config.subnet_ids, edge_kind: containment}
+- {resource_type: aws_lb, attribute: subnets, edge_kind: containment}
+- {resource_type: aws_lb, attribute: security_groups, edge_kind: containment}
+- {resource_type: aws_elasticache_subnet_group, attribute: subnet_ids, edge_kind: containment}
+alternatives:
+- {ref: hetzner, difficulty: low, compatibility: conceptual, notes: 'Hetzner Cloud Networks and Firewalls cover private subnets and security rules; NAT and peering are set up differently.', approved_by: cloudowski}
+- {ref: ovhcloud, difficulty: low, compatibility: conceptual, notes: OVHcloud vRack and Public Cloud private networks provide isolated L2/L3 networks with gateways., approved_by: cloudowski}
+- {ref: scaleway, difficulty: low, compatibility: conceptual, notes: 'Scaleway VPC and Private Networks with Public Gateways map to VPCs, subnets and NAT.', approved_by: cloudowski}
+- {ref: stackit, difficulty: low, compatibility: conceptual, notes: STACKIT networks and security groups provide equivalent isolation and routing., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

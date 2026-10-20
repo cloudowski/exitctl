@@ -1,0 +1,6 @@
+schema: "1.0"
+kind: providers
+providers:
+  - { id: aws, name: Amazon Web Services, kind: hyperscaler }
+  - { id: kubernetes, name: Kubernetes, kind: platform }
+  - { id: generic, name: Generic, kind: generic }

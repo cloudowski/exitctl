@@ -1,0 +1,58 @@
+schema: '1.0'
+kind: service
+id: aws.fsx
+provider: aws
+name: Amazon FSx
+category: storage.file
+resource_types:
+  terraform: [aws_fsx_lustre_file_system, aws_fsx_ontap_file_system, aws_fsx_ontap_storage_virtual_machine, aws_fsx_ontap_volume, aws_fsx_openzfs_file_system, aws_fsx_openzfs_volume, aws_fsx_openzfs_snapshot, aws_fsx_windows_file_system, aws_fsx_backup, aws_fsx_data_repository_association, aws_fsx_file_cache]
+  cloudformation: ['AWS::FSx::FileSystem', 'AWS::FSx::StorageVirtualMachine', 'AWS::FSx::Volume', 'AWS::FSx::Snapshot', 'AWS::FSx::DataRepositoryAssociation', 'AWS::FSx::FileCache']
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'Clients use standard protocols (Lustre, NFS, SMB, iSCSI); provisioning, backups, S3 data repositories and CSI drivers are AWS-specific.'}
+- {id: data-gravity, level: low, reason: 'Files are copied out with standard tools; ONTAP volumes can replicate to any NetApp ONTAP system with SnapMirror.'}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-fsx']
+  imports: ['[''"]@aws-sdk/client-fsx[''"/]']
+  usage: ['\bAWS\.FSx\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["'']fsx["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/fsx]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/fsx(/[^"]*)?"']
+- ecosystem: rubygems
+  packages: [aws-sdk-fsx]
+  imports: ['^\s*require\s+["'']aws-sdk-(fsx)["'']']
+  usage: ['(?i)\bAws::(fsx)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-fsx]
+  imports: ['\baws_sdk_(fsx)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(fsx)\\']
+  gate: [aws/aws-sdk-php]
+kubernetes_bindings:
+- match: {kind: StorageClass, field: provisioner, in: [fsx.csi.aws.com, fsx.openzfs.csi.aws.com]}
+- match: {kind: PersistentVolume, field: spec.csi.driver, in: [fsx.csi.aws.com, fsx.openzfs.csi.aws.com]}
+- match: {kind: TridentBackendConfig, group: trident.netapp.io, field: spec.aws.fsxFilesystemID, exists: true}
+edge_hints:
+- {resource_type: aws_fsx_ontap_storage_virtual_machine, attribute: file_system_id, edge_kind: containment}
+- {resource_type: aws_fsx_ontap_volume, attribute: storage_virtual_machine_id, edge_kind: containment}
+- {resource_type: aws_fsx_openzfs_volume, attribute: parent_volume_id, edge_kind: containment}
+- {resource_type: aws_fsx_data_repository_association, attribute: file_system_id, edge_kind: containment}
+alternatives:
+- {ref: ceph, difficulty: medium, compatibility: conceptual, notes: 'CephFS serves POSIX and NFS workloads; Lustre-specific tuning and ONTAP features such as SnapMirror have no direct equivalent.', recommended: true, approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.aws.amazon.com/fsx/
+  - https://github.com/kubernetes-sigs/aws-fsx-csi-driver
+  - https://docs.netapp.com/us-en/trident/trident-use/trident-fsx.html
+  - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/fsx_ontap_file_system
+  llm: {batch: 2026-10-07-eks-workshop, model: claude-opus-5-5, prompt_version: catalog-coverage-v1, eval_passed: true}

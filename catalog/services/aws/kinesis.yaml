@@ -1,0 +1,71 @@
+schema: '1.0'
+kind: service
+id: aws.kinesis
+provider: aws
+name: Amazon Kinesis
+category: messaging.stream
+resource_types:
+  terraform: [aws_kinesis_stream, aws_kinesis_stream_consumer, aws_kinesis_resource_policy, aws_kinesis_firehose_delivery_stream, aws_kinesis_analytics_application, aws_kinesisanalyticsv2_application, aws_kinesisanalyticsv2_application_snapshot, aws_kinesis_video_stream]
+  cloudformation: ['AWS::Kinesis::Stream', 'AWS::Kinesis::StreamConsumer', 'AWS::Kinesis::ResourcePolicy', 'AWS::KinesisFirehose::DeliveryStream', 'AWS::KinesisAnalytics::Application', 'AWS::KinesisAnalyticsV2::Application', 'AWS::KinesisVideo::Stream']
+traits:
+- {id: proprietary-api, level: high, reason: 'Shard-based Kinesis API and KCL checkpointing in DynamoDB have no OSS implementation; Kafka concepts map but code is rewritten.'}
+- {id: proprietary-sdk}
+rules:
+- id: aws.kinesis.firehose
+  match:
+    resource_type: [aws_kinesis_firehose_delivery_stream]
+  then: {add_trait: managed-only-feature, level: medium, evidence: destination}
+- id: aws.kinesis.analytics
+  match:
+    resource_type: [aws_kinesis_analytics_application, aws_kinesisanalyticsv2_application]
+  then: {add_trait: managed-only-feature, level: medium, evidence: runtime_environment}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-kinesis', '@aws-sdk/client-firehose', '@aws-sdk/client-kinesis-analytics-v2', '@aws-sdk/client-kinesis-video', 'aws-kcl']
+  imports: ['[''"]@aws-sdk/client-(kinesis|firehose|kinesis-analytics-v2|kinesis-video)[''"/]', '[''"]aws-kcl[''"]']
+  usage: ['\bAWS\.(Kinesis|Firehose)\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  packages: [amazon-kclpy]
+  imports: ['^\s*(from|import)\s+amazon_kclpy\b']
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["''](kinesis|firehose|kinesisanalyticsv2|kinesisvideo)["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/kinesis, github.com/aws/aws-sdk-go-v2/service/firehose, github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2, github.com/vmware/vmware-go-kcl-v2]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/(kinesis|firehose|kinesisanalyticsv2|kinesisvideo)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:kinesis', 'software.amazon.awssdk:firehose', 'software.amazon.awssdk:kinesisanalyticsv2', 'software.amazon.kinesis:amazon-kinesis-client', 'com.amazonaws:aws-java-sdk-kinesis', 'com.amazonaws:amazon-kinesis-producer']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.(kinesis|firehose|kinesisanalyticsv2)\.', '^\s*import\s+(static\s+)?software\.amazon\.kinesis\.', '^\s*import\s+(static\s+)?com\.amazonaws\.services\.kinesis(firehose)?\.']
+- ecosystem: nuget
+  packages: [AWSSDK.Kinesis, AWSSDK.KinesisFirehose, AWSSDK.KinesisAnalyticsV2]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.(Kinesis|KinesisFirehose|KinesisAnalyticsV2)\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-kinesis, aws-sdk-firehose, aws-sdk-kinesisanalyticsv2]
+  imports: ['^\s*require\s+["'']aws-sdk-(kinesis|firehose|kinesisanalyticsv2)["'']']
+  usage: ['(?i)\bAws::(kinesis|firehose|kinesisanalyticsv2)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-kinesis, aws-sdk-firehose, aws-sdk-kinesisanalyticsv2]
+  imports: ['\baws_sdk_(kinesis|firehose|kinesisanalyticsv2)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(kinesis|firehose|kinesisanalyticsv2)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_kinesis_stream_consumer, attribute: stream_arn, edge_kind: containment}
+- {resource_type: aws_kinesis_resource_policy, attribute: resource_arn, edge_kind: binding}
+- {resource_type: aws_kinesis_firehose_delivery_stream, attribute: kinesis_source_configuration.kinesis_stream_arn, edge_kind: data-flow}
+- {resource_type: aws_kinesis_firehose_delivery_stream, attribute: extended_s3_configuration.bucket_arn, edge_kind: data-flow}
+- {resource_type: aws_kinesis_firehose_delivery_stream, attribute: msk_source_configuration.msk_cluster_arn, edge_kind: data-flow}
+alternatives:
+- {ref: apache-kafka, difficulty: medium, compatibility: conceptual, notes: 'Shards map to partitions and KCL to consumer groups; producers, consumers and checkpointing are rewritten.', approved_by: cloudowski}
+- {ref: redpanda, difficulty: medium, compatibility: conceptual, notes: Kafka-API streaming engine; same migration path as Kafka with simpler operations., approved_by: cloudowski}
+- {ref: apache-pulsar, difficulty: medium, compatibility: conceptual, notes: Partitioned topics with tiered storage cover retention needs; client code changes., approved_by: cloudowski}
+- {ref: nats, difficulty: medium, compatibility: conceptual, notes: JetStream streams with replay suit moderate throughput; Firehose-style delivery needs extra tooling., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/streams/latest/dev/introduction.html', 'https://docs.aws.amazon.com/firehose/latest/dev/what-is-this-service.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kinesis_stream']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

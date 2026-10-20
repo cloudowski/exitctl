@@ -1,0 +1,60 @@
+schema: '1.0'
+kind: service
+id: gcp.cloud-monitoring
+provider: gcp
+name: Cloud Monitoring
+category: observability
+resource_types:
+  terraform: [google_monitoring_alert_policy, google_monitoring_notification_channel, google_monitoring_uptime_check_config, google_monitoring_dashboard, google_monitoring_custom_service, google_monitoring_service, google_monitoring_slo, google_monitoring_group, google_monitoring_metric_descriptor, google_monitoring_monitored_project]
+  kubernetes:
+  - {group: monitoring.cnrm.cloud.google.com, kind: MonitoringAlertPolicy}
+  - {group: monitoring.cnrm.cloud.google.com, kind: MonitoringNotificationChannel}
+  - {group: monitoring.cnrm.cloud.google.com, kind: MonitoringUptimeCheckConfig}
+  - {group: monitoring.cnrm.cloud.google.com, kind: MonitoringDashboard}
+  - {group: monitoring.cnrm.cloud.google.com, kind: MonitoringService}
+  - {group: monitoring.cnrm.cloud.google.com, kind: MonitoringServiceLevelObjective}
+  - {group: monitoring.cnrm.cloud.google.com, kind: MonitoringGroup}
+  - {group: monitoring.cnrm.cloud.google.com, kind: MonitoringMetricDescriptor}
+  - {group: monitoring.cnrm.cloud.google.com, kind: MonitoringMonitoredProject}
+  - {group: monitoring.googleapis.com, kind: PodMonitoring}
+  - {group: monitoring.googleapis.com, kind: ClusterPodMonitoring}
+  - {group: monitoring.googleapis.com, kind: Rules}
+  - {group: monitoring.googleapis.com, kind: ClusterRules}
+  - {group: monitoring.googleapis.com, kind: GlobalRules}
+  - {group: monitoring.googleapis.com, kind: OperatorConfig}
+  - {group: monitoring.googleapis.com, kind: ClusterNodeMonitoring}
+traits:
+- {id: operational-tooling-coupling, level: medium, reason: 'Alerts, dashboards, SLOs and uptime checks are defined in Google-specific formats.'}
+- {id: proprietary-query-language, level: low, reason: Managed Service for Prometheus accepts PromQL; older alerts may use MQL or filter syntax.}
+sdk:
+- ecosystem: npm
+  packages: ['@google-cloud/monitoring', '@google-cloud/trace-agent', '@google-cloud/profiler', '@google-cloud/error-reporting', '@google-cloud/opentelemetry-cloud-trace-exporter', '@google-cloud/opentelemetry-cloud-monitoring-exporter']
+  imports: ['[''"]@google-cloud/(monitoring|trace-agent|profiler|error-reporting|opentelemetry-cloud-[\w-]+)[''"/]']
+- ecosystem: pypi
+  packages: [google-cloud-monitoring, google-cloud-trace, google-cloud-error-reporting, google-cloud-profiler, opentelemetry-exporter-gcp-trace, opentelemetry-exporter-gcp-monitoring]
+  imports: [^\s*from\s+google\.cloud\s+import\s+.*\b(monitoring\w*|trace_v\w+|trace|error_reporting|profiler)\b, ^\s*(from|import)\s+google\.cloud\.(monitoring\w*|trace_v\w+|trace|error_reporting|profiler)\b, ^\s*(from|import)\s+opentelemetry\.exporter\.cloud_(trace|monitoring)\b, ^\s*(from|import)\s+googlecloudprofiler\b]
+- ecosystem: go
+  packages: [cloud.google.com/go/monitoring, cloud.google.com/go/trace, cloud.google.com/go/errorreporting, cloud.google.com/go/profiler, github.com/GoogleCloudPlatform/opentelemetry-operations-go/*]
+  imports: ['"cloud\.google\.com/go/(monitoring|trace|errorreporting|profiler)(/[^"]*)?"', '"github\.com/GoogleCloudPlatform/opentelemetry-operations-go(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.google.cloud:google-cloud-monitoring', 'com.google.cloud:google-cloud-trace', 'com.google.cloud:google-cloud-errorreporting', 'com.google.cloud.opentelemetry:*']
+  imports: ['^\s*import\s+(static\s+)?com\.google\.(cloud\.monitoring|cloud\.trace|cloud\.errorreporting|cloud\.opentelemetry)\b']
+- ecosystem: nuget
+  packages: [Google.Cloud.Monitoring.V3, Google.Cloud.Trace.V2, Google.Cloud.ErrorReporting.V1Beta1]
+  imports: ['^\s*using\s+(static\s+)?Google\.Cloud\.(Monitoring|Trace|ErrorReporting)\b']
+edge_hints:
+- {resource_type: google_monitoring_alert_policy, attribute: notification_channels, edge_kind: reference}
+- {resource_type: google_monitoring_slo, attribute: service, edge_kind: containment}
+alternatives:
+- {ref: prometheus, difficulty: low, compatibility: protocol-compatible, notes: PromQL and scrape configs carry over from Managed Service for Prometheus; alert policies are rewritten., approved_by: cloudowski}
+- {ref: grafana, difficulty: low, compatibility: conceptual, notes: Dashboards and alerting over Prometheus or other sources; Google dashboards are rebuilt., approved_by: cloudowski}
+- {ref: opentelemetry, difficulty: low, compatibility: conceptual, notes: OpenTelemetry metrics and traces replace Google-specific exporters and agents., approved_by: cloudowski}
+- {ref: jaeger, difficulty: low, compatibility: conceptual, notes: 'Jaeger stores and queries traces sent with OpenTelemetry, replacing Cloud Trace.', approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/monitoring/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/monitoring_alert_policy', 'https://cloud.google.com/stackdriver/docs/managed-prometheus']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

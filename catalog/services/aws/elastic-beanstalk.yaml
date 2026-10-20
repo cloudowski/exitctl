@@ -1,0 +1,65 @@
+schema: '1.0'
+kind: service
+id: aws.elastic-beanstalk
+provider: aws
+name: AWS Elastic Beanstalk
+category: compute
+resource_types:
+  terraform: [aws_elastic_beanstalk_application, aws_elastic_beanstalk_application_version, aws_elastic_beanstalk_environment, aws_elastic_beanstalk_configuration_template]
+  cloudformation: ['AWS::ElasticBeanstalk::Application', 'AWS::ElasticBeanstalk::ApplicationVersion', 'AWS::ElasticBeanstalk::Environment', 'AWS::ElasticBeanstalk::ConfigurationTemplate']
+traits:
+- {id: operational-tooling-coupling, level: medium, reason: 'Platform branches, .ebextensions and option settings define deployment; application code itself stays portable.'}
+rules:
+- id: aws.elastic-beanstalk.worker-tier
+  match:
+    resource_type: [aws_elastic_beanstalk_environment]
+  when: {attr: tier, equals: Worker}
+  then: {add_trait: proprietary-event-model, level: medium, evidence: tier}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-elastic-beanstalk']
+  imports: ['[''"]@aws-sdk/client-elastic-beanstalk[''"/]']
+  usage: ['\bAWS\.ElasticBeanstalk\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  packages: [awsebcli]
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["'']elasticbeanstalk["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/elasticbeanstalk(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:elasticbeanstalk']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.elasticbeanstalk\.']
+- ecosystem: nuget
+  packages: [AWSSDK.ElasticBeanstalk]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.ElasticBeanstalk\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-elasticbeanstalk]
+  imports: ['^\s*require\s+["'']aws-sdk-(elasticbeanstalk)["'']']
+  usage: ['(?i)\bAws::(elasticbeanstalk)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-elasticbeanstalk]
+  imports: ['\baws_sdk_(elasticbeanstalk)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(elasticbeanstalk)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_elastic_beanstalk_environment, attribute: application, edge_kind: containment}
+- {resource_type: aws_elastic_beanstalk_environment, attribute: version_label, edge_kind: reference}
+- {resource_type: aws_elastic_beanstalk_application_version, attribute: application, edge_kind: containment}
+- {resource_type: aws_elastic_beanstalk_application_version, attribute: bucket, edge_kind: reference}
+- {resource_type: aws_elastic_beanstalk_configuration_template, attribute: application, edge_kind: containment}
+alternatives:
+- {ref: kubernetes, difficulty: medium, compatibility: conceptual, notes: 'Apps are containerised and deployed as Deployments; .ebextensions become manifests or Helm values.', approved_by: cloudowski}
+- {ref: knative, difficulty: medium, compatibility: conceptual, notes: Knative Serving offers a similar push-to-run experience for HTTP apps on Kubernetes., approved_by: cloudowski}
+- {ref: scaleway, difficulty: medium, compatibility: conceptual, notes: Scaleway Serverless Containers host containerised web apps without managing servers., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/Welcome.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elastic_beanstalk_environment']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

@@ -1,0 +1,72 @@
+schema: '1.0'
+kind: service
+id: azure.queue-storage
+provider: azure
+name: Azure Queue Storage
+category: messaging.queue
+resource_types:
+  terraform:
+  - azurerm_storage_queue
+  kubernetes:
+  - {group: storage.azure.com, kind: StorageAccountsQueueService}
+  - {group: storage.azure.com, kind: StorageAccountsQueueServicesQueue}
+traits:
+- {id: proprietary-api, level: medium, reason: Queue Storage REST API and visibility-timeout model are Azure specific.}
+- {id: proprietary-sdk}
+sdk:
+- ecosystem: npm
+  packages:
+  - '@azure/storage-queue'
+  imports:
+  - '[''"]@azure/storage-queue(/[^''"]*)?[''"]'
+- ecosystem: pypi
+  packages:
+  - azure-storage-queue
+  imports:
+  - ^\s*(from|import)\s+azure\.storage\.queue\b
+- ecosystem: go
+  packages:
+  - github.com/Azure/azure-sdk-for-go/sdk/storage/azqueue
+  imports:
+  - '"github\.com/Azure/azure-sdk-for-go/sdk/storage/azqueue(/[^"]*)?"'
+- ecosystem: maven
+  packages:
+  - com.azure:azure-storage-queue
+  imports:
+  - ^\s*import\s+(static\s+)?com\.azure\.storage\.queue\.
+- ecosystem: nuget
+  packages:
+  - Azure.Storage.Queues
+  - Microsoft.Azure.Storage.Queue
+  imports:
+  - ^\s*using\s+(static\s+)?Azure\.Storage\.Queues\b
+  - ^\s*using\s+(static\s+)?Microsoft\.Azure\.Storage\.Queue\b
+edge_hints:
+- {resource_type: azurerm_storage_queue, attribute: storage_account_name, edge_kind: containment}
+- {resource_type: azurerm_storage_queue, attribute: storage_account_id, edge_kind: containment}
+alternatives:
+- ref: rabbitmq
+  difficulty: low
+  compatibility: conceptual
+  notes: Simple work queues map directly; replace Queue Storage SDK calls with AMQP clients.
+  approved_by: cloudowski
+- ref: nats
+  difficulty: low
+  compatibility: conceptual
+  notes: JetStream work-queue streams cover the same pattern with ack and redelivery.
+  approved_by: cloudowski
+- ref: valkey
+  difficulty: medium
+  compatibility: conceptual
+  notes: Lists or streams can back simple queues; visibility timeouts must be implemented in the app.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/storage/queues/storage-queues-introduction
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_queue
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

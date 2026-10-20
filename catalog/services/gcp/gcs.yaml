@@ -1,0 +1,70 @@
+schema: '1.0'
+kind: service
+id: gcp.gcs
+provider: gcp
+name: Cloud Storage
+category: storage.object
+resource_types:
+  terraform: [google_storage_bucket, google_storage_bucket_object, google_storage_bucket_acl, google_storage_default_object_acl, google_storage_object_acl, google_storage_bucket_access_control, google_storage_default_object_access_control, google_storage_object_access_control, google_storage_bucket_iam_binding, google_storage_bucket_iam_member, google_storage_bucket_iam_policy, google_storage_notification, google_storage_hmac_key, google_storage_managed_folder, google_storage_managed_folder_iam_binding, google_storage_managed_folder_iam_member, google_storage_managed_folder_iam_policy, google_storage_insights_report_config, google_storage_transfer_job, google_storage_transfer_agent_pool]
+  kubernetes:
+  - {group: storage.cnrm.cloud.google.com, kind: StorageBucket}
+  - {group: storage.cnrm.cloud.google.com, kind: StorageBucketAccessControl}
+  - {group: storage.cnrm.cloud.google.com, kind: StorageDefaultObjectAccessControl}
+  - {group: storage.cnrm.cloud.google.com, kind: StorageNotification}
+  - {group: storage.cnrm.cloud.google.com, kind: StorageHMACKey}
+  - {group: storagetransfer.cnrm.cloud.google.com, kind: StorageTransferJob}
+traits:
+- {id: proprietary-api, level: low, reason: Objects are plain blobs and an S3-interoperable XML API exists; the JSON API and SDKs are Google-specific.}
+- {id: data-gravity, level: medium, reason: Bucket contents can be large; egress volume and time drive migration effort.}
+- {id: proprietary-sdk}
+rules:
+- id: gcp.gcs.notification
+  match:
+    resource_type: [google_storage_notification]
+  then: {add_trait: proprietary-event-model, level: medium, evidence: topic}
+- id: gcp.gcs.archive-transition
+  match:
+    resource_type: [google_storage_bucket]
+  when: {attr: lifecycle_rule.action.storage_class, in: [COLDLINE, ARCHIVE]}
+  then: {add_trait: data-gravity, level: high, evidence: lifecycle_rule.action.storage_class}
+- id: gcp.gcs.locked-retention
+  match:
+    resource_type: [google_storage_bucket]
+  when: {attr: retention_policy.is_locked, equals: true}
+  then: {add_trait: data-gravity, level: high, evidence: retention_policy.is_locked}
+sdk:
+- ecosystem: npm
+  packages: ['@google-cloud/storage', '@google-cloud/storage-transfer']
+  imports: ['[''"]@google-cloud/(storage|storage-transfer)[''"/]']
+- ecosystem: pypi
+  packages: [google-cloud-storage, gcsfs, google-cloud-storage-transfer]
+  imports: [^\s*from\s+google\.cloud\s+import\s+.*\b(storage|storage_v\w+|storage_transfer\w*)\b, ^\s*(from|import)\s+google\.cloud\.(storage|storage_v\w+|storage_transfer\w*)\b, ^\s*(from|import)\s+gcsfs\b]
+- ecosystem: go
+  packages: [cloud.google.com/go/storage, cloud.google.com/go/storagetransfer]
+  imports: ['"cloud\.google\.com/go/(storage|storagetransfer)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.google.cloud:google-cloud-storage', 'com.google.cloud:google-cloud-nio', 'com.google.cloud:google-cloud-storage-transfer']
+  imports: ['^\s*import\s+(static\s+)?com\.google\.(cloud\.storage)\b']
+- ecosystem: nuget
+  packages: [Google.Cloud.Storage.V1, Google.Cloud.StorageTransfer.V1]
+  imports: ['^\s*using\s+(static\s+)?Google\.Cloud\.(Storage\w*)\b']
+edge_hints:
+- {resource_type: google_storage_bucket_object, attribute: bucket, edge_kind: containment}
+- {resource_type: google_storage_notification, attribute: bucket, edge_kind: reference}
+- {resource_type: google_storage_notification, attribute: topic, edge_kind: data-flow}
+- {resource_type: google_storage_bucket, attribute: encryption.default_kms_key_name, edge_kind: reference}
+- {resource_type: google_storage_managed_folder, attribute: bucket, edge_kind: containment}
+alternatives:
+- {ref: minio, difficulty: low, compatibility: protocol-compatible, notes: S3 API; code using the GCS JSON API or SDK must switch to an S3 client. Copy data with rclone., approved_by: cloudowski}
+- {ref: ceph, difficulty: medium, compatibility: protocol-compatible, notes: Ceph RGW exposes the S3 API; GCS SDK calls must move to an S3 client., approved_by: cloudowski}
+- {ref: garage, difficulty: low, compatibility: protocol-compatible, notes: Lightweight S3-compatible store; GCS SDK calls must move to an S3 client., approved_by: cloudowski}
+- {ref: scaleway, difficulty: low, compatibility: protocol-compatible, notes: Scaleway Object Storage is S3-compatible; replace GCS SDK calls with an S3 client., approved_by: cloudowski}
+- {ref: ovhcloud, difficulty: low, compatibility: protocol-compatible, notes: OVHcloud Object Storage offers an S3-compatible API; replace GCS SDK calls with an S3 client., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/storage/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket', 'https://cloud.google.com/storage/docs/interoperability']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

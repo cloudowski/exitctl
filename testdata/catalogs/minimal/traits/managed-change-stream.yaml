@@ -1,0 +1,15 @@
+schema: "1.0"
+kind: trait
+id: managed-change-stream
+name: Managed change stream
+level: medium
+dimensions: [technical, data]
+explanation: Consumers read changes through a provider-specific stream API and ordering model.
+exit_hint: Move to an outbox table or a log-based CDC tool with a portable protocol.
+provenance:
+  origin: maintainer
+  author: cloudowski
+  status: verified
+  reviewed_by: cloudowski
+  reviewed_on: 2026-10-06
+  sources: []

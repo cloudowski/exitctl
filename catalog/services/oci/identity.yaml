@@ -1,0 +1,117 @@
+schema: '1.0'
+kind: service
+id: oci.identity
+provider: oci
+name: OCI Identity and Access Management
+category: identity.iam
+resource_types:
+  terraform:
+  - oci_identity_compartment
+  - oci_identity_policy
+  - oci_identity_user
+  - oci_identity_group
+  - oci_identity_user_group_membership
+  - oci_identity_dynamic_group
+  - oci_identity_api_key
+  - oci_identity_auth_token
+  - oci_identity_customer_secret_key
+  - oci_identity_smtp_credential
+  - oci_identity_ui_password
+  - oci_identity_db_credential
+  - oci_identity_user_capabilities_management
+  - oci_identity_tag_namespace
+  - oci_identity_tag
+  - oci_identity_tag_default
+  - oci_identity_import_standard_tags_management
+  - oci_identity_identity_provider
+  - oci_identity_idp_group_mapping
+  - oci_identity_authentication_policy
+  - oci_identity_network_source
+  - oci_identity_domain
+  - oci_identity_domain_replication_to_region
+  - oci_identity_domains_user
+  - oci_identity_domains_group
+  - oci_identity_domains_app
+  - oci_identity_domains_app_role
+  - oci_identity_domains_grant
+  - oci_identity_domains_dynamic_resource_group
+  - oci_identity_domains_identity_provider
+  - oci_identity_domains_policy
+  - oci_identity_domains_rule
+  - oci_identity_domains_password_policy
+  - oci_identity_domains_api_key
+  - oci_identity_domains_auth_token
+  - oci_identity_domains_customer_secret_key
+  - oci_identity_domains_oauth2client_credential
+  - oci_identity_domains_setting
+  ci_action: [oracle-actions/run-oci-cli-command]
+traits:
+- {id: proprietary-iam-model, level: medium, reason: 'IAM policies use the OCI policy language over compartments, groups and dynamic groups.'}
+- {id: provider-ci-auth, level: low, reason: Pipelines authenticate with OCI API keys or Oracle GitHub actions.}
+rules:
+- id: oci.identity.compartments
+  match: {resource_type: [oci_identity_compartment, oci_identity_tag_namespace, oci_identity_tag, oci_identity_tag_default]}
+  then: {set_level: {trait: proprietary-iam-model, level: low}, evidence: compartment_id}
+- id: oci.identity.dynamic-groups
+  match: {resource_type: [oci_identity_dynamic_group, oci_identity_domains_dynamic_resource_group]}
+  then: {add_trait: managed-only-feature, level: low, evidence: matching_rule}
+sdk:
+- ecosystem: npm
+  packages: [oci-identity, oci-identitydomains]
+  imports: ['[''"]oci-(identity|identitydomains)[''"]']
+- ecosystem: pypi
+  imports: ['^\s*from\s+oci\.(identity|identity_domains)\b', '^\s*from\s+oci\s+import\s+.*\b(identity|identity_domains)\b']
+  usage: ['\boci\.(identity|identity_domains)\.\w+Client\b']
+  gate: [oci]
+- ecosystem: go
+  packages: [github.com/oracle/oci-go-sdk/v65/identity, github.com/oracle/oci-go-sdk/v65/identitydomains]
+  imports: ['"github\.com/oracle/oci-go-sdk/v[0-9]+/(identity|identitydomains)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.oracle.oci.sdk:oci-java-sdk-identity', 'com.oracle.oci.sdk:oci-java-sdk-identitydomains']
+  imports: ['^\s*import\s+com\.oracle\.bmc\.(identity|identitydomains)\.']
+- ecosystem: nuget
+  packages: [OCI.DotNetSDK.Identity, OCI.DotNetSDK.Identitydomains]
+  imports: ['^\s*using\s+Oci\.(Identity|Identitydomains)Service\b']
+edge_hints:
+- {resource_type: oci_identity_compartment, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_identity_policy, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_identity_group, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_identity_user, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_identity_dynamic_group, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_identity_user_group_membership, attribute: user_id, edge_kind: binding}
+- {resource_type: oci_identity_user_group_membership, attribute: group_id, edge_kind: binding}
+- {resource_type: oci_identity_api_key, attribute: user_id, edge_kind: containment}
+- {resource_type: oci_identity_auth_token, attribute: user_id, edge_kind: containment}
+- {resource_type: oci_identity_customer_secret_key, attribute: user_id, edge_kind: containment}
+- {resource_type: oci_identity_tag_namespace, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_identity_tag, attribute: tag_namespace_id, edge_kind: containment}
+- {resource_type: oci_identity_idp_group_mapping, attribute: identity_provider_id, edge_kind: containment}
+- {resource_type: oci_identity_domain, attribute: compartment_id, edge_kind: containment}
+alternatives:
+- ref: keycloak
+  difficulty: medium
+  compatibility: conceptual
+  notes: Users, groups and federation move to Keycloak realms; OCI resource policies have no direct equivalent.
+  approved_by: cloudowski
+  recommended: true
+- ref: zitadel
+  difficulty: medium
+  compatibility: conceptual
+  notes: Identity domain users and apps map to Zitadel organizations and projects; resource policies are rebuilt.
+  approved_by: cloudowski
+- ref: authentik
+  difficulty: medium
+  compatibility: conceptual
+  notes: Covers user directory and SSO for apps; infrastructure authorization is handled by the target platform.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.oracle.com/en-us/iaas/Content/Identity/home.htm
+  - https://docs.oracle.com/en-us/iaas/Content/Identity/policyreference/policyreference.htm
+  - https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/identity_policy
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

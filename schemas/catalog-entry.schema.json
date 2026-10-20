@@ -1,0 +1,250 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:exitctl:schema:catalog-entry:1.0",
+  "title": "exitctl catalog entry (schema 1.0)",
+  "description": "One catalog file. Referential integrity (IDs exist, no alias cycles, one service per resource type, maintainer-only recommended) is checked after schema validation. See data-model.md Part 1.",
+  "type": "object",
+  "required": ["schema", "kind"],
+  "properties": {
+    "schema": { "type": "string", "pattern": "^1\\.\\d+$" },
+    "kind": { "enum": ["catalog", "providers", "categories", "trait", "service", "alternative", "neutral"] }
+  },
+  "allOf": [
+    { "if": { "properties": { "kind": { "const": "catalog" } } }, "then": { "$ref": "#/$defs/manifest" } },
+    { "if": { "properties": { "kind": { "const": "providers" } } }, "then": { "$ref": "#/$defs/providers" } },
+    { "if": { "properties": { "kind": { "const": "categories" } } }, "then": { "$ref": "#/$defs/categories" } },
+    { "if": { "properties": { "kind": { "const": "trait" } } }, "then": { "$ref": "#/$defs/trait" } },
+    { "if": { "properties": { "kind": { "const": "service" } } }, "then": { "$ref": "#/$defs/service" } },
+    { "if": { "properties": { "kind": { "const": "alternative" } } }, "then": { "$ref": "#/$defs/alternative" } },
+    { "if": { "properties": { "kind": { "const": "neutral" } } }, "then": { "$ref": "#/$defs/neutral" } }
+  ],
+  "$defs": {
+    "slug": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "serviceId": { "type": "string", "pattern": "^[a-z0-9]+\\.[a-z0-9][a-z0-9-]*$" },
+    "level": { "enum": ["none", "low", "medium", "high", "critical"] },
+    "dimension": { "enum": ["technical", "data", "operational", "economic", "skills"] },
+    "provenance": {
+      "type": "object",
+      "required": ["origin", "author", "status"],
+      "properties": {
+        "origin": { "enum": ["maintainer", "community", "vendor", "llm"] },
+        "author": { "type": "string" },
+        "reviewed_by": { "type": "string" },
+        "reviewed_on": { "type": "string", "format": "date" },
+        "sources": { "type": "array", "items": { "type": "string", "format": "uri" } },
+        "status": { "enum": ["draft", "verified", "deprecated"] },
+        "llm": {
+          "type": "object",
+          "required": ["batch", "model", "prompt_version", "eval_passed"],
+          "properties": {
+            "batch": { "type": "string" }, "model": { "type": "string" },
+            "prompt_version": { "type": "string" }, "eval_passed": { "type": "boolean" }
+          }
+        }
+      },
+      "allOf": [
+        { "if": { "properties": { "status": { "const": "verified" } } },
+          "then": { "required": ["reviewed_by", "reviewed_on"] } },
+        { "if": { "properties": { "origin": { "const": "llm" } } }, "then": { "required": ["llm"] } }
+      ]
+    },
+    "traitRef": {
+      "type": "object",
+      "required": ["id"],
+      "properties": { "id": { "$ref": "#/$defs/slug" }, "level": { "$ref": "#/$defs/level" }, "reason": { "type": "string" } },
+      "dependentRequired": { "level": ["reason"] },
+      "additionalProperties": false
+    },
+    "condition": {
+      "type": "object",
+      "minProperties": 1,
+      "properties": {
+        "attr": { "type": "string" },
+        "exists": { "type": "boolean" },
+        "equals": {},
+        "in": { "type": "array" },
+        "matches": { "type": "string" },
+        "gte": { "type": "number" },
+        "lte": { "type": "number" },
+        "all": { "type": "array", "items": { "$ref": "#/$defs/condition" } },
+        "any": { "type": "array", "items": { "$ref": "#/$defs/condition" } },
+        "not": { "$ref": "#/$defs/condition" },
+        "edge_to": {
+          "type": "object",
+          "properties": {
+            "service": { "$ref": "#/$defs/serviceId" },
+            "category": { "type": "string" },
+            "kind": { "enum": ["reference", "ordering", "binding", "data-flow", "usage", "containment"] },
+            "direction": { "enum": ["in", "out"] }
+          }
+        },
+        "has_sdk_usage": { "const": true }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "required": ["id", "match", "then"],
+      "properties": {
+        "id": { "type": "string" },
+        "match": {
+          "type": "object", "minProperties": 1,
+          "properties": {
+            "resource_type": { "type": "array", "items": { "type": "string" } },
+            "service": { "type": "array", "items": { "$ref": "#/$defs/serviceId" } },
+            "category": { "type": "array", "items": { "type": "string" } },
+            "trait": { "type": "array", "items": { "$ref": "#/$defs/slug" } },
+            "source": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "when": { "$ref": "#/$defs/condition" },
+        "then": {
+          "type": "object",
+          "properties": {
+            "add_trait": { "$ref": "#/$defs/slug" },
+            "level": { "$ref": "#/$defs/level" },
+            "set_level": { "type": "object", "required": ["trait", "level"], "properties": {
+              "trait": { "$ref": "#/$defs/slug" }, "level": { "$ref": "#/$defs/level" } } },
+            "evidence": { "type": "string" }
+          },
+          "oneOf": [ { "required": ["add_trait"] }, { "required": ["set_level"] } ]
+        }
+      }
+    },
+    "manifest": {
+      "required": ["catalog_version", "title", "maintainers", "neutrality"],
+      "properties": {
+        "catalog_version": { "type": "string", "pattern": "^\\d{4}\\.\\d{2}\\.\\d+$" },
+        "title": { "type": "string" },
+        "maintainers": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "neutrality": { "type": "string" }
+      }
+    },
+    "providers": {
+      "required": ["providers"],
+      "properties": { "providers": { "type": "array", "items": { "type": "object", "required": ["id", "name", "kind"], "properties": {
+        "id": { "$ref": "#/$defs/slug" }, "name": { "type": "string" },
+        "kind": { "enum": ["hyperscaler", "platform", "generic"] } } } } }
+    },
+    "categories": {
+      "required": ["categories"],
+      "properties": { "categories": { "type": "array", "items": { "type": "object", "required": ["id", "name"], "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9-]+(\\.[a-z0-9-]+)*$" }, "name": { "type": "string" } } } } }
+    },
+    "trait": {
+      "required": ["id", "name", "level", "dimensions", "explanation", "exit_hint", "provenance"],
+      "properties": {
+        "id": { "$ref": "#/$defs/slug" },
+        "name": { "type": "string" },
+        "level": { "$ref": "#/$defs/level" },
+        "dimensions": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/dimension" } },
+        "explanation": { "type": "string", "maxLength": 200 },
+        "exit_hint": { "type": "string", "maxLength": 200 },
+        "rules": { "type": "array", "items": { "$ref": "#/$defs/rule" } },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+    "service": {
+      "required": ["id", "provider", "name", "category", "resource_types", "traits", "provenance"],
+      "properties": {
+        "id": { "$ref": "#/$defs/serviceId" },
+        "provider": { "$ref": "#/$defs/slug" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "resource_types": {
+          "type": "object", "minProperties": 1, "additionalProperties": false,
+          "properties": {
+            "terraform": { "type": "array", "items": { "type": "string" } },
+            "cloudformation": { "type": "array", "items": { "type": "string" } },
+            "kubernetes": { "type": "array", "items": { "type": "object", "required": ["group", "kind"], "properties": {
+              "group": { "type": "string" }, "kind": { "type": "string" } } } },
+            "container_registry": { "type": "array", "items": { "type": "string" } },
+            "ci_action": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "traits": { "type": "array", "items": { "$ref": "#/$defs/traitRef" } },
+        "rules": { "type": "array", "items": { "$ref": "#/$defs/rule" } },
+        "sdk": {
+          "type": "array",
+          "items": {
+            "type": "object", "required": ["ecosystem"],
+            "properties": {
+              "ecosystem": { "enum": ["npm", "pypi", "go", "maven", "nuget", "rubygems", "composer", "cargo"] },
+              "packages": { "type": "array", "items": { "type": "string" } },
+              "imports": { "type": "array", "items": { "type": "string" } },
+              "usage": { "type": "array", "items": { "type": "string" } },
+              "gate": { "type": "array", "items": { "type": "string" } },
+              "trait": { "$ref": "#/$defs/traitRef" }
+            },
+            "anyOf": [ { "required": ["packages"] }, { "required": ["imports"] }, { "required": ["usage", "gate"] } ]
+          }
+        },
+        "kubernetes_bindings": {
+          "type": "array",
+          "items": {
+            "type": "object", "required": ["match"],
+            "properties": {
+              "match": { "type": "object", "required": ["kind"], "properties": {
+                "kind": { "type": "string" }, "group": { "type": "string" },
+                "field": { "type": "string" }, "annotation": { "type": "string" },
+                "exists": { "type": "boolean" }, "equals": { "type": "string" },
+                "in": { "type": "array", "items": { "type": "string" } } } },
+              "service": { "$ref": "#/$defs/serviceId" }
+            }
+          }
+        },
+        "edge_hints": {
+          "type": "array",
+          "items": { "type": "object", "required": ["resource_type", "attribute", "edge_kind"], "properties": {
+            "resource_type": { "type": "string" }, "attribute": { "type": "string" },
+            "edge_kind": { "enum": ["reference", "binding", "data-flow", "containment"] } } }
+        },
+        "alternatives": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["ref", "difficulty", "compatibility"],
+            "properties": {
+              "ref": { "$ref": "#/$defs/slug" },
+              "difficulty": { "enum": ["low", "medium", "high", "very-high"] },
+              "compatibility": { "enum": ["api-compatible", "protocol-compatible", "conceptual"] },
+              "residual_traits": { "type": "array", "items": { "$ref": "#/$defs/traitRef" } },
+              "notes": { "type": "string", "maxLength": 200 },
+              "recommended": { "type": "boolean" },
+              "approved_by": { "type": "string" }
+            },
+            "dependentRequired": { "recommended": ["approved_by"] },
+            "additionalProperties": false
+          }
+        },
+        "aliases": { "type": "array", "items": { "$ref": "#/$defs/serviceId" } },
+        "successor": { "$ref": "#/$defs/serviceId" },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+    "alternative": {
+      "required": ["id", "name", "alternative_kind", "license", "homepage", "provenance"],
+      "properties": {
+        "id": { "$ref": "#/$defs/slug" },
+        "name": { "type": "string" },
+        "alternative_kind": { "enum": ["oss-self-hosted", "managed-oss", "european-provider", "other-provider"] },
+        "license": { "type": "string" },
+        "homepage": { "type": "string", "format": "uri" },
+        "vendor_contributed": { "type": "boolean", "default": false },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+    "neutral": {
+      "required": ["id", "provider", "resource_types", "provenance"],
+      "properties": {
+        "id": { "$ref": "#/$defs/slug" },
+        "provider": { "$ref": "#/$defs/slug" },
+        "resource_types": { "type": "object" },
+        "scored": {
+          "type": "boolean",
+          "description": "false: the types deploy nothing (lookups, local rendering, metadata) and are left out of the score and coverage. Default true."
+        },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    }
+  }
+}

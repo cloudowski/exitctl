@@ -1,0 +1,125 @@
+schema: '1.0'
+kind: service
+id: azure.storage-account
+provider: azure
+name: Azure Storage Account (Blob Storage)
+category: storage.object
+resource_types:
+  terraform:
+  - azurerm_storage_account
+  - azurerm_storage_container
+  - azurerm_storage_blob
+  - azurerm_storage_account_network_rules
+  - azurerm_storage_management_policy
+  - azurerm_storage_account_customer_managed_key
+  - azurerm_storage_encryption_scope
+  - azurerm_storage_object_replication
+  - azurerm_storage_blob_inventory_policy
+  - azurerm_storage_account_local_user
+  - azurerm_storage_account_static_website
+  - azurerm_storage_container_immutability_policy
+  - azurerm_storage_data_lake_gen2_filesystem
+  - azurerm_storage_data_lake_gen2_path
+  kubernetes:
+  - {group: storage.azure.com, kind: StorageAccount}
+  - {group: storage.azure.com, kind: StorageAccountsBlobService}
+  - {group: storage.azure.com, kind: StorageAccountsBlobServicesContainer}
+  - {group: storage.azure.com, kind: StorageAccountsManagementPolicy}
+traits:
+- {id: proprietary-api, level: medium, reason: The Blob REST API is not S3 compatible; tools and SDK calls must change on exit.}
+- {id: data-gravity, level: high, reason: Object stores accumulate large volumes; egress cost and transfer time grow with size.}
+- {id: proprietary-sdk}
+rules:
+- id: azure.storage-account.hns
+  match: {resource_type: [azurerm_storage_account]}
+  when: {attr: is_hns_enabled, equals: true}
+  then: {add_trait: proprietary-data-format, level: low, evidence: is_hns_enabled}
+sdk:
+- ecosystem: npm
+  packages:
+  - '@azure/storage-blob'
+  - '@azure/storage-file-datalake'
+  imports:
+  - '[''"]@azure/storage-blob(/[^''"]*)?[''"]'
+  - '[''"]@azure/storage-file-datalake(/[^''"]*)?[''"]'
+- ecosystem: pypi
+  packages:
+  - azure-storage-blob
+  - azure-storage-file-datalake
+  imports:
+  - ^\s*(from|import)\s+azure\.storage\.blob\b
+  - ^\s*(from|import)\s+azure\.storage\.filedatalake\b
+- ecosystem: go
+  packages:
+  - github.com/Azure/azure-sdk-for-go/sdk/storage/azblob
+  - github.com/Azure/azure-sdk-for-go/sdk/storage/azdatalake
+  imports:
+  - '"github\.com/Azure/azure-sdk-for-go/sdk/storage/azblob(/[^"]*)?"'
+  - '"github\.com/Azure/azure-sdk-for-go/sdk/storage/azdatalake(/[^"]*)?"'
+- ecosystem: maven
+  packages:
+  - com.azure:azure-storage-blob
+  - com.azure:azure-storage-blob-batch
+  - com.azure:azure-storage-file-datalake
+  imports:
+  - ^\s*import\s+(static\s+)?com\.azure\.storage\.blob\.
+  - ^\s*import\s+(static\s+)?com\.azure\.storage\.file\.datalake\.
+- ecosystem: nuget
+  packages:
+  - Azure.Storage.Blobs
+  - Azure.Storage.Files.DataLake
+  - Microsoft.Azure.Storage.Blob
+  - WindowsAzure.Storage
+  imports:
+  - ^\s*using\s+(static\s+)?Azure\.Storage\.Blobs\b
+  - ^\s*using\s+(static\s+)?Azure\.Storage\.Files\.DataLake\b
+  - ^\s*using\s+(static\s+)?Microsoft\.Azure\.Storage\.Blob\b
+  - ^\s*using\s+(static\s+)?Microsoft\.WindowsAzure\.Storage\b
+kubernetes_bindings:
+- match: {kind: StorageClass, field: provisioner, in: [blob.csi.azure.com]}
+- match: {kind: PersistentVolume, field: spec.csi.driver, in: [blob.csi.azure.com]}
+edge_hints:
+- {resource_type: azurerm_storage_account, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_storage_container, attribute: storage_account_name, edge_kind: containment}
+- {resource_type: azurerm_storage_container, attribute: storage_account_id, edge_kind: containment}
+- {resource_type: azurerm_storage_blob, attribute: storage_container_name, edge_kind: containment}
+- {resource_type: azurerm_storage_management_policy, attribute: storage_account_id, edge_kind: containment}
+- {resource_type: azurerm_storage_account_network_rules, attribute: storage_account_id, edge_kind: containment}
+- {resource_type: azurerm_storage_data_lake_gen2_filesystem, attribute: storage_account_id, edge_kind: containment}
+alternatives:
+- ref: minio
+  difficulty: medium
+  compatibility: conceptual
+  notes: S3 API, not Blob API; applications move from Azure Blob SDKs to S3 clients, data copied with rclone or azcopy.
+  approved_by: cloudowski
+- ref: ceph
+  difficulty: medium
+  compatibility: conceptual
+  notes: RGW offers the S3 API; Blob SDK calls and SAS tokens must be replaced.
+  approved_by: cloudowski
+- ref: seaweedfs
+  difficulty: medium
+  compatibility: conceptual
+  notes: S3 gateway on a self-hosted cluster; Blob SDK code and lifecycle policies must be rewritten.
+  approved_by: cloudowski
+- ref: ovhcloud
+  difficulty: medium
+  compatibility: conceptual
+  notes: Managed S3-compatible object storage in the EU; client code moves from Blob to S3 APIs.
+  approved_by: cloudowski
+- ref: scaleway
+  difficulty: medium
+  compatibility: conceptual
+  notes: Managed S3-compatible object storage in the EU; client code moves from Blob to S3 APIs.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction
+  - https://learn.microsoft.com/en-us/azure/storage/blobs/blob-csi-driver
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

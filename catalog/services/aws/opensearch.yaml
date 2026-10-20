@@ -1,0 +1,75 @@
+schema: '1.0'
+kind: service
+id: aws.opensearch
+provider: aws
+name: Amazon OpenSearch Service
+category: analytics
+resource_types:
+  terraform: [aws_opensearch_domain, aws_opensearch_domain_policy, aws_opensearch_domain_saml_options, aws_opensearch_outbound_connection, aws_opensearch_inbound_connection_accepter, aws_opensearch_package, aws_opensearch_package_association, aws_opensearch_vpc_endpoint, aws_opensearch_authorize_vpc_endpoint_access, aws_opensearchserverless_collection, aws_opensearchserverless_security_policy, aws_opensearchserverless_access_policy, aws_opensearchserverless_vpc_endpoint, aws_opensearchserverless_security_config, aws_opensearchserverless_lifecycle_policy, aws_osis_pipeline, aws_elasticsearch_domain, aws_elasticsearch_domain_policy, aws_elasticsearch_domain_saml_options]
+  cloudformation: ['AWS::OpenSearchService::Domain', 'AWS::Elasticsearch::Domain', 'AWS::OpenSearchServerless::Collection', 'AWS::OpenSearchServerless::SecurityPolicy', 'AWS::OpenSearchServerless::AccessPolicy', 'AWS::OpenSearchServerless::VpcEndpoint', 'AWS::OpenSearchServerless::SecurityConfig', 'AWS::OpenSearchServerless::LifecyclePolicy', 'AWS::OSIS::Pipeline']
+  kubernetes:
+  - {group: opensearchservice.services.k8s.aws, kind: Domain}
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'Domains run OpenSearch (or legacy Elasticsearch) with the standard REST API; access uses SigV4 and AWS domain tooling.'}
+rules:
+- id: aws.opensearch.serverless
+  match:
+    resource_type: [aws_opensearchserverless_collection]
+  then: {add_trait: managed-only-feature, level: medium, evidence: type}
+- id: aws.opensearch.ingestion
+  match:
+    resource_type: [aws_osis_pipeline]
+  then: {add_trait: managed-only-feature, level: low, evidence: pipeline_configuration_body}
+- id: aws.opensearch.iam-access-policy
+  match:
+    resource_type: [aws_opensearch_domain_policy, aws_opensearchserverless_access_policy]
+  then: {add_trait: proprietary-iam-model, level: low, evidence: access_policies}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-opensearch', '@aws-sdk/client-opensearchserverless', '@aws-sdk/client-osis']
+  imports: ['[''"]@aws-sdk/client-(opensearch|opensearchserverless|osis|elasticsearch-service)[''"/]']
+  usage: ['\bAWS\.(OpenSearch|ES)\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["''](opensearch|opensearchserverless|osis|es)["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/opensearch, github.com/aws/aws-sdk-go-v2/service/opensearchserverless, github.com/aws/aws-sdk-go-v2/service/elasticsearchservice, github.com/aws/aws-sdk-go-v2/service/osis]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/(opensearch|opensearchserverless|opensearchservice|elasticsearchservice|osis)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:opensearch', 'software.amazon.awssdk:opensearchserverless', 'software.amazon.awssdk:osis', 'software.amazon.awssdk:elasticsearch']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.(opensearch|opensearchserverless|osis|elasticsearch)\.']
+- ecosystem: nuget
+  packages: [AWSSDK.OpenSearchService, AWSSDK.OpenSearchServerless, AWSSDK.OSIS, AWSSDK.Elasticsearch]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.(OpenSearchService|OpenSearchServerless|OSIS|Elasticsearch)\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-opensearch, aws-sdk-opensearchserverless, aws-sdk-elasticsearchservice, aws-sdk-osis]
+  imports: ['^\s*require\s+["'']aws-sdk-(opensearch|opensearchserverless|elasticsearchservice|osis)["'']']
+  usage: ['(?i)\bAws::(opensearch|opensearchserverless|elasticsearchservice|osis)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-opensearch, aws-sdk-opensearchserverless, aws-sdk-elasticsearchservice, aws-sdk-osis]
+  imports: ['\baws_sdk_(opensearch|opensearchserverless|elasticsearchservice|osis)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(opensearch|opensearchserverless|elasticsearchservice|osis)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_opensearch_domain, attribute: vpc_options.subnet_ids, edge_kind: containment}
+- {resource_type: aws_opensearch_domain, attribute: vpc_options.security_group_ids, edge_kind: containment}
+- {resource_type: aws_opensearch_domain, attribute: log_publishing_options.cloudwatch_log_group_arn, edge_kind: data-flow}
+- {resource_type: aws_opensearch_domain_policy, attribute: domain_name, edge_kind: binding}
+- {resource_type: aws_opensearch_package_association, attribute: domain_name, edge_kind: binding}
+- {resource_type: aws_elasticsearch_domain, attribute: vpc_options.subnet_ids, edge_kind: containment}
+- {resource_type: aws_osis_pipeline, attribute: vpc_options.subnet_ids, edge_kind: containment}
+alternatives:
+- {ref: opensearch, difficulty: low, compatibility: api-compatible, notes: 'Self-managed OpenSearch uses the same REST API; migrate with snapshots or reindex. Replace SigV4 auth with security plugin.', approved_by: cloudowski}
+- {ref: ovhcloud, difficulty: low, compatibility: api-compatible, notes: OVHcloud Public Cloud Databases include managed OpenSearch., approved_by: cloudowski}
+- {ref: clickhouse, difficulty: high, compatibility: conceptual, notes: For log analytics workloads; queries and dashboards must be rebuilt in SQL., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/opensearch-service/latest/developerguide/what-is.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/opensearch_domain']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

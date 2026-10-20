@@ -1,0 +1,73 @@
+schema: '1.0'
+kind: service
+id: gcp.vpc
+provider: gcp
+name: Virtual Private Cloud (VPC)
+category: network
+resource_types:
+  terraform: [google_compute_network, google_compute_subnetwork, google_compute_subnetwork_iam_binding, google_compute_subnetwork_iam_member, google_compute_subnetwork_iam_policy, google_compute_firewall, google_compute_route, google_compute_router, google_compute_router_nat, google_compute_router_interface, google_compute_router_peer, google_compute_address, google_compute_global_address, google_compute_network_peering, google_compute_network_peering_routes_config, google_compute_shared_vpc_host_project, google_compute_shared_vpc_service_project, google_compute_vpn_gateway, google_compute_ha_vpn_gateway, google_compute_vpn_tunnel, google_compute_external_vpn_gateway, google_compute_interconnect_attachment, google_compute_network_firewall_policy, google_compute_network_firewall_policy_rule, google_compute_network_firewall_policy_association, google_compute_region_network_firewall_policy, google_compute_region_network_firewall_policy_rule, google_compute_region_network_firewall_policy_association, google_compute_firewall_policy, google_compute_firewall_policy_rule, google_compute_firewall_policy_association, google_compute_service_attachment, google_compute_packet_mirroring, google_service_networking_connection, google_vpc_access_connector, google_network_connectivity_hub, google_network_connectivity_spoke]
+  kubernetes:
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeNetwork}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeSubnetwork}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeFirewall}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeRoute}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeRouter}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeRouterNAT}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeRouterInterface}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeRouterPeer}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeAddress}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeNetworkPeering}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeSharedVPCHostProject}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeSharedVPCServiceProject}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeVPNGateway}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeVPNTunnel}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeExternalVPNGateway}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeInterconnectAttachment}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeFirewallPolicy}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeFirewallPolicyRule}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeFirewallPolicyAssociation}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeServiceAttachment}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputePacketMirroring}
+  - {group: servicenetworking.cnrm.cloud.google.com, kind: ServiceNetworkingConnection}
+  - {group: vpcaccess.cnrm.cloud.google.com, kind: VPCAccessConnector}
+traits:
+- {id: provider-network-construct, level: medium, reason: 'Global VPCs, Shared VPC, Private Service Access and Serverless VPC Access are Google-specific network constructs.'}
+- {id: operational-tooling-coupling, level: low, reason: 'Firewall rules, routes and Cloud NAT are expressed in Google-specific resources.'}
+edge_hints:
+- {resource_type: google_compute_subnetwork, attribute: network, edge_kind: containment}
+- {resource_type: google_compute_firewall, attribute: network, edge_kind: containment}
+- {resource_type: google_compute_route, attribute: network, edge_kind: containment}
+- {resource_type: google_compute_router, attribute: network, edge_kind: containment}
+- {resource_type: google_compute_router_nat, attribute: router, edge_kind: containment}
+- {resource_type: google_compute_router_nat, attribute: subnetwork.name, edge_kind: reference}
+- {resource_type: google_compute_router_interface, attribute: router, edge_kind: containment}
+- {resource_type: google_compute_router_peer, attribute: router, edge_kind: containment}
+- {resource_type: google_compute_address, attribute: subnetwork, edge_kind: containment}
+- {resource_type: google_compute_address, attribute: network, edge_kind: containment}
+- {resource_type: google_compute_global_address, attribute: network, edge_kind: containment}
+- {resource_type: google_compute_network_peering, attribute: network, edge_kind: containment}
+- {resource_type: google_compute_network_peering, attribute: peer_network, edge_kind: reference}
+- {resource_type: google_compute_ha_vpn_gateway, attribute: network, edge_kind: containment}
+- {resource_type: google_compute_vpn_gateway, attribute: network, edge_kind: containment}
+- {resource_type: google_compute_vpn_tunnel, attribute: router, edge_kind: reference}
+- {resource_type: google_compute_vpn_tunnel, attribute: vpn_gateway, edge_kind: containment}
+- {resource_type: google_compute_interconnect_attachment, attribute: router, edge_kind: reference}
+- {resource_type: google_compute_network_firewall_policy_association, attribute: attachment_target, edge_kind: binding}
+- {resource_type: google_service_networking_connection, attribute: network, edge_kind: containment}
+- {resource_type: google_vpc_access_connector, attribute: network, edge_kind: containment}
+- {resource_type: google_vpc_access_connector, attribute: subnet.name, edge_kind: containment}
+- {resource_type: google_compute_service_attachment, attribute: nat_subnets, edge_kind: containment}
+- {resource_type: google_compute_shared_vpc_service_project, attribute: host_project, edge_kind: reference}
+alternatives:
+- {ref: hetzner, difficulty: medium, compatibility: conceptual, notes: Hetzner Cloud Networks and Firewalls cover private networking; topology and rules are redesigned., approved_by: cloudowski}
+- {ref: ovhcloud, difficulty: medium, compatibility: conceptual, notes: OVHcloud vRack and private networks provide isolation; routing and NAT are configured differently., approved_by: cloudowski}
+- {ref: scaleway, difficulty: medium, compatibility: conceptual, notes: Scaleway VPC with Private Networks and Public Gateways covers subnets and NAT., approved_by: cloudowski}
+- {ref: upcloud, difficulty: medium, compatibility: conceptual, notes: UpCloud SDN private networks and routers cover subnets and NAT gateways., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/vpc/docs/overview', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_network', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_router_nat']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

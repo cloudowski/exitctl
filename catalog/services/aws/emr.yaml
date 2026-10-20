@@ -1,0 +1,70 @@
+schema: '1.0'
+kind: service
+id: aws.emr
+provider: aws
+name: Amazon EMR
+category: analytics
+resource_types:
+  terraform: [aws_emr_cluster, aws_emr_instance_group, aws_emr_instance_fleet, aws_emr_managed_scaling_policy, aws_emr_security_configuration, aws_emr_studio, aws_emr_studio_session_mapping, aws_emr_block_public_access_configuration, aws_emrserverless_application, aws_emrcontainers_virtual_cluster, aws_emrcontainers_job_template]
+  cloudformation: ['AWS::EMR::Cluster', 'AWS::EMR::InstanceGroupConfig', 'AWS::EMR::InstanceFleetConfig', 'AWS::EMR::Step', 'AWS::EMR::SecurityConfiguration', 'AWS::EMR::Studio', 'AWS::EMR::StudioSessionMapping', 'AWS::EMRServerless::Application', 'AWS::EMRContainers::VirtualCluster']
+  kubernetes:
+  - {group: emrcontainers.services.k8s.aws, kind: VirtualCluster}
+  - {group: emrcontainers.services.k8s.aws, kind: JobRun}
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'Runs open-source Spark, Hive, Trino and Flink; cluster provisioning, steps and EMRFS are EMR-specific.'}
+rules:
+- id: aws.emr.serverless
+  match:
+    resource_type: [aws_emrserverless_application]
+  then: {add_trait: managed-only-feature, level: low, evidence: type}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-emr', '@aws-sdk/client-emr-serverless', '@aws-sdk/client-emr-containers']
+  imports: ['[''"]@aws-sdk/client-emr(-serverless|-containers)?[''"/]']
+  usage: ['\bAWS\.EMR\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["''](emr|emr-serverless|emr-containers)["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/emr, github.com/aws/aws-sdk-go-v2/service/emrserverless, github.com/aws/aws-sdk-go-v2/service/emrcontainers]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/(emr|emrserverless|emrcontainers)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:emr', 'software.amazon.awssdk:emrserverless', 'software.amazon.awssdk:emrcontainers', 'com.amazonaws:aws-java-sdk-emr']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.(emr|emrserverless|emrcontainers)\.', '^\s*import\s+(static\s+)?com\.amazonaws\.services\.elasticmapreduce\.']
+- ecosystem: nuget
+  packages: [AWSSDK.ElasticMapReduce, AWSSDK.EMRServerless, AWSSDK.EMRContainers]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.(ElasticMapReduce|EMRServerless|EMRContainers)\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-emr, aws-sdk-emrserverless, aws-sdk-emrcontainers]
+  imports: ['^\s*require\s+["'']aws-sdk-(emr|emrserverless|emrcontainers)["'']']
+  usage: ['(?i)\bAws::(emr|emrserverless|emrcontainers)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-emr, aws-sdk-emrserverless, aws-sdk-emrcontainers]
+  imports: ['\baws_sdk_(emr|emrserverless|emrcontainers)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(emr|emrserverless|emrcontainers)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_emr_cluster, attribute: service_role, edge_kind: binding}
+- {resource_type: aws_emr_cluster, attribute: ec2_attributes.subnet_id, edge_kind: containment}
+- {resource_type: aws_emr_cluster, attribute: ec2_attributes.instance_profile, edge_kind: binding}
+- {resource_type: aws_emr_cluster, attribute: log_uri, edge_kind: data-flow}
+- {resource_type: aws_emr_cluster, attribute: security_configuration, edge_kind: reference}
+- {resource_type: aws_emr_instance_group, attribute: cluster_id, edge_kind: containment}
+- {resource_type: aws_emr_instance_fleet, attribute: cluster_id, edge_kind: containment}
+- {resource_type: aws_emr_managed_scaling_policy, attribute: cluster_id, edge_kind: containment}
+- {resource_type: aws_emrcontainers_virtual_cluster, attribute: container_provider.id, edge_kind: containment}
+alternatives:
+- {ref: apache-spark, difficulty: low, compatibility: api-compatible, notes: 'Spark jobs run unchanged on self-managed Spark or Spark on Kubernetes; replace EMRFS and s3:// paths with s3a://.', approved_by: cloudowski}
+- {ref: trino, difficulty: low, compatibility: api-compatible, notes: Trino and Presto workloads on EMR move to a self-managed Trino cluster., approved_by: cloudowski}
+- {ref: kubernetes, difficulty: medium, compatibility: conceptual, notes: The Spark operator on Kubernetes replaces EMR clusters and EMR on EKS virtual clusters., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-what-is-emr.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/emr_cluster']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

@@ -1,0 +1,64 @@
+schema: '1.0'
+kind: service
+id: gcp.gke
+provider: gcp
+name: Google Kubernetes Engine
+category: compute.container
+resource_types:
+  terraform: [google_container_cluster, google_container_node_pool, google_gke_hub_membership, google_gke_hub_feature, google_gke_hub_feature_membership, google_gke_hub_fleet, google_gke_hub_scope, google_gke_hub_namespace, google_gke_hub_membership_binding, google_gke_backup_backup_plan, google_gke_backup_restore_plan, google_gke_hub_membership_iam_binding, google_gke_hub_membership_iam_member, google_gke_hub_membership_iam_policy]
+  kubernetes:
+  - {group: container.cnrm.cloud.google.com, kind: ContainerCluster}
+  - {group: container.cnrm.cloud.google.com, kind: ContainerNodePool}
+  - {group: gkehub.cnrm.cloud.google.com, kind: GKEHubMembership}
+  - {group: gkehub.cnrm.cloud.google.com, kind: GKEHubFeature}
+  - {group: gkehub.cnrm.cloud.google.com, kind: GKEHubFeatureMembership}
+  ci_action: [google-github-actions/get-gke-credentials]
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'Conformant Kubernetes; node pools, upgrades, Autopilot and fleet features use Google tooling.'}
+- {id: provider-network-construct, level: low, reason: Clusters use VPC-native networking with Google secondary ranges and load balancer integration.}
+rules:
+- id: gcp.gke.autopilot
+  match:
+    resource_type: [google_container_cluster]
+  when: {attr: enable_autopilot, equals: true}
+  then: {add_trait: managed-only-feature, level: low, evidence: enable_autopilot}
+- id: gcp.gke.tpu-node-pool
+  match:
+    resource_type: [google_container_node_pool, google_container_cluster]
+  when: {attr: node_config.machine_type, matches: '^ct[0-9]'}
+  then: {add_trait: provider-accelerator, level: medium, evidence: node_config.machine_type}
+sdk:
+- ecosystem: npm
+  packages: ['@google-cloud/container', '@google-cloud/gke-hub']
+  imports: ['[''"]@google-cloud/(container|gke-hub)[''"/]']
+- ecosystem: pypi
+  packages: [google-cloud-container, google-cloud-gke-hub]
+  imports: [^\s*from\s+google\.cloud\s+import\s+.*\b(container_v1\w*|container|gkehub\w*)\b, ^\s*(from|import)\s+google\.cloud\.(container_v1\w*|container|gkehub\w*)\b]
+- ecosystem: go
+  packages: [cloud.google.com/go/container, cloud.google.com/go/gkehub]
+  imports: ['"cloud\.google\.com/go/(container|gkehub)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.google.cloud:google-cloud-container', 'com.google.cloud:google-cloud-gkehub']
+  imports: ['^\s*import\s+(static\s+)?com\.google\.(cloud\.container\.v1\w*|cloud\.gkehub)\b']
+- ecosystem: nuget
+  packages: [Google.Cloud.Container.V1, Google.Cloud.GkeHub.V1]
+  imports: ['^\s*using\s+(static\s+)?Google\.Cloud\.(Container|GkeHub)\b']
+edge_hints:
+- {resource_type: google_container_cluster, attribute: network, edge_kind: containment}
+- {resource_type: google_container_cluster, attribute: subnetwork, edge_kind: containment}
+- {resource_type: google_container_node_pool, attribute: cluster, edge_kind: containment}
+- {resource_type: google_container_node_pool, attribute: node_config.service_account, edge_kind: reference}
+- {resource_type: google_gke_hub_membership, attribute: endpoint.gke_cluster.resource_link, edge_kind: reference}
+alternatives:
+- {ref: kubernetes, difficulty: low, compatibility: api-compatible, notes: 'Workloads use the standard Kubernetes API; GKE annotations, CRDs and storage classes need replacement.', approved_by: cloudowski}
+- {ref: ovhcloud, difficulty: low, compatibility: api-compatible, notes: OVHcloud Managed Kubernetes Service is CNCF conformant., approved_by: cloudowski}
+- {ref: scaleway, difficulty: low, compatibility: api-compatible, notes: Scaleway Kubernetes Kapsule is CNCF conformant., approved_by: cloudowski}
+- {ref: stackit, difficulty: low, compatibility: api-compatible, notes: 'STACKIT Kubernetes Engine (SKE) is a managed, CNCF conformant Kubernetes service.', approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/kubernetes-engine/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

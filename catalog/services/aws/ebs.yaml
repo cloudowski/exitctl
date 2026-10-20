@@ -1,0 +1,67 @@
+schema: '1.0'
+kind: service
+id: aws.ebs
+provider: aws
+name: Amazon Elastic Block Store (EBS)
+category: storage.block
+resource_types:
+  terraform: [aws_ebs_volume, aws_volume_attachment, aws_ebs_snapshot, aws_ebs_snapshot_copy, aws_ebs_snapshot_import, aws_ebs_default_kms_key, aws_ebs_encryption_by_default, aws_ebs_fast_snapshot_restore, aws_ebs_snapshot_block_public_access, aws_snapshot_create_volume_permission, aws_dlm_lifecycle_policy]
+  cloudformation: ['AWS::EC2::Volume', 'AWS::EC2::VolumeAttachment', 'AWS::DLM::LifecyclePolicy']
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'Volumes are standard block devices; snapshots, volume types and the CSI driver are AWS-specific.'}
+- {id: data-gravity, level: low, reason: 'Data must be copied out at file or block level; EBS snapshots cannot be exported as a portable format directly.'}
+rules:
+- id: aws.ebs.io2-multi-attach
+  match:
+    resource_type: [aws_ebs_volume]
+  when: {attr: multi_attach_enabled, equals: true}
+  then: {add_trait: managed-only-feature, level: low, evidence: multi_attach_enabled}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-ebs', '@aws-sdk/client-dlm']
+  imports: ['[''"]@aws-sdk/client-(ebs|dlm)[''"/]']
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["''](ebs|dlm)["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/ebs, github.com/aws/aws-sdk-go-v2/service/dlm]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/(ebs|dlm)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:ebs', 'software.amazon.awssdk:dlm']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.(ebs|dlm)\.']
+- ecosystem: nuget
+  packages: [AWSSDK.EBS, AWSSDK.DLM]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.(EBS|DLM)\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-ebs, aws-sdk-dlm]
+  imports: ['^\s*require\s+["'']aws-sdk-(ebs|dlm)["'']']
+  usage: ['(?i)\bAws::(ebs|dlm)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-ebs, aws-sdk-dlm]
+  imports: ['\baws_sdk_(ebs|dlm)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(ebs|dlm)\\']
+  gate: [aws/aws-sdk-php]
+kubernetes_bindings:
+- match: {kind: StorageClass, field: provisioner, in: [ebs.csi.aws.com, kubernetes.io/aws-ebs]}
+- match: {kind: VolumeSnapshotClass, field: driver, equals: ebs.csi.aws.com}
+edge_hints:
+- {resource_type: aws_volume_attachment, attribute: volume_id, edge_kind: binding}
+- {resource_type: aws_volume_attachment, attribute: instance_id, edge_kind: binding}
+- {resource_type: aws_ebs_snapshot, attribute: volume_id, edge_kind: reference}
+- {resource_type: aws_ebs_volume, attribute: snapshot_id, edge_kind: reference}
+- {resource_type: aws_ebs_volume, attribute: kms_key_id, edge_kind: reference}
+alternatives:
+- {ref: ceph, difficulty: low, compatibility: conceptual, notes: Ceph RBD provides replicated block volumes with a Kubernetes CSI driver; data is copied at file or block level., approved_by: cloudowski}
+- {ref: hetzner, difficulty: low, compatibility: conceptual, notes: Hetzner Cloud Volumes are network block storage with a Kubernetes CSI driver., approved_by: cloudowski}
+- {ref: ovhcloud, difficulty: low, compatibility: conceptual, notes: OVHcloud Block Storage volumes attach to instances and have a Kubernetes CSI driver., approved_by: cloudowski}
+- {ref: scaleway, difficulty: low, compatibility: conceptual, notes: Scaleway Block Storage volumes attach to instances and Kapsule clusters via CSI., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/ebs/latest/userguide/what-is-ebs.html', 'https://github.com/kubernetes-sigs/aws-ebs-csi-driver', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ebs_volume']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

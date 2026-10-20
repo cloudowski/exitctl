@@ -1,0 +1,57 @@
+schema: '1.0'
+kind: service
+id: aws.x-ray
+provider: aws
+name: AWS X-Ray
+category: observability
+resource_types:
+  terraform: [aws_xray_sampling_rule, aws_xray_group, aws_xray_encryption_config, aws_xray_resource_policy]
+  cloudformation: ['AWS::XRay::SamplingRule', 'AWS::XRay::Group', 'AWS::XRay::ResourcePolicy']
+traits:
+- {id: proprietary-sdk, level: medium, reason: 'X-Ray SDKs instrument code with AWS-specific segments and trace headers; OpenTelemetry with the X-Ray exporter decouples this.'}
+- {id: proprietary-data-format, level: low, reason: Traces use the X-Ray segment document format and X-Amzn-Trace-Id header.}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-xray', 'aws-xray-sdk', 'aws-xray-sdk-core', 'aws-xray-sdk-express']
+  imports: ['[''"]@aws-sdk/client-xray[''"/]', '[''"]aws-xray-sdk(-core|-express|-mysql|-postgres)?[''"]']
+  usage: ['\bAWS\.XRay\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  packages: [aws-xray-sdk]
+  imports: ['^\s*(from|import)\s+aws_xray_sdk\b']
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["'']xray["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/xray, github.com/aws/aws-xray-sdk-go, github.com/aws/aws-xray-sdk-go/*]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/xray(/[^"]*)?"', '"github\.com/aws/aws-xray-sdk-go(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:xray', 'com.amazonaws:aws-xray-recorder-sdk-*', 'com.amazonaws:aws-java-sdk-xray']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.xray\.', '^\s*import\s+(static\s+)?com\.amazonaws\.(xray|services\.xray)\.']
+- ecosystem: nuget
+  packages: [AWSSDK.XRay, 'AWSXRayRecorder*']
+  imports: ['^\s*using\s+(static\s+)?Amazon\.XRay\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-xray]
+  imports: ['^\s*require\s+["'']aws-sdk-(xray)["'']']
+  usage: ['(?i)\bAws::(xray)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-xray]
+  imports: ['\baws_sdk_(xray)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(xray)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_xray_encryption_config, attribute: key_id, edge_kind: reference}
+alternatives:
+- {ref: opentelemetry, difficulty: low, compatibility: conceptual, notes: 'OpenTelemetry SDKs and collector replace X-Ray SDKs; AWS recommends OTel for new instrumentation.', approved_by: cloudowski}
+- {ref: jaeger, difficulty: low, compatibility: conceptual, notes: Jaeger stores and visualises OpenTelemetry traces as a self-hosted backend., approved_by: cloudowski}
+- {ref: grafana, difficulty: low, compatibility: conceptual, notes: Grafana Tempo stores traces and Grafana visualises service maps., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/xray/latest/devguide/aws-xray.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/xray_sampling_rule']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

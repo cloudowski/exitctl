@@ -1,0 +1,74 @@
+schema: '1.0'
+kind: service
+id: azure.app-service
+provider: azure
+name: Azure App Service
+category: compute
+resource_types:
+  terraform:
+  - azurerm_service_plan
+  - azurerm_app_service_plan
+  - azurerm_linux_web_app
+  - azurerm_windows_web_app
+  - azurerm_app_service
+  - azurerm_linux_web_app_slot
+  - azurerm_windows_web_app_slot
+  - azurerm_app_service_slot
+  - azurerm_web_app_active_slot
+  - azurerm_app_service_custom_hostname_binding
+  - azurerm_app_service_certificate
+  - azurerm_app_service_certificate_binding
+  - azurerm_app_service_managed_certificate
+  - azurerm_app_service_virtual_network_swift_connection
+  - azurerm_app_service_source_control
+  - azurerm_app_service_connection
+  - azurerm_app_service_environment_v3
+  - azurerm_static_web_app
+  - azurerm_static_web_app_custom_domain
+  kubernetes:
+  - {group: web.azure.com, kind: ServerFarm}
+  - {group: web.azure.com, kind: Site}
+  ci_action:
+  - azure/webapps-deploy
+  - azure/static-web-apps-deploy
+  - azure/appservice-settings
+traits:
+- {id: proprietary-runtime, level: low, reason: 'Runs standard code stacks or containers; deployment slots, settings and auth are App Service features.'}
+- {id: operational-tooling-coupling, level: medium, reason: 'Deployment slots, Kudu, WebJobs and Easy Auth are App Service specific and must be rebuilt in CI and the ingress layer.'}
+edge_hints:
+- {resource_type: azurerm_service_plan, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_linux_web_app, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_windows_web_app, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_linux_web_app, attribute: service_plan_id, edge_kind: containment}
+- {resource_type: azurerm_windows_web_app, attribute: service_plan_id, edge_kind: containment}
+- {resource_type: azurerm_linux_web_app, attribute: virtual_network_subnet_id, edge_kind: containment}
+- {resource_type: azurerm_windows_web_app, attribute: virtual_network_subnet_id, edge_kind: containment}
+- {resource_type: azurerm_linux_web_app_slot, attribute: app_service_id, edge_kind: containment}
+- {resource_type: azurerm_windows_web_app_slot, attribute: app_service_id, edge_kind: containment}
+alternatives:
+- ref: kubernetes
+  difficulty: medium
+  compatibility: conceptual
+  notes: Containerize the app; slots become separate deployments, Easy Auth moves to an auth proxy.
+  approved_by: cloudowski
+- ref: knative
+  difficulty: medium
+  compatibility: conceptual
+  notes: Scale-to-zero HTTP containers with traffic splitting, similar to deployment slots.
+  approved_by: cloudowski
+- ref: scaleway
+  difficulty: low
+  compatibility: conceptual
+  notes: Serverless Containers in the EU run the same container image.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/app-service/overview
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_web_app
+  - https://github.com/Azure/webapps-deploy
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

@@ -1,0 +1,23 @@
+schema: '1.0'
+kind: service
+id: aws.mq
+provider: aws
+name: Amazon MQ
+category: messaging.queue
+resource_types:
+  terraform: [aws_mq_broker, aws_mq_configuration]
+  kubernetes:
+  - {group: mq.services.k8s.aws, kind: Broker}
+traits:
+- {id: proprietary-api, level: low, reason: 'Brokers run ActiveMQ or RabbitMQ and speak open protocols (AMQP, JMS, MQTT, STOMP), so clients usually port unchanged.'}
+- {id: operational-tooling-coupling, level: low, reason: 'Broker provisioning, maintenance windows and users are managed through AWS APIs.'}
+alternatives:
+- {ref: rabbitmq, difficulty: low, compatibility: protocol-compatible, notes: 'Amazon MQ for RabbitMQ is a managed RabbitMQ; the same AMQP clients work against a self-hosted broker.', approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-08'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/welcome.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/mq_broker']
+  llm: {batch: 2026-10-08-coverage, model: claude-sonnet-5-5, prompt_version: catalog-coverage-v1, eval_passed: true}

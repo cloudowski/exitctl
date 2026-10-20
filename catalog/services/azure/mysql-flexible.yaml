@@ -1,0 +1,68 @@
+schema: '1.0'
+kind: service
+id: azure.mysql-flexible
+provider: azure
+name: Azure Database for MySQL
+category: database.relational
+resource_types:
+  terraform:
+  - azurerm_mysql_flexible_server
+  - azurerm_mysql_flexible_database
+  - azurerm_mysql_flexible_server_configuration
+  - azurerm_mysql_flexible_server_firewall_rule
+  - azurerm_mysql_flexible_server_active_directory_administrator
+  - azurerm_mysql_server
+  - azurerm_mysql_database
+  - azurerm_mysql_configuration
+  - azurerm_mysql_firewall_rule
+  - azurerm_mysql_virtual_network_rule
+  - azurerm_mysql_active_directory_administrator
+  - azurerm_mysql_server_key
+  kubernetes:
+  - {group: dbformysql.azure.com, kind: FlexibleServer}
+  - {group: dbformysql.azure.com, kind: FlexibleServersDatabase}
+  - {group: dbformysql.azure.com, kind: FlexibleServersFirewallRule}
+  - {group: dbformysql.azure.com, kind: FlexibleServersConfiguration}
+  - {group: dbformysql.azure.com, kind: FlexibleServersAdministrator}
+traits:
+- {id: proprietary-api, level: low, reason: 'Standard MySQL protocol and SQL; only management, HA and Entra authentication are Azure specific.'}
+- {id: data-gravity, level: medium, reason: 'mysqldump, mydumper or replication moves the data with a planned cutover; managed backups restore only on Azure.'}
+edge_hints:
+- {resource_type: azurerm_mysql_flexible_server, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_mysql_server, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_mysql_flexible_server, attribute: delegated_subnet_id, edge_kind: containment}
+- {resource_type: azurerm_mysql_flexible_database, attribute: server_name, edge_kind: containment}
+- {resource_type: azurerm_mysql_flexible_server_configuration, attribute: server_name, edge_kind: containment}
+- {resource_type: azurerm_mysql_flexible_server_firewall_rule, attribute: server_name, edge_kind: containment}
+- {resource_type: azurerm_mysql_database, attribute: server_name, edge_kind: containment}
+alternatives:
+- ref: mysql
+  difficulty: low
+  compatibility: api-compatible
+  notes: Same engine; migrate with dumps or binlog replication.
+  approved_by: cloudowski
+- ref: mariadb
+  difficulty: low
+  compatibility: protocol-compatible
+  notes: MySQL protocol compatible; check version-specific features such as JSON functions.
+  approved_by: cloudowski
+- ref: ovhcloud
+  difficulty: low
+  compatibility: api-compatible
+  notes: Managed MySQL in the EU; migrate with dumps or replication.
+  approved_by: cloudowski
+- ref: scaleway
+  difficulty: low
+  compatibility: api-compatible
+  notes: Managed MySQL in the EU; migrate with dumps or replication.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/mysql/flexible-server/overview
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mysql_flexible_server
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

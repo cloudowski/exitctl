@@ -1,0 +1,17 @@
+schema: "1.0"
+kind: service
+id: aws.badregex
+provider: aws
+name: aws.badregex
+category: messaging.queue
+resource_types:
+  terraform: [aws_badregex]
+traits:
+  - id: proprietary-api
+sdk:
+  - ecosystem: pypi
+    usage: ['boto3\\.client\\(('] 
+    gate: [boto3]
+alternatives:
+  - { ref: nats, difficulty: low, compatibility: conceptual, approved_by: cloudowski }
+provenance: { origin: maintainer, author: cloudowski, status: verified, reviewed_by: cloudowski, reviewed_on: 2026-10-06 }

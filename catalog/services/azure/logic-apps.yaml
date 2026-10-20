@@ -1,0 +1,64 @@
+schema: '1.0'
+kind: service
+id: azure.logic-apps
+provider: azure
+name: Azure Logic Apps
+category: integration
+resource_types:
+  terraform:
+  - azurerm_logic_app_workflow
+  - azurerm_logic_app_standard
+  - azurerm_logic_app_trigger_http_request
+  - azurerm_logic_app_trigger_recurrence
+  - azurerm_logic_app_trigger_custom
+  - azurerm_logic_app_action_http
+  - azurerm_logic_app_action_custom
+  - azurerm_logic_app_integration_account
+  - azurerm_logic_app_integration_account_schema
+  - azurerm_logic_app_integration_account_map
+  - azurerm_logic_app_integration_account_partner
+  - azurerm_logic_app_integration_account_agreement
+  - azurerm_logic_app_integration_account_certificate
+  - azurerm_logic_app_integration_account_session
+  - azurerm_logic_app_integration_account_assembly
+  - azurerm_logic_app_integration_account_batch_configuration
+  - azurerm_api_connection
+  - azurerm_integration_service_environment
+traits:
+- {id: proprietary-workflow-definition, level: high, reason: Workflows use the Workflow Definition Language and managed connectors that run only on Logic Apps.}
+- {id: managed-only-feature, level: medium, reason: Hundreds of managed connectors have no portable runtime equivalent.}
+edge_hints:
+- {resource_type: azurerm_logic_app_workflow, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_logic_app_standard, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_logic_app_trigger_http_request, attribute: logic_app_id, edge_kind: containment}
+- {resource_type: azurerm_logic_app_trigger_recurrence, attribute: logic_app_id, edge_kind: containment}
+- {resource_type: azurerm_logic_app_trigger_custom, attribute: logic_app_id, edge_kind: containment}
+- {resource_type: azurerm_logic_app_action_http, attribute: logic_app_id, edge_kind: containment}
+- {resource_type: azurerm_logic_app_action_custom, attribute: logic_app_id, edge_kind: containment}
+alternatives:
+- ref: temporal
+  difficulty: high
+  compatibility: conceptual
+  notes: Workflows become code with durable execution; each connector becomes an explicit API client.
+  approved_by: cloudowski
+- ref: argo-workflows
+  difficulty: high
+  compatibility: conceptual
+  notes: Container-based DAG workflows on Kubernetes; connectors replaced by containers or scripts.
+  approved_by: cloudowski
+- ref: knative
+  difficulty: high
+  compatibility: conceptual
+  notes: Event-driven steps as services with Knative Eventing; orchestration logic moves into code.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-overview
+  - https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-workflow-definition-language
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/logic_app_workflow
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

@@ -1,0 +1,16 @@
+schema: '1.0'
+kind: alternative
+id: leaseweb
+name: Leaseweb Object Storage
+alternative_kind: european-provider
+license: proprietary
+homepage: https://www.leaseweb.com/en/products-services/object-storage
+vendor_contributed: false
+provenance:
+  origin: llm
+  author: claude
+  status: deprecated
+  sources:
+  - https://european-alternatives.eu/category/object-storage-providers
+  - https://www.leaseweb.com/en/products-services/object-storage
+  llm: {batch: 2026-10-08-eu-providers, model: claude-sonnet-5-5, prompt_version: catalog-draft-v1, eval_passed: false}

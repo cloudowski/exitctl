@@ -1,0 +1,16 @@
+schema: '1.0'
+kind: alternative
+id: t-cloud
+name: T Cloud (Deutsche Telekom)
+alternative_kind: european-provider
+license: proprietary
+homepage: https://www.t-cloud-public.com/en
+vendor_contributed: false
+provenance:
+  origin: llm
+  author: claude
+  status: deprecated
+  sources:
+  - https://european-alternatives.eu/category/cloud-computing-platforms
+  - https://www.t-cloud-public.com/en
+  llm: {batch: 2026-10-08-eu-providers, model: claude-sonnet-5-5, prompt_version: catalog-draft-v1, eval_passed: false}

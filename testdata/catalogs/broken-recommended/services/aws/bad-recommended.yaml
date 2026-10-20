@@ -1,0 +1,13 @@
+schema: "1.0"
+kind: service
+id: aws.badrec
+provider: aws
+name: aws.badrec
+category: messaging.queue
+resource_types:
+  terraform: [aws_badrec]
+traits:
+  - id: proprietary-api
+alternatives:
+  - { ref: nats, difficulty: low, compatibility: conceptual, recommended: true, approved_by: someone-else }
+provenance: { origin: maintainer, author: cloudowski, status: verified, reviewed_by: cloudowski, reviewed_on: 2026-10-06 }

@@ -1,0 +1,96 @@
+schema: '1.0'
+kind: service
+id: azure.application-insights
+provider: azure
+name: Azure Application Insights
+category: observability
+resource_types:
+  terraform:
+  - azurerm_application_insights
+  - azurerm_application_insights_web_test
+  - azurerm_application_insights_standard_web_test
+  - azurerm_application_insights_workbook
+  - azurerm_application_insights_workbook_template
+  - azurerm_application_insights_analytics_item
+  - azurerm_application_insights_api_key
+  - azurerm_application_insights_smart_detection_rule
+  kubernetes:
+  - {group: insights.azure.com, kind: Component}
+  - {group: insights.azure.com, kind: Webtest}
+traits:
+- {id: proprietary-sdk, level: medium, reason: Classic Application Insights SDKs emit a proprietary telemetry format; the Azure Monitor OpenTelemetry distro reduces this.}
+- {id: proprietary-query-language, level: medium, reason: Telemetry is queried with KQL.}
+sdk:
+- ecosystem: npm
+  packages:
+  - applicationinsights
+  - '@microsoft/applicationinsights-web'
+  - '@azure/monitor-opentelemetry'
+  - '@azure/monitor-opentelemetry-exporter'
+  imports:
+  - '[''"]applicationinsights(/[^''"]*)?[''"]'
+  - '[''"]@microsoft/applicationinsights-web(/[^''"]*)?[''"]'
+  - '[''"]@azure/monitor-opentelemetry(/[^''"]*)?[''"]'
+  - '[''"]@azure/monitor-opentelemetry-exporter(/[^''"]*)?[''"]'
+- ecosystem: pypi
+  packages:
+  - applicationinsights
+  - azure-monitor-opentelemetry
+  - azure-monitor-opentelemetry-exporter
+  - opencensus-ext-azure
+  imports:
+  - ^\s*(from|import)\s+applicationinsights\b
+  - ^\s*(from|import)\s+azure\.monitor\.opentelemetry\b
+  - ^\s*(from|import)\s+opencensus\.ext\.azure\b
+- ecosystem: go
+  packages:
+  - github.com/microsoft/ApplicationInsights-Go
+  imports:
+  - '"github\.com/microsoft/ApplicationInsights-Go(/[^"]*)?"'
+- ecosystem: maven
+  packages:
+  - com.microsoft.azure:applicationinsights-*
+  - com.azure:azure-monitor-opentelemetry-exporter
+  - com.azure:azure-monitor-opentelemetry-autoconfigure
+  imports:
+  - ^\s*import\s+(static\s+)?com\.microsoft\.applicationinsights\.
+  - ^\s*import\s+(static\s+)?com\.azure\.monitor\.opentelemetry\.
+- ecosystem: nuget
+  packages:
+  - Microsoft.ApplicationInsights*
+  - Azure.Monitor.OpenTelemetry.*
+  imports:
+  - ^\s*using\s+(static\s+)?Microsoft\.ApplicationInsights\b
+  - ^\s*using\s+(static\s+)?Azure\.Monitor\.OpenTelemetry\b
+edge_hints:
+- {resource_type: azurerm_application_insights, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_application_insights, attribute: workspace_id, edge_kind: data-flow}
+- {resource_type: azurerm_application_insights_web_test, attribute: application_insights_id, edge_kind: containment}
+- {resource_type: azurerm_application_insights_standard_web_test, attribute: application_insights_id, edge_kind: containment}
+alternatives:
+- ref: opentelemetry
+  difficulty: low
+  compatibility: conceptual
+  notes: Instrument with OpenTelemetry SDKs and export via OTLP; move off classic AI SDKs first.
+  approved_by: cloudowski
+- ref: jaeger
+  difficulty: medium
+  compatibility: conceptual
+  notes: Distributed tracing backend; application maps and availability tests are not included.
+  approved_by: cloudowski
+- ref: grafana
+  difficulty: medium
+  compatibility: conceptual
+  notes: Grafana with Tempo, Loki and Prometheus covers traces, logs and metrics.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview
+  - https://learn.microsoft.com/en-us/azure/azure-monitor/app/opentelemetry-enable
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/application_insights
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

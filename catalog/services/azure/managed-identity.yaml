@@ -1,0 +1,78 @@
+schema: '1.0'
+kind: service
+id: azure.managed-identity
+provider: azure
+name: Azure Managed Identities and Workload Identity
+category: identity.iam
+resource_types:
+  terraform:
+  - azurerm_user_assigned_identity
+  - azurerm_federated_identity_credential
+  kubernetes:
+  - {group: managedidentity.azure.com, kind: UserAssignedIdentity}
+  - {group: managedidentity.azure.com, kind: FederatedIdentityCredential}
+  ci_action:
+  - azure/login
+traits:
+- {id: proprietary-iam-model, level: medium, reason: Workloads authenticate as Entra service principals via managed identities and federated credentials.}
+- {id: provider-ci-auth, level: medium, reason: CI pipelines log in to Azure with OIDC federation through azure/login.}
+sdk:
+- ecosystem: npm
+  packages:
+  - '@azure/identity'
+  imports:
+  - '[''"]@azure/identity(/[^''"]*)?[''"]'
+- ecosystem: pypi
+  packages:
+  - azure-identity
+  imports:
+  - ^\s*(from|import)\s+azure\.identity\b
+- ecosystem: go
+  packages:
+  - github.com/Azure/azure-sdk-for-go/sdk/azidentity
+  imports:
+  - '"github\.com/Azure/azure-sdk-for-go/sdk/azidentity(/[^"]*)?"'
+- ecosystem: maven
+  packages:
+  - com.azure:azure-identity
+  imports:
+  - ^\s*import\s+(static\s+)?com\.azure\.identity\.
+- ecosystem: nuget
+  packages:
+  - Azure.Identity
+  imports:
+  - ^\s*using\s+(static\s+)?Azure\.Identity\b
+kubernetes_bindings:
+- match: {kind: ServiceAccount, annotation: azure.workload.identity/client-id, exists: true}
+- match: {kind: ServiceAccount, annotation: azure.workload.identity/tenant-id, exists: true}
+edge_hints:
+- {resource_type: azurerm_user_assigned_identity, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_federated_identity_credential, attribute: parent_id, edge_kind: containment}
+alternatives:
+- ref: vault-openbao
+  difficulty: medium
+  compatibility: conceptual
+  notes: Kubernetes or JWT auth plus dynamic secrets replace managed identity tokens for non-Azure targets.
+  approved_by: cloudowski
+- ref: keycloak
+  difficulty: medium
+  compatibility: conceptual
+  notes: Issues OIDC tokens for workloads and CI; relying services must trust the new issuer.
+  approved_by: cloudowski
+  recommended: true
+- ref: zitadel
+  difficulty: medium
+  compatibility: conceptual
+  notes: Service accounts with OIDC tokens; relying services must trust the new issuer.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview
+  - https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview
+  - https://github.com/Azure/login
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

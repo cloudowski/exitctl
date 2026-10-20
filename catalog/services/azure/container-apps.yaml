@@ -1,0 +1,58 @@
+schema: '1.0'
+kind: service
+id: azure.container-apps
+provider: azure
+name: Azure Container Apps
+category: compute.container
+resource_types:
+  terraform:
+  - azurerm_container_app
+  - azurerm_container_app_environment
+  - azurerm_container_app_job
+  - azurerm_container_app_environment_certificate
+  - azurerm_container_app_environment_dapr_component
+  - azurerm_container_app_environment_storage
+  - azurerm_container_app_custom_domain
+  - azurerm_container_app_environment_custom_domain
+  kubernetes:
+  - {group: app.azure.com, kind: ContainerApp}
+  - {group: app.azure.com, kind: ManagedEnvironment}
+  - {group: app.azure.com, kind: Job}
+  ci_action:
+  - azure/container-apps-deploy-action
+traits:
+- {id: proprietary-runtime, level: low, reason: 'Runs OCI images; scaling uses KEDA and Dapr, but app definitions use the Container Apps resource model.'}
+- {id: operational-tooling-coupling, level: low, reason: 'Revisions, ingress and secrets are managed through Azure APIs.'}
+edge_hints:
+- {resource_type: azurerm_container_app_environment, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_container_app, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_container_app, attribute: container_app_environment_id, edge_kind: containment}
+- {resource_type: azurerm_container_app_job, attribute: container_app_environment_id, edge_kind: containment}
+- {resource_type: azurerm_container_app_environment, attribute: infrastructure_subnet_id, edge_kind: containment}
+- {resource_type: azurerm_container_app_environment, attribute: log_analytics_workspace_id, edge_kind: data-flow}
+alternatives:
+- ref: knative
+  difficulty: low
+  compatibility: conceptual
+  notes: Revisions, traffic splitting and scale-to-zero map closely; KEDA scalers and Dapr run on any cluster.
+  approved_by: cloudowski
+- ref: kubernetes
+  difficulty: medium
+  compatibility: conceptual
+  notes: Deployments plus KEDA and Dapr reproduce the platform; more operational work.
+  approved_by: cloudowski
+- ref: scaleway
+  difficulty: low
+  compatibility: conceptual
+  notes: Serverless Containers in the EU run the same images.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/container-apps/overview
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_app
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

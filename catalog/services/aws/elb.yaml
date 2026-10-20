@@ -1,0 +1,104 @@
+schema: '1.0'
+kind: service
+id: aws.elb
+provider: aws
+name: Elastic Load Balancing (ALB, NLB, GWLB, CLB)
+category: network.load-balancer
+resource_types:
+  terraform: [aws_lb, aws_alb, aws_lb_listener, aws_alb_listener, aws_lb_listener_rule, aws_alb_listener_rule, aws_lb_listener_certificate, aws_alb_listener_certificate, aws_lb_target_group, aws_alb_target_group, aws_lb_target_group_attachment, aws_alb_target_group_attachment, aws_lb_cookie_stickiness_policy, aws_lb_ssl_negotiation_policy, aws_lb_trust_store, aws_lb_trust_store_revocation, aws_elb, aws_elb_attachment, aws_app_cookie_stickiness_policy, aws_load_balancer_policy, aws_load_balancer_backend_server_policy, aws_load_balancer_listener_policy, aws_proxy_protocol_policy]
+  cloudformation: ['AWS::ElasticLoadBalancingV2::LoadBalancer', 'AWS::ElasticLoadBalancingV2::Listener', 'AWS::ElasticLoadBalancingV2::ListenerRule', 'AWS::ElasticLoadBalancingV2::ListenerCertificate', 'AWS::ElasticLoadBalancingV2::TargetGroup', 'AWS::ElasticLoadBalancingV2::TrustStore', 'AWS::ElasticLoadBalancingV2::TrustStoreRevocation', 'AWS::ElasticLoadBalancing::LoadBalancer']
+  kubernetes:
+  - {group: elbv2.k8s.aws, kind: TargetGroupBinding}
+  - {group: elbv2.k8s.aws, kind: IngressClassParams}
+  - {group: eks.amazonaws.com, kind: IngressClassParams}
+  - {group: gateway.k8s.aws, kind: LoadBalancerConfiguration}
+  - {group: gateway.k8s.aws, kind: TargetGroupConfiguration}
+  - {group: gateway.k8s.aws, kind: ListenerRuleConfiguration}
+  - {group: elbv2.services.k8s.aws, kind: LoadBalancer}
+  - {group: elbv2.services.k8s.aws, kind: Listener}
+  - {group: elbv2.services.k8s.aws, kind: Rule}
+  - {group: elbv2.services.k8s.aws, kind: TargetGroup}
+traits:
+- {id: provider-network-construct, level: low, reason: 'Load balancers, listeners and target groups are AWS objects; equivalent L4/L7 load balancing exists everywhere.'}
+- {id: provider-specific-annotations, level: low, reason: Kubernetes Ingress and Service objects carry AWS Load Balancer Controller annotations that other platforms ignore.}
+rules:
+- id: aws.elb.gateway-load-balancer
+  match:
+    resource_type: [aws_lb]
+  when: {attr: load_balancer_type, equals: gateway}
+  then: {add_trait: provider-network-construct, level: medium, evidence: load_balancer_type}
+- id: aws.elb.cognito-oidc-auth
+  match:
+    resource_type: [aws_lb_listener_rule, aws_lb_listener]
+  when:
+    any:
+    - {attr: action.authenticate_cognito, exists: true}
+    - {attr: default_action.authenticate_cognito, exists: true}
+  then: {add_trait: managed-only-feature, level: medium, evidence: authenticate_cognito}
+- id: aws.elb.lambda-target
+  match:
+    resource_type: [aws_lb_target_group]
+  when: {attr: target_type, equals: lambda}
+  then: {add_trait: proprietary-event-model, level: medium, evidence: target_type}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-elastic-load-balancing-v2', '@aws-sdk/client-elastic-load-balancing']
+  imports: ['[''"]@aws-sdk/client-elastic-load-balancing(-v2)?[''"/]']
+  usage: ['\bAWS\.(ELBv2|ELB)\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["''](elbv2|elb)["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2, github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/(elasticloadbalancingv2|elasticloadbalancing|elbv2|elb)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:elasticloadbalancingv2', 'software.amazon.awssdk:elasticloadbalancing']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.(elasticloadbalancingv2|elasticloadbalancing)\.']
+- ecosystem: nuget
+  packages: [AWSSDK.ElasticLoadBalancingV2, AWSSDK.ElasticLoadBalancing]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.(ElasticLoadBalancingV2|ElasticLoadBalancing)\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-elasticloadbalancingv2, aws-sdk-elasticloadbalancing]
+  imports: ['^\s*require\s+["'']aws-sdk-(elasticloadbalancingv2|elasticloadbalancing)["'']']
+  usage: ['(?i)\bAws::(elasticloadbalancingv2|elasticloadbalancing)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-elasticloadbalancingv2, aws-sdk-elasticloadbalancing]
+  imports: ['\baws_sdk_(elasticloadbalancingv2|elasticloadbalancing)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(elasticloadbalancingv2|elasticloadbalancing)\\']
+  gate: [aws/aws-sdk-php]
+kubernetes_bindings:
+- match: {kind: Ingress, field: spec.ingressClassName, equals: alb}
+- match: {kind: IngressClass, field: spec.controller, in: [ingress.k8s.aws/alb, eks.amazonaws.com/alb]}
+- match: {kind: GatewayClass, field: spec.controllerName, in: [gateway.k8s.aws/alb, gateway.k8s.aws/nlb]}
+- match: {kind: Ingress, annotation: 'alb.ingress.kubernetes.io/*', exists: true}
+- match: {kind: Service, annotation: 'service.beta.kubernetes.io/aws-load-balancer-*', exists: true}
+edge_hints:
+- {resource_type: aws_lb_listener, attribute: load_balancer_arn, edge_kind: containment}
+- {resource_type: aws_lb_listener, attribute: default_action.target_group_arn, edge_kind: data-flow}
+- {resource_type: aws_lb_listener, attribute: certificate_arn, edge_kind: reference}
+- {resource_type: aws_lb_listener_rule, attribute: listener_arn, edge_kind: containment}
+- {resource_type: aws_lb_listener_rule, attribute: action.target_group_arn, edge_kind: data-flow}
+- {resource_type: aws_lb_listener_certificate, attribute: listener_arn, edge_kind: binding}
+- {resource_type: aws_lb_target_group, attribute: vpc_id, edge_kind: containment}
+- {resource_type: aws_lb_target_group_attachment, attribute: target_group_arn, edge_kind: binding}
+- {resource_type: aws_lb_target_group_attachment, attribute: target_id, edge_kind: data-flow}
+- {resource_type: aws_lb, attribute: access_logs.bucket, edge_kind: data-flow}
+- {resource_type: aws_elb, attribute: subnets, edge_kind: containment}
+- {resource_type: aws_elb, attribute: instances, edge_kind: data-flow}
+alternatives:
+- {ref: nginx, difficulty: low, compatibility: conceptual, notes: 'NGINX (or ingress-nginx) handles L7 routing and TLS; listener rules translate to server and location blocks.', approved_by: cloudowski}
+- {ref: haproxy, difficulty: low, compatibility: conceptual, notes: HAProxy covers L4 and L7 load balancing with health checks and stickiness., approved_by: cloudowski}
+- {ref: envoy, difficulty: low, compatibility: conceptual, notes: Envoy or Envoy Gateway implements L4/L7 routing with the Kubernetes Gateway API., approved_by: cloudowski}
+- {ref: traefik, difficulty: low, compatibility: conceptual, notes: Traefik ingress replaces ALB Ingress; alb.ingress annotations become Traefik routers and middlewares., approved_by: cloudowski}
+- {ref: hetzner, difficulty: low, compatibility: conceptual, notes: Hetzner Cloud Load Balancers provide managed L4/L7 balancing with a Kubernetes integration., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/what-is-load-balancing.html', 'https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

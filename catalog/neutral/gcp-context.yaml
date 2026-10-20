@@ -1,0 +1,21 @@
+schema: '1.0'
+kind: neutral
+id: gcp-context
+provider: gcp
+# Terraform data sources that only look up client, project, or zone context,
+# and blueprint metadata files read by Google tooling (not deployed).
+resource_types:
+  terraform: [google_client_config, google_client_openid_userinfo, google_compute_zones, google_compute_regions, google_netblock_ip_ranges]
+  kubernetes:
+  - {group: blueprints.cloud.google.com, kind: BlueprintMetadata}
+scored: false
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/client_config
+  - https://github.com/GoogleCloudPlatform/cloud-foundation-toolkit/tree/main/cli/bpmetadata
+  llm: {batch: 2026-10-07-coverage, model: claude-opus-5-5, prompt_version: catalog-coverage-v1, eval_passed: true}

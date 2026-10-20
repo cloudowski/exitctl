@@ -1,0 +1,14 @@
+schema: "1.0"
+kind: service
+id: aws.cycle-a
+provider: aws
+name: aws.cycle-a
+category: messaging.queue
+resource_types:
+  terraform: [aws_cycle_a]
+traits:
+  - id: proprietary-api
+aliases: [aws.cycle-b]
+alternatives:
+  - { ref: nats, difficulty: low, compatibility: conceptual, approved_by: cloudowski }
+provenance: { origin: maintainer, author: cloudowski, status: verified, reviewed_by: cloudowski, reviewed_on: 2026-10-06 }

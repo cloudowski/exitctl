@@ -1,0 +1,93 @@
+schema: '1.0'
+kind: service
+id: azure.event-grid
+provider: azure
+name: Azure Event Grid
+category: messaging.pubsub
+resource_types:
+  terraform:
+  - azurerm_eventgrid_topic
+  - azurerm_eventgrid_domain
+  - azurerm_eventgrid_domain_topic
+  - azurerm_eventgrid_event_subscription
+  - azurerm_eventgrid_system_topic
+  - azurerm_eventgrid_system_topic_event_subscription
+  - azurerm_eventgrid_namespace
+  - azurerm_eventgrid_partner_configuration
+  - azurerm_eventgrid_partner_namespace
+  - azurerm_eventgrid_partner_registration
+  kubernetes:
+  - {group: eventgrid.azure.com, kind: Topic}
+  - {group: eventgrid.azure.com, kind: Domain}
+  - {group: eventgrid.azure.com, kind: DomainsTopic}
+  - {group: eventgrid.azure.com, kind: EventSubscription}
+traits:
+- {id: proprietary-event-model, level: medium, reason: System topics and the Event Grid schema are Azure specific; CloudEvents 1.0 schema is supported as an option.}
+- {id: proprietary-sdk}
+sdk:
+- ecosystem: npm
+  packages:
+  - '@azure/eventgrid'
+  - '@azure/eventgrid-namespaces'
+  imports:
+  - '[''"]@azure/eventgrid(/[^''"]*)?[''"]'
+  - '[''"]@azure/eventgrid-namespaces(/[^''"]*)?[''"]'
+- ecosystem: pypi
+  packages:
+  - azure-eventgrid
+  imports:
+  - ^\s*(from|import)\s+azure\.eventgrid\b
+- ecosystem: go
+  packages:
+  - github.com/Azure/azure-sdk-for-go/sdk/messaging/azeventgrid
+  imports:
+  - '"github\.com/Azure/azure-sdk-for-go/sdk/messaging/azeventgrid(/[^"]*)?"'
+- ecosystem: maven
+  packages:
+  - com.azure:azure-messaging-eventgrid
+  - com.azure:azure-messaging-eventgrid-namespaces
+  imports:
+  - ^\s*import\s+(static\s+)?com\.azure\.messaging\.eventgrid\.
+- ecosystem: nuget
+  packages:
+  - Azure.Messaging.EventGrid
+  - Azure.Messaging.EventGrid.Namespaces
+  - Microsoft.Azure.EventGrid
+  imports:
+  - ^\s*using\s+(static\s+)?Azure\.Messaging\.EventGrid\b
+  - ^\s*using\s+(static\s+)?Microsoft\.Azure\.EventGrid\b
+edge_hints:
+- {resource_type: azurerm_eventgrid_topic, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_eventgrid_domain, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_eventgrid_system_topic, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_eventgrid_domain_topic, attribute: domain_name, edge_kind: containment}
+- {resource_type: azurerm_eventgrid_event_subscription, attribute: scope, edge_kind: data-flow}
+- {resource_type: azurerm_eventgrid_system_topic, attribute: source_arm_resource_id, edge_kind: data-flow}
+- {resource_type: azurerm_eventgrid_system_topic_event_subscription, attribute: system_topic, edge_kind: containment}
+alternatives:
+- ref: knative
+  difficulty: medium
+  compatibility: conceptual
+  notes: Knative Eventing brokers and triggers route CloudEvents; Azure system event sources need replacing.
+  approved_by: cloudowski
+- ref: nats
+  difficulty: medium
+  compatibility: conceptual
+  notes: Subjects and consumers cover fan-out; push delivery to webhooks needs a small bridge.
+  approved_by: cloudowski
+- ref: apache-kafka
+  difficulty: medium
+  compatibility: conceptual
+  notes: The Event Grid namespace MQTT broker and pull delivery map to topics; filtering moves to consumers.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/event-grid/overview
+  - https://learn.microsoft.com/en-us/azure/event-grid/cloud-event-schema
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/eventgrid_topic
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

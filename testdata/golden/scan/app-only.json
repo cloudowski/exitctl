@@ -1,0 +1,428 @@
+{
+  "format": "exitctl.result/v1",
+  "kind": "result",
+  "versions": {
+    "tool": "0.1.0-dev",
+    "catalog": "2026.10.1",
+    "catalog_schema": "1.0",
+    "rules": "1.1.0",
+    "config_fingerprint": "8d36fc36",
+    "custom_scoring": false,
+    "catalog_drafts_included": true
+  },
+  "inputs": [
+    {
+      "repo": "app-only",
+      "as_of": "2026-10-06",
+      "versions": {
+        "tool": "0.1.0-dev",
+        "catalog": "2026.10.1",
+        "catalog_schema": "1.0",
+        "rules": "1.1.0",
+        "config_fingerprint": "8d36fc36",
+        "custom_scoring": false,
+        "catalog_drafts_included": true
+      }
+    }
+  ],
+  "facts": {
+    "sources": [
+      {
+        "repo": "app-only",
+        "path": "requirements.txt",
+        "kind": "package-manifest",
+        "status": "parsed"
+      }
+    ],
+    "raw_nodes": [
+      {
+        "id": "app-only//#component",
+        "node_kind": "component",
+        "source_kind": "package-manifest",
+        "type": "component",
+        "native_address": ".",
+        "attributes": {},
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "app-only",
+            "path": "requirements.txt",
+            "line": 1,
+            "excerpt": "boto3==1.35.0",
+            "source_kind": "package-manifest"
+          }
+        ]
+      }
+    ],
+    "raw_edges": [],
+    "package_uses": [
+      {
+        "component": "app-only//#component",
+        "ecosystem": "pypi",
+        "name": "boto3",
+        "version": "1.35.0",
+        "manifest": {
+          "repo": "app-only",
+          "path": "requirements.txt",
+          "line": 1,
+          "excerpt": "boto3==1.35.0",
+          "source_kind": "package-manifest"
+        }
+      },
+      {
+        "component": "app-only//#component",
+        "ecosystem": "pypi",
+        "name": "flask",
+        "manifest": {
+          "repo": "app-only",
+          "path": "requirements.txt",
+          "line": 2,
+          "excerpt": "flask",
+          "source_kind": "package-manifest"
+        }
+      }
+    ],
+    "code_uses": [
+      {
+        "component": "app-only//#component",
+        "ecosystem": "pypi",
+        "pattern_kind": "usage",
+        "service": "aws.dynamodb",
+        "match": ".client(\"dynamodb\"",
+        "evidence": {
+          "repo": "app-only",
+          "path": "app/repo.py",
+          "line": 3,
+          "excerpt": "ddb = boto3.client(\"dynamodb\")",
+          "source_kind": "code"
+        }
+      },
+      {
+        "component": "app-only//#component",
+        "ecosystem": "pypi",
+        "pattern_kind": "usage",
+        "service": "aws.s3",
+        "match": ".resource('s3'",
+        "evidence": {
+          "repo": "app-only",
+          "path": "app/repo.py",
+          "line": 4,
+          "excerpt": "s3 = boto3.resource('s3')",
+          "source_kind": "code"
+        }
+      }
+    ],
+    "gaps": []
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "app-only//#component",
+        "kind": "component",
+        "type": "component",
+        "native_address": ".",
+        "class": "component",
+        "sources": [
+          "app-only//requirements.txt"
+        ],
+        "evidence": [
+          {
+            "repo": "app-only",
+            "path": "requirements.txt",
+            "line": 1,
+            "excerpt": "boto3==1.35.0",
+            "source_kind": "package-manifest"
+          }
+        ],
+        "findings": [],
+        "risk": 0,
+        "weight": 1,
+        "dependents_count": 0,
+        "wave": 2
+      },
+      {
+        "id": "implied//aws.dynamodb",
+        "kind": "implied_service",
+        "type": "aws.dynamodb",
+        "service": "aws.dynamodb",
+        "class": "service",
+        "sources": [
+          "app-only//app/repo.py"
+        ],
+        "evidence": [
+          {
+            "repo": "app-only",
+            "path": "app/repo.py",
+            "line": 3,
+            "excerpt": "ddb = boto3.client(\"dynamodb\")",
+            "source_kind": "code"
+          }
+        ],
+        "findings": [
+          {
+            "id": "implied//aws.dynamodb::proprietary-sdk",
+            "trait": "proprietary-sdk",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "sdk",
+            "evidence": [
+              {
+                "repo": "app-only",
+                "path": "app/repo.py",
+                "line": 3,
+                "excerpt": "ddb = boto3.client(\"dynamodb\")",
+                "source_kind": "code"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.45,
+        "risk_by_dimension": {
+          "technical": 0.5
+        },
+        "weight": 2,
+        "contribution": 0.9,
+        "dependents_count": 1,
+        "dependents": [
+          "app-only//#component"
+        ],
+        "wave": 1
+      },
+      {
+        "id": "implied//aws.s3",
+        "kind": "implied_service",
+        "type": "aws.s3",
+        "service": "aws.s3",
+        "class": "service",
+        "sources": [
+          "app-only//app/repo.py"
+        ],
+        "evidence": [
+          {
+            "repo": "app-only",
+            "path": "app/repo.py",
+            "line": 4,
+            "excerpt": "s3 = boto3.resource('s3')",
+            "source_kind": "code"
+          }
+        ],
+        "findings": [
+          {
+            "id": "implied//aws.s3::proprietary-sdk",
+            "trait": "proprietary-sdk",
+            "level": "low",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "sdk",
+            "evidence": [
+              {
+                "repo": "app-only",
+                "path": "app/repo.py",
+                "line": 4,
+                "excerpt": "s3 = boto3.resource('s3')",
+                "source_kind": "code"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.225,
+        "risk_by_dimension": {
+          "technical": 0.25
+        },
+        "weight": 2,
+        "contribution": 0.45,
+        "dependents_count": 1,
+        "dependents": [
+          "app-only//#component"
+        ],
+        "wave": 1
+      }
+    ],
+    "edges": [
+      {
+        "from": "app-only//#component",
+        "to": "implied//aws.dynamodb",
+        "kind": "usage",
+        "confidence": "service-level",
+        "evidence": [
+          {
+            "repo": "app-only",
+            "path": "app/repo.py",
+            "line": 3,
+            "excerpt": "ddb = boto3.client(\"dynamodb\")",
+            "source_kind": "code"
+          }
+        ]
+      },
+      {
+        "from": "app-only//#component",
+        "to": "implied//aws.s3",
+        "kind": "usage",
+        "confidence": "service-level",
+        "evidence": [
+          {
+            "repo": "app-only",
+            "path": "app/repo.py",
+            "line": 4,
+            "excerpt": "s3 = boto3.resource('s3')",
+            "source_kind": "code"
+          }
+        ]
+      }
+    ],
+    "groups": [],
+    "sccs": []
+  },
+  "analysis": {
+    "status": "ok",
+    "index": 34,
+    "index_without_exceptions": 34,
+    "grade": "C",
+    "confidence": "normal",
+    "dimensions": {
+      "data": 0,
+      "economic": null,
+      "operational": 0,
+      "skills": 0,
+      "technical": 38
+    },
+    "anchors": [
+      {
+        "rank": 1,
+        "node": "implied//aws.dynamodb",
+        "contribution": 0.9,
+        "dependents_count": 1,
+        "components_using": 1,
+        "sdk_files": 1,
+        "alternatives": [
+          {
+            "id": "scylladb",
+            "name": "ScyllaDB",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "api-compatible",
+            "recommended": false,
+            "notes": "ScyllaDB Alternator implements the DynamoDB API; streams, transactions and some expressions differ, so test coverage matters."
+          },
+          {
+            "id": "cassandra",
+            "name": "Apache Cassandra",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Wide-column model fits key-based access; data model and queries must be redesigned in CQL."
+          },
+          {
+            "id": "mongodb",
+            "name": "MongoDB Community Server",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Document model covers items and secondary indexes; access code and change streams need a rewrite."
+          },
+          {
+            "id": "postgresql",
+            "name": "PostgreSQL",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "JSONB tables with composite keys can host single-table designs; queries and streams are rewritten."
+          }
+        ],
+        "reason": "Proprietary SDK + 1 SDK file + 1 dependent resource"
+      },
+      {
+        "rank": 2,
+        "node": "implied//aws.s3",
+        "contribution": 0.45,
+        "dependents_count": 1,
+        "components_using": 1,
+        "sdk_files": 1,
+        "alternatives": [
+          {
+            "id": "ceph",
+            "name": "Ceph",
+            "kind": "oss-self-hosted",
+            "difficulty": "low",
+            "compatibility": "api-compatible",
+            "recommended": false,
+            "notes": "Ceph RGW implements the S3 API; operating a Ceph cluster requires storage expertise."
+          },
+          {
+            "id": "garage",
+            "name": "Garage",
+            "kind": "oss-self-hosted",
+            "difficulty": "low",
+            "compatibility": "api-compatible",
+            "recommended": false,
+            "notes": "Lightweight geo-distributed S3-compatible store; implements a subset of the API (no object lock, limited ACLs)."
+          },
+          {
+            "id": "scaleway",
+            "name": "Scaleway",
+            "kind": "european-provider",
+            "difficulty": "low",
+            "compatibility": "api-compatible",
+            "recommended": false,
+            "notes": "Scaleway Object Storage exposes an S3-compatible API including lifecycle rules."
+          },
+          {
+            "id": "seaweedfs",
+            "name": "SeaweedFS",
+            "kind": "oss-self-hosted",
+            "difficulty": "low",
+            "compatibility": "api-compatible",
+            "recommended": false,
+            "notes": "SeaweedFS S3 gateway serves buckets on top of its distributed file store."
+          }
+        ],
+        "reason": "Proprietary SDK + 1 SDK file + 1 dependent resource"
+      }
+    ],
+    "lever": {
+      "service": "aws.dynamodb",
+      "alternative": "scylladb",
+      "delta": 23
+    },
+    "coverage": {
+      "types": 1,
+      "resources": 1,
+      "weighted": 1,
+      "unknown_types": 0
+    },
+    "waves": [
+      {
+        "wave": 1,
+        "units": [
+          [
+            "implied//aws.dynamodb"
+          ],
+          [
+            "implied//aws.s3"
+          ]
+        ]
+      },
+      {
+        "wave": 2,
+        "units": [
+          [
+            "app-only//#component"
+          ]
+        ]
+      }
+    ],
+    "chains": [],
+    "exceptions": [],
+    "notes": [
+      "draft catalog entries were scored (development mode); results are unverified"
+    ]
+  }
+}

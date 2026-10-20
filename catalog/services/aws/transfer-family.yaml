@@ -1,0 +1,68 @@
+schema: '1.0'
+kind: service
+id: aws.transfer-family
+provider: aws
+name: AWS Transfer Family
+category: storage.file
+resource_types:
+  terraform: [aws_transfer_server, aws_transfer_user, aws_transfer_ssh_key, aws_transfer_access, aws_transfer_workflow, aws_transfer_agreement, aws_transfer_certificate, aws_transfer_connector, aws_transfer_profile, aws_transfer_tag, aws_transfer_host_key, aws_transfer_web_app, aws_transfer_web_app_customization]
+  cloudformation: ['AWS::Transfer::Server', 'AWS::Transfer::User', 'AWS::Transfer::Workflow', 'AWS::Transfer::Agreement', 'AWS::Transfer::Certificate', 'AWS::Transfer::Connector', 'AWS::Transfer::Profile', 'AWS::Transfer::WebApp']
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'Clients use standard SFTP, FTPS, FTP or AS2; users, identity providers and S3/EFS backends are AWS-specific.'}
+rules:
+- id: aws.transfer-family.custom-idp
+  match:
+    resource_type: [aws_transfer_server]
+  when: {attr: identity_provider_type, in: [AWS_LAMBDA, API_GATEWAY]}
+  then: {add_trait: proprietary-runtime, level: low, evidence: identity_provider_type}
+- id: aws.transfer-family.workflows
+  match:
+    resource_type: [aws_transfer_workflow]
+  then: {add_trait: proprietary-workflow-definition, level: low, evidence: steps}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-transfer']
+  imports: ['[''"]@aws-sdk/client-transfer[''"/]']
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["'']transfer["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/transfer]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/transfer(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:transfer']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.transfer\.']
+- ecosystem: nuget
+  packages: [AWSSDK.Transfer]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.Transfer\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-transfer]
+  imports: ['^\s*require\s+["'']aws-sdk-(transfer)["'']']
+  usage: ['(?i)\bAws::(transfer)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-transfer]
+  imports: ['\baws_sdk_(transfer)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(transfer)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_transfer_user, attribute: server_id, edge_kind: containment}
+- {resource_type: aws_transfer_user, attribute: role, edge_kind: binding}
+- {resource_type: aws_transfer_user, attribute: home_directory, edge_kind: data-flow}
+- {resource_type: aws_transfer_ssh_key, attribute: user_name, edge_kind: containment}
+- {resource_type: aws_transfer_access, attribute: server_id, edge_kind: containment}
+- {resource_type: aws_transfer_server, attribute: endpoint_details.subnet_ids, edge_kind: containment}
+- {resource_type: aws_transfer_server, attribute: function, edge_kind: reference}
+- {resource_type: aws_transfer_server, attribute: workflow_details.on_upload.workflow_id, edge_kind: reference}
+alternatives:
+- {ref: sftpgo, difficulty: low, compatibility: protocol-compatible, notes: 'SFTPGo serves SFTP, FTP/S and WebDAV with S3-compatible or local backends; users and keys are migrated.', approved_by: cloudowski}
+- {ref: minio, difficulty: low, compatibility: protocol-compatible, notes: MinIO can expose buckets over SFTP for clients that need file transfer access to object storage., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/transfer/latest/userguide/what-is-aws-transfer-family.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/transfer_server']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

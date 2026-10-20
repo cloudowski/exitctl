@@ -1,0 +1,19 @@
+schema: "1.0"
+kind: service
+id: aws.lambda
+provider: aws
+name: AWS Lambda
+category: compute.serverless
+resource_types:
+  terraform: [aws_lambda_function, aws_lambda_event_source_mapping]
+traits:
+  - id: proprietary-runtime
+alternatives:
+  - { ref: knative, difficulty: medium, compatibility: conceptual, approved_by: cloudowski }
+provenance:
+  origin: maintainer
+  author: cloudowski
+  status: verified
+  reviewed_by: cloudowski
+  reviewed_on: 2026-10-06
+  sources: []

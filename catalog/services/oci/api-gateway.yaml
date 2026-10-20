@@ -1,0 +1,68 @@
+schema: '1.0'
+kind: service
+id: oci.api-gateway
+provider: oci
+name: OCI API Gateway
+category: integration
+resource_types:
+  terraform:
+  - oci_apigateway_gateway
+  - oci_apigateway_deployment
+  - oci_apigateway_api
+  - oci_apigateway_certificate
+  - oci_apigateway_subscriber
+  - oci_apigateway_usage_plan
+traits:
+- {id: proprietary-api, level: medium, reason: 'Routes, authorizers and policies are defined in the OCI deployment specification format.'}
+- {id: managed-only-feature, level: low, reason: Usage plans and subscribers rely on the managed service.}
+sdk:
+- ecosystem: npm
+  packages: [oci-apigateway]
+  imports: ['[''"]oci-apigateway[''"]']
+- ecosystem: pypi
+  imports: ['^\s*from\s+oci\.apigateway\b', '^\s*from\s+oci\s+import\s+.*\bapigateway\b']
+  usage: ['\boci\.apigateway\.\w+Client\b']
+  gate: [oci]
+- ecosystem: go
+  packages: [github.com/oracle/oci-go-sdk/v65/apigateway]
+  imports: ['"github\.com/oracle/oci-go-sdk/v[0-9]+/apigateway(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.oracle.oci.sdk:oci-java-sdk-apigateway']
+  imports: ['^\s*import\s+com\.oracle\.bmc\.apigateway\.']
+- ecosystem: nuget
+  packages: [OCI.DotNetSDK.Apigateway]
+  imports: ['^\s*using\s+Oci\.ApigatewayService\b']
+edge_hints:
+- {resource_type: oci_apigateway_gateway, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_apigateway_gateway, attribute: subnet_id, edge_kind: containment}
+- {resource_type: oci_apigateway_gateway, attribute: network_security_group_ids, edge_kind: binding}
+- {resource_type: oci_apigateway_gateway, attribute: certificate_id, edge_kind: binding}
+- {resource_type: oci_apigateway_deployment, attribute: gateway_id, edge_kind: containment}
+- {resource_type: oci_apigateway_deployment, attribute: specification.routes.backend.function_id, edge_kind: data-flow}
+- {resource_type: oci_apigateway_subscriber, attribute: usage_plans, edge_kind: binding}
+alternatives:
+- ref: kong
+  difficulty: medium
+  compatibility: conceptual
+  notes: Routes and auth plugins replace deployment specifications; function backends become HTTP upstreams.
+  approved_by: cloudowski
+- ref: envoy
+  difficulty: medium
+  compatibility: conceptual
+  notes: Envoy-based gateways route the same APIs; authorizers need ext_authz or JWT filter configuration.
+  approved_by: cloudowski
+- ref: traefik
+  difficulty: medium
+  compatibility: conceptual
+  notes: Routers and middlewares cover routing, rate limiting and JWT validation.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.oracle.com/en-us/iaas/Content/APIGateway/home.htm
+  - https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/apigateway_deployment
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

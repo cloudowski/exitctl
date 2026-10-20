@@ -1,0 +1,42 @@
+schema: '1.0'
+kind: service
+id: gcp.api-gateway
+provider: gcp
+name: API Gateway
+category: integration
+resource_types:
+  terraform: [google_api_gateway_api, google_api_gateway_api_config, google_api_gateway_gateway, google_api_gateway_api_iam_binding, google_api_gateway_api_iam_member, google_api_gateway_api_iam_policy, google_api_gateway_api_config_iam_binding, google_api_gateway_api_config_iam_member, google_api_gateway_api_config_iam_policy, google_api_gateway_gateway_iam_binding, google_api_gateway_gateway_iam_member, google_api_gateway_gateway_iam_policy]
+traits:
+- {id: proprietary-api, level: medium, reason: APIs are described in OpenAPI 2.0 with x-google extensions for backends and authentication.}
+- {id: proprietary-iam-model, level: low, reason: 'Authentication relies on Google service accounts, API keys and Google-issued tokens.'}
+sdk:
+- ecosystem: npm
+  packages: ['@google-cloud/api-gateway']
+  imports: ['[''"]@google-cloud/(api-gateway)[''"/]']
+- ecosystem: pypi
+  packages: [google-cloud-api-gateway]
+  imports: [^\s*from\s+google\.cloud\s+import\s+.*\b(apigateway\w*)\b, ^\s*(from|import)\s+google\.cloud\.(apigateway\w*)\b]
+- ecosystem: go
+  packages: [cloud.google.com/go/apigateway]
+  imports: ['"cloud\.google\.com/go/(apigateway)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.google.cloud:google-cloud-api-gateway']
+  imports: ['^\s*import\s+(static\s+)?com\.google\.(cloud\.apigateway)\b']
+- ecosystem: nuget
+  packages: [Google.Cloud.ApiGateway.V1]
+  imports: ['^\s*using\s+(static\s+)?Google\.Cloud\.(ApiGateway)\b']
+edge_hints:
+- {resource_type: google_api_gateway_api_config, attribute: api, edge_kind: containment}
+- {resource_type: google_api_gateway_gateway, attribute: api_config, edge_kind: reference}
+alternatives:
+- {ref: kong, difficulty: medium, compatibility: conceptual, notes: Routes and plugins replace the API config; OpenAPI specs can be imported with decK., approved_by: cloudowski}
+- {ref: traefik, difficulty: medium, compatibility: conceptual, notes: Routers and middlewares cover routing and auth; x-google settings must be translated., approved_by: cloudowski}
+- {ref: envoy, difficulty: medium, compatibility: conceptual, notes: Envoy with JWT and ext_authz filters replaces gateway auth; configuration is rewritten., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/api-gateway/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/api_gateway_gateway']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

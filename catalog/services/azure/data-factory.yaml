@@ -1,0 +1,92 @@
+schema: '1.0'
+kind: service
+id: azure.data-factory
+provider: azure
+name: Azure Data Factory
+category: integration
+resource_types:
+  terraform:
+  - azurerm_data_factory
+  - azurerm_data_factory_pipeline
+  - azurerm_data_factory_trigger_schedule
+  - azurerm_data_factory_trigger_tumbling_window
+  - azurerm_data_factory_trigger_blob_event
+  - azurerm_data_factory_trigger_custom_event
+  - azurerm_data_factory_integration_runtime_azure
+  - azurerm_data_factory_integration_runtime_self_hosted
+  - azurerm_data_factory_integration_runtime_azure_ssis
+  - azurerm_data_factory_linked_service_azure_blob_storage
+  - azurerm_data_factory_linked_service_data_lake_storage_gen2
+  - azurerm_data_factory_linked_service_azure_sql_database
+  - azurerm_data_factory_linked_service_cosmosdb
+  - azurerm_data_factory_linked_service_key_vault
+  - azurerm_data_factory_linked_service_azure_function
+  - azurerm_data_factory_linked_service_web
+  - azurerm_data_factory_linked_service_postgresql
+  - azurerm_data_factory_linked_service_mysql
+  - azurerm_data_factory_linked_service_sql_server
+  - azurerm_data_factory_linked_service_snowflake
+  - azurerm_data_factory_linked_service_sftp
+  - azurerm_data_factory_linked_service_azure_databricks
+  - azurerm_data_factory_linked_custom_service
+  - azurerm_data_factory_dataset_azure_blob
+  - azurerm_data_factory_dataset_binary
+  - azurerm_data_factory_dataset_delimited_text
+  - azurerm_data_factory_dataset_json
+  - azurerm_data_factory_dataset_parquet
+  - azurerm_data_factory_dataset_sql_server_table
+  - azurerm_data_factory_dataset_postgresql
+  - azurerm_data_factory_dataset_mysql
+  - azurerm_data_factory_dataset_http
+  - azurerm_data_factory_custom_dataset
+  - azurerm_data_factory_data_flow
+  - azurerm_data_factory_flowlet_data_flow
+  - azurerm_data_factory_managed_private_endpoint
+  - azurerm_data_factory_credential_user_managed_identity
+  - azurerm_data_factory_credential_service_principal
+  kubernetes:
+  - {group: datafactory.azure.com, kind: Factory}
+traits:
+- {id: proprietary-workflow-definition, level: high, reason: 'Pipelines, activities, mapping data flows and linked services use the ADF JSON definition model.'}
+- {id: managed-only-feature, level: medium, reason: Mapping data flows and managed connectors run only on the ADF integration runtime.}
+edge_hints:
+- {resource_type: azurerm_data_factory, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_data_factory_pipeline, attribute: data_factory_id, edge_kind: containment}
+- {resource_type: azurerm_data_factory_trigger_schedule, attribute: data_factory_id, edge_kind: containment}
+- {resource_type: azurerm_data_factory_trigger_tumbling_window, attribute: data_factory_id, edge_kind: containment}
+- {resource_type: azurerm_data_factory_trigger_blob_event, attribute: data_factory_id, edge_kind: containment}
+- {resource_type: azurerm_data_factory_integration_runtime_azure, attribute: data_factory_id, edge_kind: containment}
+- {resource_type: azurerm_data_factory_integration_runtime_self_hosted, attribute: data_factory_id, edge_kind: containment}
+- {resource_type: azurerm_data_factory_linked_service_azure_blob_storage, attribute: data_factory_id, edge_kind: containment}
+- {resource_type: azurerm_data_factory_linked_service_azure_sql_database, attribute: data_factory_id, edge_kind: containment}
+- {resource_type: azurerm_data_factory_data_flow, attribute: data_factory_id, edge_kind: containment}
+- {resource_type: azurerm_data_factory_dataset_parquet, attribute: data_factory_id, edge_kind: containment}
+- {resource_type: azurerm_data_factory_dataset_json, attribute: data_factory_id, edge_kind: containment}
+- {resource_type: azurerm_data_factory_dataset_delimited_text, attribute: data_factory_id, edge_kind: containment}
+alternatives:
+- ref: argo-workflows
+  difficulty: high
+  compatibility: conceptual
+  notes: Pipeline steps become container tasks in a DAG; copy activities need explicit tools.
+  approved_by: cloudowski
+- ref: apache-spark
+  difficulty: high
+  compatibility: conceptual
+  notes: Mapping data flows run on Spark internally; rewrite them as Spark jobs.
+  approved_by: cloudowski
+- ref: temporal
+  difficulty: high
+  compatibility: conceptual
+  notes: Orchestration as code with retries; each activity becomes code calling the data source.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/data-factory/introduction
+  - https://learn.microsoft.com/en-us/azure/data-factory/concepts-pipelines-activities
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/data_factory
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

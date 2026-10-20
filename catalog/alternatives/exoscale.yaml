@@ -1,0 +1,16 @@
+schema: '1.0'
+kind: alternative
+id: exoscale
+name: Exoscale
+alternative_kind: european-provider
+license: proprietary
+homepage: https://www.exoscale.com/
+vendor_contributed: false
+provenance:
+  origin: llm
+  author: claude
+  status: deprecated
+  sources:
+  - https://www.exoscale.com/
+  - https://community.exoscale.com/documentation/
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: false}

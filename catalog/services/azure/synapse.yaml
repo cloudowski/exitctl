@@ -1,0 +1,65 @@
+schema: '1.0'
+kind: service
+id: azure.synapse
+provider: azure
+name: Azure Synapse Analytics
+category: analytics
+resource_types:
+  terraform:
+  - azurerm_synapse_workspace
+  - azurerm_synapse_sql_pool
+  - azurerm_synapse_spark_pool
+  - azurerm_synapse_firewall_rule
+  - azurerm_synapse_integration_runtime_azure
+  - azurerm_synapse_integration_runtime_self_hosted
+  - azurerm_synapse_linked_service
+  - azurerm_synapse_managed_private_endpoint
+  - azurerm_synapse_role_assignment
+  - azurerm_synapse_private_link_hub
+  - azurerm_synapse_workspace_aad_admin
+  - azurerm_synapse_workspace_key
+  - azurerm_synapse_workspace_sql_aad_admin
+  - azurerm_synapse_sql_pool_workload_group
+  - azurerm_synapse_sql_pool_workload_classifier
+  - azurerm_synapse_sql_pool_security_alert_policy
+  - azurerm_synapse_sql_pool_extended_auditing_policy
+  - azurerm_synapse_workspace_extended_auditing_policy
+  kubernetes:
+  - {group: synapse.azure.com, kind: Workspace}
+  - {group: synapse.azure.com, kind: WorkspacesBigDataPool}
+traits:
+- {id: proprietary-query-language, level: medium, reason: Dedicated SQL pools use a T-SQL dialect with distribution options specific to Synapse.}
+- {id: data-gravity, level: high, reason: Warehouses hold large datasets; export is a bulk data movement project.}
+- {id: proprietary-workflow-definition, level: medium, reason: Synapse pipelines share the Data Factory pipeline definition format.}
+edge_hints:
+- {resource_type: azurerm_synapse_workspace, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_synapse_sql_pool, attribute: synapse_workspace_id, edge_kind: containment}
+- {resource_type: azurerm_synapse_spark_pool, attribute: synapse_workspace_id, edge_kind: containment}
+- {resource_type: azurerm_synapse_firewall_rule, attribute: synapse_workspace_id, edge_kind: containment}
+- {resource_type: azurerm_synapse_workspace, attribute: storage_data_lake_gen2_filesystem_id, edge_kind: data-flow}
+alternatives:
+- ref: trino
+  difficulty: high
+  compatibility: conceptual
+  notes: Federated SQL over open table formats (Parquet, Iceberg, Delta) in object storage; T-SQL must be rewritten.
+  approved_by: cloudowski
+- ref: apache-spark
+  difficulty: medium
+  compatibility: conceptual
+  notes: Synapse Spark pools run Apache Spark, so Spark jobs port with storage path changes.
+  approved_by: cloudowski
+- ref: clickhouse
+  difficulty: high
+  compatibility: conceptual
+  notes: Columnar warehouse; schema, distribution and SQL dialect need conversion.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/synapse-analytics/overview-what-is
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/synapse_workspace
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

@@ -1,0 +1,20 @@
+schema: '1.0'
+kind: trait
+id: provider-network-construct
+name: Provider network construct
+level: high
+dimensions:
+- technical
+- operational
+explanation: Networking is defined with provider-specific constructs (VPCs, subnets, security groups, private endpoints) that must be rebuilt on the target.
+exit_hint: Recreate the topology on the target from the inventory of networks, rules and routes; keep addressing plans documented.
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html
+  - https://cloud.google.com/vpc/docs/vpc
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

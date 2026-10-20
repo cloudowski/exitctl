@@ -1,0 +1,15 @@
+schema: "1.0"
+kind: alternative
+id: scylladb
+name: ScyllaDB
+alternative_kind: oss-self-hosted
+license: AGPL-3.0-only
+homepage: https://www.scylladb.com/
+vendor_contributed: false
+provenance:
+  origin: maintainer
+  author: cloudowski
+  status: verified
+  reviewed_by: cloudowski
+  reviewed_on: 2026-10-06
+  sources: []

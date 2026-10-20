@@ -1,0 +1,108 @@
+schema: '1.0'
+kind: service
+id: azure.key-vault
+provider: azure
+name: Azure Key Vault
+category: security.secrets
+resource_types:
+  terraform:
+  - azurerm_key_vault
+  - azurerm_key_vault_secret
+  - azurerm_key_vault_key
+  - azurerm_key_vault_certificate
+  - azurerm_key_vault_access_policy
+  - azurerm_key_vault_certificate_issuer
+  - azurerm_key_vault_certificate_contacts
+  - azurerm_key_vault_managed_storage_account
+  - azurerm_key_vault_managed_hardware_security_module
+  - azurerm_key_vault_managed_hardware_security_module_key
+  - azurerm_key_vault_managed_hardware_security_module_role_assignment
+  kubernetes:
+  - {group: keyvault.azure.com, kind: Vault}
+traits:
+- {id: proprietary-api, level: medium, reason: 'Secrets, keys and certificates are read through the Key Vault REST API and SDKs.'}
+- {id: proprietary-iam-model, level: low, reason: Access is granted through Entra identities with RBAC or vault access policies.}
+rules:
+- id: azure.key-vault.non-exportable-key
+  match: {resource_type: [azurerm_key_vault_key, azurerm_key_vault_managed_hardware_security_module_key]}
+  when:
+    not: {attr: exportable, equals: true}
+  then: {add_trait: non-exportable-data, level: high, evidence: key_type}
+sdk:
+- ecosystem: npm
+  packages:
+  - '@azure/keyvault-secrets'
+  - '@azure/keyvault-keys'
+  - '@azure/keyvault-certificates'
+  - '@azure/keyvault-admin'
+  imports:
+  - '[''"]@azure/keyvault-secrets(/[^''"]*)?[''"]'
+  - '[''"]@azure/keyvault-keys(/[^''"]*)?[''"]'
+  - '[''"]@azure/keyvault-certificates(/[^''"]*)?[''"]'
+  - '[''"]@azure/keyvault-admin(/[^''"]*)?[''"]'
+- ecosystem: pypi
+  packages:
+  - azure-keyvault-secrets
+  - azure-keyvault-keys
+  - azure-keyvault-certificates
+  - azure-keyvault-administration
+  - azure-keyvault
+  imports:
+  - ^\s*(from|import)\s+azure\.keyvault\b
+- ecosystem: go
+  packages:
+  - github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azsecrets
+  - github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys
+  - github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azcertificates
+  - github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azadmin
+  imports:
+  - '"github\.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azsecrets(/[^"]*)?"'
+  - '"github\.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys(/[^"]*)?"'
+  - '"github\.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azcertificates(/[^"]*)?"'
+  - '"github\.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azadmin(/[^"]*)?"'
+- ecosystem: maven
+  packages:
+  - com.azure:azure-security-keyvault-secrets
+  - com.azure:azure-security-keyvault-keys
+  - com.azure:azure-security-keyvault-certificates
+  - com.azure:azure-security-keyvault-administration
+  imports:
+  - ^\s*import\s+(static\s+)?com\.azure\.security\.keyvault\.
+- ecosystem: nuget
+  packages:
+  - Azure.Security.KeyVault.*
+  - Microsoft.Azure.KeyVault*
+  - Azure.Extensions.AspNetCore.Configuration.Secrets
+  imports:
+  - ^\s*using\s+(static\s+)?Azure\.Security\.KeyVault\b
+  - ^\s*using\s+(static\s+)?Microsoft\.Azure\.KeyVault\b
+kubernetes_bindings:
+- match: {kind: SecretProviderClass, group: secrets-store.csi.x-k8s.io, field: spec.provider, equals: azure}
+edge_hints:
+- {resource_type: azurerm_key_vault, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_key_vault_secret, attribute: key_vault_id, edge_kind: containment}
+- {resource_type: azurerm_key_vault_key, attribute: key_vault_id, edge_kind: containment}
+- {resource_type: azurerm_key_vault_certificate, attribute: key_vault_id, edge_kind: containment}
+- {resource_type: azurerm_key_vault_access_policy, attribute: key_vault_id, edge_kind: containment}
+alternatives:
+- ref: vault-openbao
+  difficulty: medium
+  compatibility: conceptual
+  notes: KV secrets, transit encryption and PKI cover the same uses; app code and CSI provider change.
+  approved_by: cloudowski
+- ref: sops
+  difficulty: low
+  compatibility: conceptual
+  notes: Encrypted secrets in Git for static configuration; no runtime API or key rotation service.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/key-vault/general/overview
+  - https://learn.microsoft.com/en-us/azure/aks/csi-secrets-store-driver
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

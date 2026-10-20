@@ -1,0 +1,90 @@
+schema: '1.0'
+kind: service
+id: aws.iam
+provider: aws
+name: AWS Identity and Access Management (IAM)
+category: identity.iam
+resource_types:
+  terraform: [aws_iam_role, aws_iam_role_policy, aws_iam_role_policy_attachment, aws_iam_role_policies_exclusive, aws_iam_role_policy_attachments_exclusive, aws_iam_policy, aws_iam_policy_attachment, aws_iam_user, aws_iam_user_policy, aws_iam_user_policy_attachment, aws_iam_user_group_membership, aws_iam_user_login_profile, aws_iam_user_ssh_key, aws_iam_access_key, aws_iam_group, aws_iam_group_policy, aws_iam_group_policy_attachment, aws_iam_group_membership, aws_iam_instance_profile, aws_iam_openid_connect_provider, aws_iam_saml_provider, aws_iam_service_linked_role, aws_iam_service_specific_credential, aws_iam_signing_certificate, aws_iam_server_certificate, aws_iam_virtual_mfa_device, aws_iam_account_alias, aws_iam_account_password_policy, aws_iam_security_token_service_preferences]
+  cloudformation: ['AWS::IAM::Role', 'AWS::IAM::RolePolicy', 'AWS::IAM::Policy', 'AWS::IAM::ManagedPolicy', 'AWS::IAM::User', 'AWS::IAM::UserPolicy', 'AWS::IAM::UserToGroupAddition', 'AWS::IAM::AccessKey', 'AWS::IAM::Group', 'AWS::IAM::GroupPolicy', 'AWS::IAM::InstanceProfile', 'AWS::IAM::OIDCProvider', 'AWS::IAM::SAMLProvider', 'AWS::IAM::ServiceLinkedRole', 'AWS::IAM::ServerCertificate', 'AWS::IAM::VirtualMFADevice']
+  kubernetes:
+  - {group: iam.services.k8s.aws, kind: Role}
+  - {group: iam.services.k8s.aws, kind: Policy}
+  - {group: iam.services.k8s.aws, kind: User}
+  - {group: iam.services.k8s.aws, kind: Group}
+  - {group: iam.services.k8s.aws, kind: InstanceProfile}
+  - {group: iam.services.k8s.aws, kind: OpenIDConnectProvider}
+  ci_action: [aws-actions/configure-aws-credentials]
+traits:
+- {id: proprietary-iam-model, level: medium, reason: 'Access is expressed as AWS IAM policy documents, roles and trust policies attached to ARNs.'}
+- {id: skills-specialization, level: low, reason: IAM concepts are common across clouds but policy language and condition keys are AWS-specific.}
+rules:
+- id: aws.iam.ci-auth
+  match:
+    resource_type: [ci_action]
+  when: {attr: action, equals: aws-actions/configure-aws-credentials}
+  then: {add_trait: provider-ci-auth, level: low}
+- id: aws.iam.github-oidc-provider
+  match:
+    resource_type: [aws_iam_openid_connect_provider]
+  when: {attr: url, matches: 'token\.actions\.githubusercontent\.com'}
+  then: {add_trait: provider-ci-auth, level: low, evidence: url}
+- id: aws.iam.static-access-key
+  match:
+    resource_type: [aws_iam_access_key]
+  then: {add_trait: proprietary-iam-model, level: medium, evidence: user}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-iam', '@aws-sdk/client-sts']
+  imports: ['[''"]@aws-sdk/client-(iam|sts)[''"/]']
+  usage: ['\bAWS\.(IAM|STS)\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["''](iam|sts)["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/iam, github.com/aws/aws-sdk-go-v2/service/sts]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/(iam|sts)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:iam', 'software.amazon.awssdk:sts', 'com.amazonaws:aws-java-sdk-iam', 'com.amazonaws:aws-java-sdk-sts']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.(iam|sts)\.', '^\s*import\s+(static\s+)?com\.amazonaws\.services\.(identitymanagement|securitytoken)\.']
+- ecosystem: nuget
+  packages: [AWSSDK.IdentityManagement, AWSSDK.SecurityToken]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.(IdentityManagement|SecurityToken)\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-iam, aws-sdk-sts]
+  imports: ['^\s*require\s+["'']aws-sdk-(iam|sts)["'']']
+  usage: ['(?i)\bAws::(iam|sts)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-iam, aws-sdk-sts]
+  imports: ['\baws_sdk_(iam|sts)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(iam|sts)\\']
+  gate: [aws/aws-sdk-php]
+kubernetes_bindings:
+- match: {kind: ServiceAccount, annotation: eks.amazonaws.com/role-arn, exists: true}
+edge_hints:
+- {resource_type: aws_iam_role_policy_attachment, attribute: role, edge_kind: binding}
+- {resource_type: aws_iam_role_policy_attachment, attribute: policy_arn, edge_kind: reference}
+- {resource_type: aws_iam_role_policy, attribute: role, edge_kind: binding}
+- {resource_type: aws_iam_policy_attachment, attribute: policy_arn, edge_kind: reference}
+- {resource_type: aws_iam_user_policy_attachment, attribute: user, edge_kind: binding}
+- {resource_type: aws_iam_group_policy_attachment, attribute: group, edge_kind: binding}
+- {resource_type: aws_iam_instance_profile, attribute: role, edge_kind: binding}
+- {resource_type: aws_iam_access_key, attribute: user, edge_kind: containment}
+- {resource_type: aws_iam_user_login_profile, attribute: user, edge_kind: containment}
+- {resource_type: aws_iam_group_membership, attribute: group, edge_kind: binding}
+- {resource_type: aws_iam_user_group_membership, attribute: user, edge_kind: binding}
+alternatives:
+- {ref: keycloak, difficulty: high, compatibility: conceptual, notes: Keycloak provides identities and OIDC tokens; resource permissions must be redone in each target system., approved_by: cloudowski, recommended: true}
+- {ref: vault-openbao, difficulty: medium, compatibility: conceptual, notes: 'Vault/OpenBao issues short-lived credentials and secrets; replaces access keys and STS role assumption.', approved_by: cloudowski}
+- {ref: zitadel, difficulty: high, compatibility: conceptual, notes: ZITADEL provides identities and OIDC; cloud resource authorization must be redesigned., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction.html', 'https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html', 'https://github.com/aws-actions/configure-aws-credentials']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

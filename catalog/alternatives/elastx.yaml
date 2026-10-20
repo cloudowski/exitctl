@@ -1,0 +1,16 @@
+schema: '1.0'
+kind: alternative
+id: elastx
+name: Elastx
+alternative_kind: european-provider
+license: proprietary
+homepage: https://elastx.se/en/
+vendor_contributed: false
+provenance:
+  origin: llm
+  author: claude
+  status: deprecated
+  sources:
+  - https://european-alternatives.eu/category/cloud-computing-platforms
+  - https://elastx.se/en/
+  llm: {batch: 2026-10-08-eu-providers, model: claude-sonnet-5-5, prompt_version: catalog-draft-v1, eval_passed: false}

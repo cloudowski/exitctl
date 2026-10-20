@@ -1,0 +1,19 @@
+schema: "1.0"
+kind: neutral
+id: kubernetes-core
+provider: kubernetes
+resource_types:
+  kubernetes:
+    - { group: "", kind: "*" }
+    - { group: apps, kind: "*" }
+    - { group: batch, kind: "*" }
+    - { group: networking.k8s.io, kind: "*" }
+    - { group: storage.k8s.io, kind: "*" }
+  terraform: [random_*, null_resource]
+provenance:
+  origin: maintainer
+  author: cloudowski
+  status: verified
+  reviewed_by: cloudowski
+  reviewed_on: 2026-10-06
+  sources: []

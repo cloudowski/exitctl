@@ -1,0 +1,6 @@
+Blast radius of aws_dynamodb_table.orders   dependents: 4
+aws_dynamodb_table.orders
+├── aws_lambda_event_source_mapping.orders_stream
+├── aws_lambda_function.order_processor
+│   └── aws_lambda_event_source_mapping.events_queue
+└── component services/orders

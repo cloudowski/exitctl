@@ -1,0 +1,16 @@
+schema: "1.0"
+kind: categories
+categories:
+  - { id: compute, name: Compute }
+  - { id: compute.serverless, name: Serverless compute }
+  - { id: database, name: Database }
+  - { id: database.nosql, name: NoSQL database }
+  - { id: database.nosql.key-value, name: Key-value store }
+  - { id: messaging, name: Messaging }
+  - { id: messaging.queue, name: Message queue }
+  - { id: network, name: Networking }
+  - { id: identity, name: Identity }
+  - { id: identity.iam, name: Identity and access management }
+  - { id: identity.user-directory, name: User directory }
+  - { id: storage, name: Storage }
+  - { id: storage.block, name: Block storage }

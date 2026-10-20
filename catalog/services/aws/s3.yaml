@@ -1,0 +1,112 @@
+schema: '1.0'
+kind: service
+id: aws.s3
+provider: aws
+name: Amazon Simple Storage Service (S3)
+category: storage.object
+resource_types:
+  terraform: [aws_s3_bucket, aws_s3_bucket_acl, aws_s3_bucket_policy, aws_s3_bucket_versioning, aws_s3_bucket_lifecycle_configuration, aws_s3_bucket_server_side_encryption_configuration, aws_s3_bucket_public_access_block, aws_s3_bucket_cors_configuration, aws_s3_bucket_website_configuration, aws_s3_bucket_logging, aws_s3_bucket_notification, aws_s3_bucket_replication_configuration, aws_s3_bucket_ownership_controls, aws_s3_bucket_object_lock_configuration, aws_s3_bucket_intelligent_tiering_configuration, aws_s3_bucket_inventory, aws_s3_bucket_metric, aws_s3_bucket_analytics_configuration, aws_s3_bucket_accelerate_configuration, aws_s3_bucket_request_payment_configuration, aws_s3_bucket_object, aws_s3_object, aws_s3_object_copy, aws_s3_account_public_access_block, aws_s3_access_point, aws_s3_directory_bucket, aws_s3control_access_point_policy, aws_s3control_multi_region_access_point, aws_s3control_multi_region_access_point_policy, aws_s3control_object_lambda_access_point, aws_s3control_object_lambda_access_point_policy, aws_s3control_storage_lens_configuration, aws_s3control_bucket, aws_s3tables_table_bucket, aws_s3tables_table_bucket_policy, aws_s3tables_namespace, aws_s3tables_table, aws_s3tables_table_policy, aws_glacier_vault, aws_glacier_vault_lock, aws_s3files_file_system, aws_s3files_mount_target]
+  cloudformation: ['AWS::S3::Bucket', 'AWS::S3::BucketPolicy', 'AWS::S3::AccessPoint', 'AWS::S3::MultiRegionAccessPoint', 'AWS::S3::MultiRegionAccessPointPolicy', 'AWS::S3::StorageLens', 'AWS::S3Express::DirectoryBucket', 'AWS::S3ObjectLambda::AccessPoint', 'AWS::S3ObjectLambda::AccessPointPolicy', 'AWS::S3Tables::TableBucket', 'AWS::S3Tables::TableBucketPolicy', 'AWS::Glacier::Vault']
+  kubernetes:
+  - {group: s3.services.k8s.aws, kind: Bucket}
+traits:
+- {id: proprietary-api, level: low, reason: 'The S3 API is a de facto standard implemented by MinIO, Ceph RGW, Garage and most European providers.'}
+- {id: data-gravity, level: medium, reason: Large object volumes make migration slow and egress fees scale with stored data.}
+rules:
+- id: aws.s3.event-notifications
+  match:
+    resource_type: [aws_s3_bucket_notification]
+  then: {add_trait: proprietary-event-model, level: medium, evidence: bucket}
+- id: aws.s3.object-lambda
+  match:
+    resource_type: [aws_s3control_object_lambda_access_point]
+  then: {add_trait: managed-only-feature, level: medium, evidence: configuration}
+- id: aws.s3.multi-region-access-point
+  match:
+    resource_type: [aws_s3control_multi_region_access_point]
+  then: {add_trait: managed-only-feature, level: medium, evidence: details}
+- id: aws.s3.intelligent-tiering
+  match:
+    resource_type: [aws_s3_bucket_intelligent_tiering_configuration]
+  then: {add_trait: managed-only-feature, level: low, evidence: tiering}
+- id: aws.s3.glacier-vault
+  match:
+    resource_type: [aws_glacier_vault]
+  then: {add_trait: data-gravity, level: high, evidence: name}
+- id: aws.s3.express-directory-bucket
+  match:
+    resource_type: [aws_s3_directory_bucket]
+  then: {add_trait: managed-only-feature, level: medium, evidence: location}
+- id: aws.s3.archive-transition
+  match:
+    resource_type: [aws_s3_bucket_lifecycle_configuration]
+  when: {attr: rule.transition.storage_class, in: [GLACIER, DEEP_ARCHIVE]}
+  then: {add_trait: data-gravity, level: high, evidence: rule.transition.storage_class}
+- id: aws.s3.object-lock-compliance
+  match:
+    resource_type: [aws_s3_bucket_object_lock_configuration]
+  when: {attr: rule.default_retention.mode, equals: COMPLIANCE}
+  then: {add_trait: data-gravity, level: high, evidence: rule.default_retention.mode}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-s3', '@aws-sdk/lib-storage', '@aws-sdk/s3-request-presigner', '@aws-sdk/s3-presigned-post', '@aws-sdk/client-s3-control']
+  imports: ['[''"]@aws-sdk/(client-s3|lib-storage|s3-request-presigner|s3-presigned-post|client-s3-control)[''"/]']
+  usage: ['\bAWS\.(S3|S3Control)\b']
+  gate: [aws-sdk]
+  trait: {id: proprietary-sdk, level: low, reason: S3 SDK clients also work against S3-compatible stores by changing the endpoint.}
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["''](s3|s3control)["'']']
+  gate: [boto3, aioboto3]
+  trait: {id: proprietary-sdk, level: low, reason: S3 SDK clients also work against S3-compatible stores by changing the endpoint.}
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/s3, github.com/aws/aws-sdk-go-v2/service/s3control, github.com/aws/aws-sdk-go-v2/feature/s3/manager]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/(s3|s3control)(/[^"]*)?"', '"github\.com/aws/aws-sdk-go-v2/feature/s3/[^"]+"']
+  trait: {id: proprietary-sdk, level: low, reason: S3 SDK clients also work against S3-compatible stores by changing the endpoint.}
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:s3', 'software.amazon.awssdk:s3-transfer-manager', 'software.amazon.awssdk:s3control', 'com.amazonaws:aws-java-sdk-s3']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.(services\.(s3|s3control)|transfer\.s3)\.', '^\s*import\s+(static\s+)?com\.amazonaws\.services\.s3\.']
+  trait: {id: proprietary-sdk, level: low, reason: S3 SDK clients also work against S3-compatible stores by changing the endpoint.}
+- ecosystem: nuget
+  packages: [AWSSDK.S3, AWSSDK.S3Control]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.(S3|S3Control)\b']
+  trait: {id: proprietary-sdk, level: low, reason: S3 SDK clients also work against S3-compatible stores by changing the endpoint.}
+- ecosystem: rubygems
+  packages: [aws-sdk-s3, aws-sdk-s3control]
+  imports: ['^\s*require\s+["'']aws-sdk-(s3|s3control)["'']']
+  usage: ['(?i)\bAws::(s3|s3control)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-s3, aws-sdk-s3control]
+  imports: ['\baws_sdk_(s3|s3control)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(s3|s3control)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_s3_bucket_policy, attribute: bucket, edge_kind: binding}
+- {resource_type: aws_s3_bucket_versioning, attribute: bucket, edge_kind: containment}
+- {resource_type: aws_s3_bucket_lifecycle_configuration, attribute: bucket, edge_kind: containment}
+- {resource_type: aws_s3_bucket_server_side_encryption_configuration, attribute: bucket, edge_kind: containment}
+- {resource_type: aws_s3_bucket_public_access_block, attribute: bucket, edge_kind: containment}
+- {resource_type: aws_s3_bucket_notification, attribute: bucket, edge_kind: containment}
+- {resource_type: aws_s3_bucket_notification, attribute: lambda_function.lambda_function_arn, edge_kind: data-flow}
+- {resource_type: aws_s3_bucket_notification, attribute: queue.queue_arn, edge_kind: data-flow}
+- {resource_type: aws_s3_bucket_notification, attribute: topic.topic_arn, edge_kind: data-flow}
+- {resource_type: aws_s3_bucket_replication_configuration, attribute: rule.destination.bucket, edge_kind: data-flow}
+- {resource_type: aws_s3_bucket_logging, attribute: target_bucket, edge_kind: data-flow}
+- {resource_type: aws_s3_object, attribute: bucket, edge_kind: containment}
+- {resource_type: aws_s3_access_point, attribute: bucket, edge_kind: containment}
+alternatives:
+- {ref: minio, difficulty: low, compatibility: api-compatible, notes: 'S3-compatible server; most SDK code only needs a new endpoint. Bucket notifications and IAM policies need reconfiguration.', approved_by: cloudowski}
+- {ref: ceph, difficulty: low, compatibility: api-compatible, notes: Ceph RGW implements the S3 API; operating a Ceph cluster requires storage expertise., approved_by: cloudowski}
+- {ref: garage, difficulty: low, compatibility: api-compatible, notes: 'Lightweight geo-distributed S3-compatible store; implements a subset of the API (no object lock, limited ACLs).', approved_by: cloudowski}
+- {ref: seaweedfs, difficulty: low, compatibility: api-compatible, notes: SeaweedFS S3 gateway serves buckets on top of its distributed file store., approved_by: cloudowski}
+- {ref: ovhcloud, difficulty: low, compatibility: api-compatible, notes: OVHcloud Object Storage exposes an S3-compatible API., approved_by: cloudowski}
+- {ref: scaleway, difficulty: low, compatibility: api-compatible, notes: Scaleway Object Storage exposes an S3-compatible API including lifecycle rules., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

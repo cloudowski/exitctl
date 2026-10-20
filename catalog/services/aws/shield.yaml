@@ -1,0 +1,61 @@
+schema: '1.0'
+kind: service
+id: aws.shield
+provider: aws
+name: AWS Shield
+category: network
+resource_types:
+  terraform: [aws_shield_protection, aws_shield_protection_group, aws_shield_protection_health_check_association, aws_shield_drt_access_role_arn_association, aws_shield_drt_access_log_bucket_association, aws_shield_application_layer_automatic_response, aws_shield_proactive_engagement, aws_shield_subscription]
+  cloudformation: ['AWS::Shield::Protection', 'AWS::Shield::ProtectionGroup', 'AWS::Shield::DRTAccess', 'AWS::Shield::ProactiveEngagement']
+traits:
+- {id: managed-only-feature, level: medium, reason: 'DDoS protection is tied to AWS edge and resources; other providers include network DDoS mitigation with different coverage.'}
+rules:
+- id: aws.shield.advanced-subscription
+  match:
+    resource_type: [aws_shield_subscription]
+  then: {add_trait: managed-only-feature, level: medium, evidence: auto_renew}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-shield']
+  imports: ['[''"]@aws-sdk/client-shield[''"/]']
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["'']shield["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/shield]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/shield(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:shield']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.shield\.']
+- ecosystem: nuget
+  packages: [AWSSDK.Shield]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.Shield\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-shield]
+  imports: ['^\s*require\s+["'']aws-sdk-(shield)["'']']
+  usage: ['(?i)\bAws::(shield)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-shield]
+  imports: ['\baws_sdk_(shield)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(shield)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_shield_protection, attribute: resource_arn, edge_kind: binding}
+- {resource_type: aws_shield_protection_group, attribute: members, edge_kind: binding}
+- {resource_type: aws_shield_protection_health_check_association, attribute: shield_protection_id, edge_kind: binding}
+- {resource_type: aws_shield_protection_health_check_association, attribute: health_check_arn, edge_kind: reference}
+- {resource_type: aws_shield_application_layer_automatic_response, attribute: resource_arn, edge_kind: binding}
+alternatives:
+- {ref: ovhcloud, difficulty: low, compatibility: conceptual, notes: OVHcloud includes network anti-DDoS mitigation on its services., approved_by: cloudowski}
+- {ref: hetzner, difficulty: low, compatibility: conceptual, notes: Hetzner includes automatic DDoS protection for its cloud and dedicated servers., approved_by: cloudowski}
+- {ref: ionos, difficulty: low, compatibility: conceptual, notes: IONOS Cloud offers DDoS protection for its infrastructure services., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/waf/latest/developerguide/shield-chapter.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/shield_protection']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

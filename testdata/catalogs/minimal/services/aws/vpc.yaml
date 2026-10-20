@@ -1,0 +1,26 @@
+schema: "1.0"
+kind: service
+id: aws.vpc
+provider: aws
+name: Amazon VPC
+category: network
+resource_types:
+  terraform: [aws_vpc, aws_subnet, aws_security_group]
+traits:
+  - id: provider-network-construct
+    level: low
+    reason: Network topology is recreated declaratively on any platform.
+edge_hints:
+  - { resource_type: "*", attribute: vpc_id, edge_kind: containment }
+  - { resource_type: "*", attribute: subnet_id, edge_kind: containment }
+  - { resource_type: "*", attribute: subnet_ids, edge_kind: containment }
+  - { resource_type: "*", attribute: security_group_ids, edge_kind: containment }
+alternatives:
+  - { ref: ovhcloud, difficulty: medium, compatibility: conceptual, approved_by: cloudowski }
+provenance:
+  origin: maintainer
+  author: cloudowski
+  status: verified
+  reviewed_by: cloudowski
+  reviewed_on: 2026-10-06
+  sources: []

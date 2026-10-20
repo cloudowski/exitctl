@@ -1,0 +1,67 @@
+schema: '1.0'
+kind: service
+id: gcp.compute-engine
+provider: gcp
+name: Compute Engine
+category: compute
+resource_types:
+  terraform: [google_compute_instance, google_compute_instance_template, google_compute_region_instance_template, google_compute_instance_from_template, google_compute_instance_from_machine_image, google_compute_instance_group, google_compute_instance_group_manager, google_compute_region_instance_group_manager, google_compute_instance_group_named_port, google_compute_autoscaler, google_compute_region_autoscaler, google_compute_per_instance_config, google_compute_region_per_instance_config, google_compute_image, google_compute_machine_image, google_compute_attached_disk, google_compute_reservation, google_compute_node_template, google_compute_node_group, google_compute_project_metadata, google_compute_project_metadata_item, google_os_login_ssh_public_key, google_compute_instance_iam_binding, google_compute_instance_iam_member, google_compute_instance_iam_policy, google_compute_image_iam_binding, google_compute_image_iam_member, google_compute_image_iam_policy, google_compute_machine_image_iam_binding, google_compute_machine_image_iam_member, google_compute_machine_image_iam_policy, google_tpu_v2_vm, google_tpu_v2_queued_resource, google_tpu_node]
+  kubernetes:
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeInstance}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeInstanceTemplate}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeInstanceGroup}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeInstanceGroupManager}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeImage}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeProjectMetadata}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeReservation}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeNodeGroup}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeNodeTemplate}
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'VMs run standard operating systems; images, metadata, OS Login and instance groups are Google-specific.'}
+- {id: provider-network-construct, level: low, reason: Instances attach to Google VPC networks and use Google firewall and metadata services.}
+rules:
+- id: gcp.compute-engine.tpu
+  match:
+    resource_type: [google_tpu_v2_vm, google_tpu_v2_queued_resource, google_tpu_node]
+  then: {add_trait: provider-accelerator, level: medium, evidence: accelerator_type}
+sdk:
+- ecosystem: npm
+  packages: ['@google-cloud/compute']
+  imports: ['[''"]@google-cloud/(compute)[''"/]']
+- ecosystem: pypi
+  packages: [google-cloud-compute]
+  imports: [^\s*from\s+google\.cloud\s+import\s+.*\b(compute_v1\w*)\b, ^\s*(from|import)\s+google\.cloud\.(compute_v1\w*)\b]
+- ecosystem: go
+  imports: ['"cloud\.google\.com/go/(compute/apiv1)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.google.cloud:google-cloud-compute']
+  imports: ['^\s*import\s+(static\s+)?com\.google\.(cloud\.compute)\b']
+- ecosystem: nuget
+  packages: [Google.Cloud.Compute.V1]
+  imports: ['^\s*using\s+(static\s+)?Google\.Cloud\.(Compute)\b']
+edge_hints:
+- {resource_type: google_compute_instance, attribute: network_interface.network, edge_kind: containment}
+- {resource_type: google_compute_instance, attribute: network_interface.subnetwork, edge_kind: containment}
+- {resource_type: google_compute_instance, attribute: boot_disk.source, edge_kind: binding}
+- {resource_type: google_compute_instance, attribute: attached_disk.source, edge_kind: binding}
+- {resource_type: google_compute_instance, attribute: service_account.email, edge_kind: reference}
+- {resource_type: google_compute_instance_template, attribute: network_interface.network, edge_kind: containment}
+- {resource_type: google_compute_instance_template, attribute: network_interface.subnetwork, edge_kind: containment}
+- {resource_type: google_compute_region_instance_template, attribute: network_interface.subnetwork, edge_kind: containment}
+- {resource_type: google_compute_instance_group_manager, attribute: version.instance_template, edge_kind: reference}
+- {resource_type: google_compute_region_instance_group_manager, attribute: version.instance_template, edge_kind: reference}
+- {resource_type: google_compute_attached_disk, attribute: instance, edge_kind: binding}
+- {resource_type: google_compute_autoscaler, attribute: target, edge_kind: reference}
+alternatives:
+- {ref: hetzner, difficulty: low, compatibility: conceptual, notes: 'Hetzner Cloud servers run the same OS images; templates, autoscaling and metadata scripts need porting.', approved_by: cloudowski}
+- {ref: ovhcloud, difficulty: low, compatibility: conceptual, notes: OVHcloud Public Cloud instances (OpenStack); instance groups map to OpenStack or Terraform constructs., approved_by: cloudowski}
+- {ref: scaleway, difficulty: low, compatibility: conceptual, notes: Scaleway Instances run standard images; startup scripts and metadata usage need adjustment., approved_by: cloudowski}
+- {ref: upcloud, difficulty: low, compatibility: conceptual, notes: UpCloud Cloud Servers run standard images; automation needs a different Terraform provider., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/compute/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

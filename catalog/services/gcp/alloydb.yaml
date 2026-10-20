@@ -1,0 +1,56 @@
+schema: '1.0'
+kind: service
+id: gcp.alloydb
+provider: gcp
+name: AlloyDB for PostgreSQL
+category: database.relational
+resource_types:
+  terraform: [google_alloydb_cluster, google_alloydb_instance, google_alloydb_backup, google_alloydb_user]
+  kubernetes:
+  - {group: alloydb.cnrm.cloud.google.com, kind: AlloyDBCluster}
+  - {group: alloydb.cnrm.cloud.google.com, kind: AlloyDBInstance}
+  - {group: alloydb.cnrm.cloud.google.com, kind: AlloyDBBackup}
+  - {group: alloydb.cnrm.cloud.google.com, kind: AlloyDBUser}
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'PostgreSQL-compatible engine; operations, backups and the connector are Google-specific.'}
+- {id: managed-only-feature, level: medium, reason: 'Columnar engine, disaggregated storage and AlloyDB AI extensions are not available in community PostgreSQL.'}
+- {id: data-gravity, level: medium, reason: 'Data leaves through pg_dump or logical replication with a planned cutover; AlloyDB backups restore only on Google Cloud.'}
+sdk:
+- ecosystem: npm
+  packages: ['@google-cloud/alloydb-connector']
+  imports: ['[''"]@google-cloud/(alloydb-connector)[''"/]']
+- ecosystem: pypi
+  packages: [google-cloud-alloydb-connector, google-cloud-alloydb]
+  imports: [^\s*from\s+google\.cloud\s+import\s+.*\b(alloydb\w*)\b, ^\s*(from|import)\s+google\.cloud\.(alloydb\w*)\b]
+- ecosystem: go
+  packages: [cloud.google.com/go/alloydbconn, cloud.google.com/go/alloydb]
+  imports: ['"cloud\.google\.com/go/(alloydbconn|alloydb)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.google.cloud:alloydb-jdbc-connector', 'com.google.cloud:google-cloud-alloydb']
+  imports: ['^\s*import\s+(static\s+)?com\.google\.(cloud\.alloydb)\b']
+- ecosystem: nuget
+  packages: [Google.Cloud.AlloyDb.V1]
+  imports: ['^\s*using\s+(static\s+)?Google\.Cloud\.(AlloyDb)\b']
+edge_hints:
+- {resource_type: google_alloydb_instance, attribute: cluster, edge_kind: containment}
+- {resource_type: google_alloydb_backup, attribute: cluster_name, edge_kind: containment}
+- {resource_type: google_alloydb_user, attribute: cluster, edge_kind: containment}
+- {resource_type: google_alloydb_cluster, attribute: network_config.network, edge_kind: containment}
+alternatives:
+- ref: postgresql
+  difficulty: low
+  compatibility: api-compatible
+  notes: PostgreSQL wire protocol and SQL; check use of AlloyDB-only extensions and the columnar engine before migrating.
+  residual_traits:
+  - {id: operational-tooling-coupling, level: low, reason: Self-managed PostgreSQL needs own backup and HA tooling.}
+  approved_by: cloudowski
+- {ref: ovhcloud, difficulty: low, compatibility: api-compatible, notes: OVHcloud managed PostgreSQL; AlloyDB-specific extensions are not available., approved_by: cloudowski}
+- {ref: stackit, difficulty: low, compatibility: api-compatible, notes: STACKIT PostgreSQL Flex offers managed PostgreSQL; AlloyDB-specific features are not available., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/alloydb/docs/overview', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/alloydb_cluster']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

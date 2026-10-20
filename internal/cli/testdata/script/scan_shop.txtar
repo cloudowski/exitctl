@@ -1,0 +1,39 @@
+# exitctl scan on the shop-aws fixture prints the one-screen summary (US1).
+exec exitctl scan $FIXTURES/shop-aws --include-drafts --as-of 2026-10-06 --repo-name shop-aws --emoji never --no-color
+stdout '^Offline, read-only scan: '
+stdout 'Lock-in index +[0-9]+/100 +grade [ABCDF]'
+stdout 'economic: not assessed'
+stdout 'Top anchors'
+stdout '1\. aws_dynamodb_table\.orders'
+stdout 'files in 1 component use Amazon DynamoDB SDK'
+stdout '\[R\]|Biggest lever:'
+stdout 'Coverage: '
+stdout 'Explain #1: exitctl explain 1  \|  Report: exitctl report'
+! stdout '🎯'
+stdout 'catalog 2026\.10\.1'
+! stdout 'hunter2'
+exists .exitctl/last-result.json
+exists .exitctl/.gitignore
+! grep hunter2 .exitctl/last-result.json
+
+# at most 24 lines
+exec exitctl scan $FIXTURES/shop-aws --include-drafts --as-of 2026-10-06 --repo-name shop-aws --emoji never --no-color --all
+stdout '^Offline'
+
+# --wide lists every alternative instead of "+N"
+exec exitctl scan $FIXTURES/shop-aws --include-drafts --as-of 2026-10-06 --repo-name shop-aws --emoji never --no-color --wide
+stdout 'ScyllaDB, Apache Cassandra, '
+! stdout 'Apache Cassandra \+[0-9]'
+
+# json output validates as a result document
+exec exitctl scan $FIXTURES/shop-aws --include-drafts --as-of 2026-10-06 --format json --no-store
+stdout '"format": "exitctl.result/v1"'
+
+# an empty directory has nothing to scan (exit 2)
+mkdir empty
+! exec exitctl scan empty
+stdout 'no supported sources found'
+
+# --as-of must be a date
+! exec exitctl scan $FIXTURES/app-only --as-of yesterday
+stderr 'as-of must be YYYY-MM-DD'

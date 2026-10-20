@@ -1,0 +1,15 @@
+schema: "1.0"
+kind: trait
+id: proprietary-data-model
+name: Proprietary data model
+level: medium
+dimensions: [data, technical]
+explanation: Data is shaped around provider-specific modeling constraints such as key design and item size limits.
+exit_hint: Export data and remodel it for the target engine.
+provenance:
+  origin: maintainer
+  author: cloudowski
+  status: verified
+  reviewed_by: cloudowski
+  reviewed_on: 2026-10-06
+  sources: []

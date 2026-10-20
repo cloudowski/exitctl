@@ -1,0 +1,57 @@
+schema: '1.0'
+kind: service
+id: aws.amplify
+provider: aws
+name: AWS Amplify
+category: devops.ci
+resource_types:
+  terraform: [aws_amplify_app, aws_amplify_branch, aws_amplify_domain_association, aws_amplify_webhook, aws_amplify_backend_environment]
+  cloudformation: ['AWS::Amplify::App', 'AWS::Amplify::Branch', 'AWS::Amplify::Domain']
+traits:
+- {id: operational-tooling-coupling, level: medium, reason: 'Hosting, build settings and branch previews are Amplify-specific; the built frontend is static or SSR output that can be hosted elsewhere.'}
+- {id: proprietary-sdk, level: medium, reason: 'Amplify libraries tie frontend code to Cognito, AppSync and S3 backends through Amplify-specific APIs.'}
+sdk:
+- ecosystem: npm
+  packages: ['aws-amplify', '@aws-amplify/*', '@aws-sdk/client-amplify']
+  imports: ['[''"]aws-amplify(/[^''"]*)?[''"]', '[''"]@aws-amplify/[^''"]+[''"]', '[''"]@aws-sdk/client-amplify[''"/]']
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["'']amplify["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/amplify]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/amplify(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:amplify', 'com.amplifyframework:*']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.amplify\.', '^\s*import\s+(static\s+)?com\.amplifyframework\.']
+- ecosystem: nuget
+  packages: [AWSSDK.Amplify]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.Amplify\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-amplify]
+  imports: ['^\s*require\s+["'']aws-sdk-(amplify)["'']']
+  usage: ['(?i)\bAws::(amplify)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-amplify]
+  imports: ['\baws_sdk_(amplify)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(amplify)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_amplify_branch, attribute: app_id, edge_kind: containment}
+- {resource_type: aws_amplify_domain_association, attribute: app_id, edge_kind: containment}
+- {resource_type: aws_amplify_webhook, attribute: app_id, edge_kind: containment}
+- {resource_type: aws_amplify_backend_environment, attribute: app_id, edge_kind: containment}
+- {resource_type: aws_amplify_app, attribute: iam_service_role_arn, edge_kind: binding}
+alternatives:
+- {ref: nginx, difficulty: low, compatibility: conceptual, notes: 'Static builds are served by NGINX or any web server; SSR apps run as containers.', approved_by: cloudowski}
+- {ref: woodpecker, difficulty: low, compatibility: conceptual, notes: 'Woodpecker CI builds and deploys the frontend on push, replacing Amplify build settings.', approved_by: cloudowski}
+- {ref: forgejo, difficulty: low, compatibility: conceptual, notes: Forgejo Actions builds the site and Forgejo Pages can host static output., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/amplify/latest/userguide/welcome.html', 'https://docs.amplify.aws/', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/amplify_app']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

@@ -1,0 +1,93 @@
+schema: '1.0'
+kind: service
+id: aws.sagemaker
+provider: aws
+name: Amazon SageMaker AI
+category: ai-ml
+resource_types:
+  terraform: [aws_sagemaker_model, aws_sagemaker_endpoint, aws_sagemaker_endpoint_configuration, aws_sagemaker_notebook_instance, aws_sagemaker_notebook_instance_lifecycle_configuration, aws_sagemaker_domain, aws_sagemaker_user_profile, aws_sagemaker_space, aws_sagemaker_app, aws_sagemaker_app_image_config, aws_sagemaker_image, aws_sagemaker_image_version, aws_sagemaker_studio_lifecycle_config, aws_sagemaker_code_repository, aws_sagemaker_feature_group, aws_sagemaker_model_package_group, aws_sagemaker_model_package_group_policy, aws_sagemaker_pipeline, aws_sagemaker_project, aws_sagemaker_workforce, aws_sagemaker_workteam, aws_sagemaker_flow_definition, aws_sagemaker_human_task_ui, aws_sagemaker_data_quality_job_definition, aws_sagemaker_monitoring_schedule, aws_sagemaker_device, aws_sagemaker_device_fleet, aws_sagemaker_servicecatalog_portfolio_status, aws_sagemaker_mlflow_tracking_server, aws_sagemaker_hub]
+  cloudformation: ['AWS::SageMaker::Model', 'AWS::SageMaker::Endpoint', 'AWS::SageMaker::EndpointConfig', 'AWS::SageMaker::NotebookInstance', 'AWS::SageMaker::NotebookInstanceLifecycleConfig', 'AWS::SageMaker::Domain', 'AWS::SageMaker::UserProfile', 'AWS::SageMaker::Space', 'AWS::SageMaker::App', 'AWS::SageMaker::AppImageConfig', 'AWS::SageMaker::Image', 'AWS::SageMaker::ImageVersion', 'AWS::SageMaker::CodeRepository', 'AWS::SageMaker::FeatureGroup', 'AWS::SageMaker::ModelPackage', 'AWS::SageMaker::ModelPackageGroup', 'AWS::SageMaker::Pipeline', 'AWS::SageMaker::Project', 'AWS::SageMaker::Workteam', 'AWS::SageMaker::DataQualityJobDefinition', 'AWS::SageMaker::ModelQualityJobDefinition', 'AWS::SageMaker::MonitoringSchedule', 'AWS::SageMaker::InferenceComponent', 'AWS::SageMaker::MlflowTrackingServer', 'AWS::SageMaker::Cluster']
+  kubernetes:
+  - {group: sagemaker.services.k8s.aws, kind: Model}
+  - {group: sagemaker.services.k8s.aws, kind: Endpoint}
+  - {group: sagemaker.services.k8s.aws, kind: EndpointConfig}
+  - {group: sagemaker.services.k8s.aws, kind: TrainingJob}
+  - {group: sagemaker.services.k8s.aws, kind: ProcessingJob}
+  - {group: sagemaker.services.k8s.aws, kind: TransformJob}
+  - {group: sagemaker.services.k8s.aws, kind: HyperParameterTuningJob}
+  - {group: sagemaker.services.k8s.aws, kind: FeatureGroup}
+  - {group: sagemaker.services.k8s.aws, kind: ModelPackage}
+  - {group: sagemaker.services.k8s.aws, kind: ModelPackageGroup}
+  - {group: sagemaker.services.k8s.aws, kind: MonitoringSchedule}
+  - {group: sagemaker.services.k8s.aws, kind: NotebookInstance}
+traits:
+- {id: proprietary-sdk, level: medium, reason: 'Training and inference code uses the SageMaker Python SDK, estimators and container contracts specific to SageMaker.'}
+- {id: operational-tooling-coupling, level: medium, reason: 'Pipelines, model registry, feature store and endpoints are SageMaker objects; models themselves are portable artifacts.'}
+rules:
+- id: aws.sagemaker.pipelines
+  match:
+    resource_type: [aws_sagemaker_pipeline]
+  then: {add_trait: proprietary-workflow-definition, level: medium, evidence: pipeline_definition}
+- id: aws.sagemaker.feature-store
+  match:
+    resource_type: [aws_sagemaker_feature_group]
+  then: {add_trait: data-gravity, level: medium, evidence: offline_store_config}
+- id: aws.sagemaker.neuron-endpoint
+  match:
+    resource_type: [aws_sagemaker_endpoint_configuration]
+  when: {attr: production_variants.instance_type, matches: '^ml\.(inf|trn)[0-9]'}
+  then: {add_trait: provider-accelerator, level: medium, evidence: production_variants.instance_type}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-sagemaker', '@aws-sdk/client-sagemaker-runtime', '@aws-sdk/client-sagemaker-featurestore-runtime']
+  imports: ['[''"]@aws-sdk/client-sagemaker(-runtime|-featurestore-runtime)?[''"/]']
+  usage: ['\bAWS\.(SageMaker|SageMakerRuntime)\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  packages: [sagemaker, sagemaker-core, sagemaker-training, sagemaker-inference]
+  imports: ['^\s*(from|import)\s+(sagemaker|sagemaker_core|sagemaker_training|sagemaker_inference)\b']
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["''](sagemaker|sagemaker-runtime|sagemaker-featurestore-runtime)["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/sagemaker, github.com/aws/aws-sdk-go-v2/service/sagemakerruntime]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/(sagemaker|sagemakerruntime|sagemakerfeaturestoreruntime)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:sagemaker', 'software.amazon.awssdk:sagemakerruntime', 'software.amazon.awssdk:sagemakerfeaturestoreruntime']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.(sagemaker|sagemakerruntime|sagemakerfeaturestoreruntime)\.']
+- ecosystem: nuget
+  packages: [AWSSDK.SageMaker, AWSSDK.SageMakerRuntime, AWSSDK.SageMakerFeatureStoreRuntime]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.(SageMaker|SageMakerRuntime|SageMakerFeatureStoreRuntime)\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-sagemaker, aws-sdk-sagemakerruntime]
+  imports: ['^\s*require\s+["'']aws-sdk-(sagemaker|sagemakerruntime)["'']']
+  usage: ['(?i)\bAws::(sagemaker|sagemakerruntime)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-sagemaker, aws-sdk-sagemakerruntime]
+  imports: ['\baws_sdk_(sagemaker|sagemakerruntime)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(sagemaker|sagemakerruntime)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_sagemaker_endpoint, attribute: endpoint_config_name, edge_kind: reference}
+- {resource_type: aws_sagemaker_endpoint_configuration, attribute: production_variants.model_name, edge_kind: reference}
+- {resource_type: aws_sagemaker_model, attribute: execution_role_arn, edge_kind: binding}
+- {resource_type: aws_sagemaker_model, attribute: primary_container.model_data_url, edge_kind: data-flow}
+- {resource_type: aws_sagemaker_model, attribute: primary_container.image, edge_kind: reference}
+- {resource_type: aws_sagemaker_notebook_instance, attribute: role_arn, edge_kind: binding}
+- {resource_type: aws_sagemaker_notebook_instance, attribute: subnet_id, edge_kind: containment}
+- {resource_type: aws_sagemaker_domain, attribute: subnet_ids, edge_kind: containment}
+- {resource_type: aws_sagemaker_user_profile, attribute: domain_id, edge_kind: containment}
+- {resource_type: aws_sagemaker_feature_group, attribute: offline_store_config.s3_storage_config.s3_uri, edge_kind: data-flow}
+alternatives:
+- {ref: mlflow, difficulty: medium, compatibility: conceptual, notes: 'MLflow covers experiment tracking, model registry and serving; training orchestration needs separate tooling.', approved_by: cloudowski}
+- {ref: kubernetes, difficulty: high, compatibility: conceptual, notes: 'Training and inference run as Kubernetes jobs and deployments (e.g. Kubeflow, KServe); SDK code is rewritten.', approved_by: cloudowski}
+- {ref: vllm, difficulty: medium, compatibility: conceptual, notes: 'vLLM serves LLM inference on GPUs with an OpenAI-compatible API, replacing LLM endpoints.', approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/sagemaker/latest/dg/whatis.html', 'https://sagemaker.readthedocs.io/en/stable/', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sagemaker_model']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

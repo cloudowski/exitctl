@@ -1,0 +1,79 @@
+schema: '1.0'
+kind: service
+id: aws.msk
+provider: aws
+name: Amazon Managed Streaming for Apache Kafka (MSK)
+category: messaging.stream
+resource_types:
+  terraform: [aws_msk_cluster, aws_msk_serverless_cluster, aws_msk_configuration, aws_msk_scram_secret_association, aws_msk_single_scram_secret_association, aws_msk_replicator, aws_msk_vpc_connection, aws_msk_cluster_policy, aws_mskconnect_connector, aws_mskconnect_custom_plugin, aws_mskconnect_worker_configuration]
+  cloudformation: ['AWS::MSK::Cluster', 'AWS::MSK::ServerlessCluster', 'AWS::MSK::Configuration', 'AWS::MSK::BatchScramSecret', 'AWS::MSK::Replicator', 'AWS::MSK::VpcConnection', 'AWS::MSK::ClusterPolicy', 'AWS::KafkaConnect::Connector', 'AWS::KafkaConnect::CustomPlugin', 'AWS::KafkaConnect::WorkerConfiguration']
+  kubernetes:
+  - {group: kafka.services.k8s.aws, kind: Cluster}
+  - {group: kafka.services.k8s.aws, kind: ServerlessCluster}
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'Clusters run Apache Kafka with the standard protocol; provisioning, scaling and Connect deployment use MSK tooling.'}
+rules:
+- id: aws.msk.iam-auth
+  match:
+    resource_type: [aws_msk_cluster]
+  when: {attr: client_authentication.sasl.iam, equals: true}
+  then: {add_trait: proprietary-iam-model, level: medium, evidence: client_authentication.sasl.iam}
+- id: aws.msk.serverless
+  match:
+    resource_type: [aws_msk_serverless_cluster]
+  then: {add_trait: proprietary-iam-model, level: medium, evidence: client_authentication}
+- id: aws.msk.replicator
+  match:
+    resource_type: [aws_msk_replicator]
+  then: {add_trait: managed-only-feature, level: low, evidence: kafka_cluster}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-kafka', '@aws-sdk/client-kafkaconnect', 'aws-msk-iam-sasl-signer-js']
+  imports: ['[''"]@aws-sdk/client-(kafka|kafkaconnect)[''"/]', '[''"]aws-msk-iam-sasl-signer-js[''"]']
+  usage: ['\bAWS\.Kafka\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  packages: [aws-msk-iam-sasl-signer-python]
+  imports: ['^\s*(from|import)\s+aws_msk_iam_sasl_signer\b']
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["''](kafka|kafkaconnect)["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/kafka, github.com/aws/aws-sdk-go-v2/service/kafkaconnect, github.com/aws/aws-msk-iam-sasl-signer-go]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/(kafka|kafkaconnect)(/[^"]*)?"', '"github\.com/aws/aws-msk-iam-sasl-signer-go/[^"]+"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:kafka', 'software.amazon.awssdk:kafkaconnect', 'software.amazon.msk:aws-msk-iam-auth']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.(kafka|kafkaconnect)\.', '^\s*import\s+(static\s+)?software\.amazon\.msk\.auth\.']
+- ecosystem: nuget
+  packages: [AWSSDK.Kafka, AWSSDK.KafkaConnect, AWS.MSK.Auth]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.(Kafka|KafkaConnect)\b', '^\s*using\s+(static\s+)?AWS\.MSK\.Auth\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-kafka, aws-sdk-kafkaconnect]
+  imports: ['^\s*require\s+["'']aws-sdk-(kafka|kafkaconnect)["'']']
+  usage: ['(?i)\bAws::(kafka|kafkaconnect)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-kafka, aws-sdk-kafkaconnect]
+  imports: ['\baws_sdk_(kafka|kafkaconnect)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(kafka|kafkaconnect)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_msk_cluster, attribute: broker_node_group_info.client_subnets, edge_kind: containment}
+- {resource_type: aws_msk_cluster, attribute: broker_node_group_info.security_groups, edge_kind: containment}
+- {resource_type: aws_msk_cluster, attribute: configuration_info.arn, edge_kind: reference}
+- {resource_type: aws_msk_serverless_cluster, attribute: vpc_config.subnet_ids, edge_kind: containment}
+- {resource_type: aws_msk_scram_secret_association, attribute: secret_arn_list, edge_kind: binding}
+- {resource_type: aws_mskconnect_connector, attribute: kafka_cluster.apache_kafka_cluster.bootstrap_servers, edge_kind: data-flow}
+- {resource_type: aws_msk_replicator, attribute: kafka_cluster.amazon_msk_cluster.msk_cluster_arn, edge_kind: data-flow}
+alternatives:
+- {ref: apache-kafka, difficulty: low, compatibility: api-compatible, notes: 'Same Kafka protocol; migrate with MirrorMaker 2. IAM SASL auth must change to SCRAM or mTLS.', approved_by: cloudowski}
+- {ref: redpanda, difficulty: low, compatibility: api-compatible, notes: Kafka API compatible engine; clients keep working after auth and bootstrap changes., approved_by: cloudowski}
+- {ref: ovhcloud, difficulty: low, compatibility: api-compatible, notes: OVHcloud Public Cloud Databases include managed Apache Kafka., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/msk/latest/developerguide/what-is-msk.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/msk_cluster', 'https://github.com/aws/aws-msk-iam-auth']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

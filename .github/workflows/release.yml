@@ -1,0 +1,40 @@
+# Release: runs when a tag "vX.Y.Z" is pushed. Builds linux/darwin x amd64/arm64 with
+# GoReleaser, then publishes archives and checksums.txt as a GitHub release.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  # Keyless cosign signing: GitHub issues an OIDC token for this workflow run.
+  id-token: write
+
+env:
+  GOTOOLCHAIN: local
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # GoReleaser needs the full history and tags for the changelog.
+          fetch-depth: 0
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: sigstore/cosign-installer@v4.1.2
+      # syft generates the SBOM of every archive (see "sboms" in .goreleaser.yaml).
+      - uses: anchore/sbom-action/download-syft@v0
+      - uses: goreleaser/goreleaser-action@v7
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Fine-grained token with "Contents: read and write" on cloudowski/homebrew-tap only.
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}

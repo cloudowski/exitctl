@@ -1,0 +1,20 @@
+schema: '1.0'
+kind: trait
+id: managed-only-feature
+name: Managed-only feature
+level: medium
+dimensions:
+- technical
+- operational
+explanation: A feature is available only in the provider's managed offering and has no equivalent in open source or other providers.
+exit_hint: Check whether the feature is essential; if so, plan to rebuild it with application logic or extra components.
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.aws.amazon.com/
+  - https://cloud.google.com/docs
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

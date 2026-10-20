@@ -1,0 +1,95 @@
+schema: '1.0'
+kind: service
+id: oci.autonomous-database
+provider: oci
+name: Oracle Autonomous Database
+category: database.relational
+resource_types:
+  terraform:
+  - oci_database_autonomous_database
+  - oci_database_autonomous_database_backup
+  - oci_database_autonomous_database_wallet
+  - oci_database_autonomous_database_instance_wallet_management
+  - oci_database_autonomous_database_regional_wallet_management
+  - oci_database_autonomous_database_saas_admin_user
+  - oci_database_autonomous_database_software_image
+  - oci_database_autonomous_container_database
+  - oci_database_autonomous_container_database_dataguard_association
+  - oci_database_autonomous_exadata_infrastructure
+  - oci_database_autonomous_vm_cluster
+  - oci_database_cloud_autonomous_vm_cluster
+  kubernetes:
+  - {group: oci.oracle.com, kind: AutonomousDatabases}
+traits:
+- {id: proprietary-query-language, level: high, reason: 'Oracle SQL and PL/SQL packages, sequences and types have no drop-in equivalent outside Oracle Database.'}
+- {id: proprietary-data-model, level: high, reason: 'Oracle-specific types, partitioning and JSON/converged features shape schemas.'}
+- {id: managed-only-feature, level: high, reason: 'Self-tuning, auto-scaling and built-in APEX/ORDS/ML features exist only in the managed service.'}
+- {id: data-gravity, level: high, reason: Large databases need Data Pump export or replication tooling to move.}
+- {id: skills-specialization, level: medium, reason: Operating and tuning Oracle Database needs Oracle-specific skills.}
+rules:
+- id: oci.autonomous-database.json-workload
+  match: {resource_type: [oci_database_autonomous_database]}
+  when: {attr: db_workload, equals: AJD}
+  then: {set_level: {trait: proprietary-query-language, level: medium}, evidence: db_workload}
+- id: oci.autonomous-database.data-guard
+  match: {resource_type: [oci_database_autonomous_database]}
+  when: {attr: is_data_guard_enabled, equals: true}
+  then: {add_trait: operational-tooling-coupling, level: medium, evidence: is_data_guard_enabled}
+sdk:
+- ecosystem: npm
+  packages: [oci-database]
+  imports: ['[''"]oci-database[''"]']
+  usage: ['\bdatabase\.DatabaseClient\b']
+  gate: [oci-sdk]
+- ecosystem: pypi
+  imports: ['^\s*from\s+oci\.database\b', '^\s*from\s+oci\s+import\s+.*\bdatabase\b']
+  usage: ['\boci\.database\.DatabaseClient\b']
+  gate: [oci]
+- ecosystem: go
+  packages: [github.com/oracle/oci-go-sdk/v65/database]
+  imports: ['"github\.com/oracle/oci-go-sdk/v[0-9]+/database(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.oracle.oci.sdk:oci-java-sdk-database']
+  imports: ['^\s*import\s+com\.oracle\.bmc\.database\.']
+- ecosystem: nuget
+  packages: [OCI.DotNetSDK.Database]
+  imports: ['^\s*using\s+Oci\.DatabaseService\b']
+edge_hints:
+- {resource_type: oci_database_autonomous_database, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_database_autonomous_database, attribute: subnet_id, edge_kind: containment}
+- {resource_type: oci_database_autonomous_database, attribute: nsg_ids, edge_kind: binding}
+- {resource_type: oci_database_autonomous_database, attribute: autonomous_container_database_id, edge_kind: containment}
+- {resource_type: oci_database_autonomous_database, attribute: kms_key_id, edge_kind: reference}
+- {resource_type: oci_database_autonomous_database_backup, attribute: autonomous_database_id, edge_kind: containment}
+- {resource_type: oci_database_autonomous_database_wallet, attribute: autonomous_database_id, edge_kind: containment}
+- {resource_type: oci_database_autonomous_container_database, attribute: cloud_autonomous_vm_cluster_id, edge_kind: containment}
+- {resource_type: oci_database_autonomous_container_database, attribute: autonomous_vm_cluster_id, edge_kind: containment}
+- {resource_type: oci_database_cloud_autonomous_vm_cluster, attribute: subnet_id, edge_kind: containment}
+- {resource_type: oci_database_cloud_autonomous_vm_cluster, attribute: cloud_exadata_infrastructure_id, edge_kind: containment}
+alternatives:
+- ref: postgresql
+  difficulty: high
+  compatibility: conceptual
+  notes: Schemas and data migrate with tools such as ora2pg; PL/SQL code and Oracle-specific SQL need rewriting.
+  approved_by: cloudowski
+- ref: mariadb
+  difficulty: high
+  compatibility: conceptual
+  notes: sql_mode=ORACLE accepts parts of PL/SQL syntax; packages, types and many built-ins still need rework.
+  approved_by: cloudowski
+- ref: yugabytedb
+  difficulty: high
+  compatibility: conceptual
+  notes: PostgreSQL-compatible distributed SQL; same PL/SQL rewrite effort as PostgreSQL plus distribution design.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.oracle.com/en-us/iaas/autonomous-database-serverless/doc/autonomous-intro-adb.html
+  - https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/database_autonomous_database
+  - https://github.com/oracle/oci-service-operator
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

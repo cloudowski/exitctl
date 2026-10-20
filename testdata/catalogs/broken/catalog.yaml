@@ -1,0 +1,13 @@
+# broken: a self-contained catalog with exactly five problems (US8, FR-019), one per file:
+#   services/aws/sqs-copy.yaml         duplicate service id aws.sqs
+#   services/aws/unknown-trait.yaml    reference to a trait that does not exist
+#   services/aws/bad-usage.yaml        sdk usage pattern that is not valid RE2
+#   services/aws/self-recommended.yaml recommended: true approved by a non-maintainer
+#   services/aws/no-reason.yaml        trait level override without reason
+# Everything else is valid.
+schema: "1.0"
+kind: catalog
+catalog_version: 2026.10.1
+title: exitctl broken test catalog
+maintainers: [cloudowski]
+neutrality: NEUTRALITY.md

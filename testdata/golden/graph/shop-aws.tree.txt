@@ -1,0 +1,38 @@
+Dependency tree (30 nodes, 25 edges)
+Namespace/_/shop
+action/actions/checkout
+action/aws-actions/amazon-ecr-login
+aws_cognito_user_pool_client.web
+└── aws_cognito_user_pool.main
+aws_lambda_event_source_mapping.events_queue
+├── aws_lambda_function.order_processor
+│   ├── aws_dynamodb_table.orders
+│   ├── aws_iam_role.lambda
+│   ├── aws_security_group.app
+│   │   └── aws_vpc.main
+│   ├── aws_sqs_queue.events
+│   ├── aws_subnet.a
+│   │   └── aws_vpc.main
+│   └── aws_subnet.b
+│       └── aws_vpc.main
+└── aws_sqs_queue.events
+aws_lambda_event_source_mapping.orders_stream
+├── aws_dynamodb_table.orders
+└── aws_lambda_function.order_processor (see above)
+aws_ssm_parameter.db
+component services/orders
+└── aws_dynamodb_table.orders
+image/gcr.io/distroless/nodejs20
+image/public.ecr.aws/docker/library/node:20-alpine
+networking.k8s.io/Ingress/shop/orders-api
+├── Service/shop/orders-api
+│   └── apps/Deployment/shop/orders-api
+│       ├── ConfigMap/shop/orders-config
+│       ├── PersistentVolumeClaim/shop/orders-cache
+│       │   └── storage.k8s.io/StorageClass/_/gp3
+│       │       └── aws.ebs (used by code, not declared)
+│       └── ServiceAccount/shop/orders-api
+│           ├── action/aws-actions/configure-aws-credentials
+│           └── aws_iam_role.lambda
+└── aws.elb (used by code, not declared)
+random_id.suffix (not scored)

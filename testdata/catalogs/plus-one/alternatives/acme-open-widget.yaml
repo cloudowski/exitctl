@@ -1,0 +1,15 @@
+schema: "1.0"
+kind: alternative
+id: acme-open-widget
+name: OpenWidget
+alternative_kind: oss-self-hosted
+license: Apache-2.0
+homepage: https://openwidget.example.org/
+vendor_contributed: false
+provenance:
+  origin: maintainer
+  author: cloudowski
+  status: verified
+  reviewed_by: cloudowski
+  reviewed_on: 2026-10-06
+  sources: []

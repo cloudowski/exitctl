@@ -1,0 +1,85 @@
+# exitctl coverage on the unknowns fixture (US6, FR-037, quickstart V7).
+# Network-free by construction: the remote module and the remote kustomize
+# base are reported as gaps, never fetched. Proxies point nowhere so any
+# attempted fetch would fail loudly.
+env HTTP_PROXY=http://127.0.0.1:9
+env HTTPS_PROXY=http://127.0.0.1:9
+env GOPROXY=off
+
+# Weighted coverage is below the provisional threshold: no grade, range only.
+exec exitctl scan $FIXTURES/unknowns --include-drafts --as-of 2026-10-06 --repo-name unknowns --emoji never --no-color
+stdout '^Offline, read-only scan: 8 Terraform resources, 1 K8s object$'
+stdout '^  Lock-in index range 18-80 - insufficient coverage for a grade \(37%\)$'
+! stdout 'grade [ABCDF]'
+stdout '^  Coverage: 71% of types, 55% of resources \(2 unknown types: exitctl coverage\)$'
+exists .exitctl/last-result.json
+
+# Text view: header, unknown types with resource and dependent counts sorted
+# by dependents, unresolved inputs, and neutral parse failure wording.
+exec exitctl coverage --no-color
+stdout '^Coverage: 71% of types · 55% of resources · 37% weighted$'
+stdout '^  Confidence: withheld - insufficient coverage for a grade  range 18-80$'
+stdout '^Unknown types \(2\)$'
+stdout '^  terraform +resources  dependents  example$'
+stdout '^    acme_widget +2 +5  infra/widgets\.tf:3$'
+stdout '^    exoticcloud_bucket +2 +2  infra/widgets\.tf:13$'
+stdout '^Unresolved inputs \(3\)$'
+stdout '^  module not available offline +terraform-aws-modules/vpc/aws +infra/network\.tf$'
+stdout '^  remote kustomize base not fetched +github\.com/example-org/platform-base//deploy/base\?ref=v1\.4\.0 +k8s/kustomization\.yaml$'
+stdout '^  reference outside the scanned inputs +aws_iam_role\.worker +infra/app\.tf$'
+stdout '^Unverified knowledge \(0 types, 0 resources\)$'
+stdout '^Parse failures \(1\)$'
+stdout '^  infra/broken\.tf \(terraform\): could not be parsed as HCL$'
+! stdout 'Argument|Invalid|expected|token'
+! stderr .
+
+# Order: acme_widget (5 dependents) before exoticcloud_bucket (2).
+exec exitctl coverage --no-color --emoji never
+cmp stdout coverage-text-order.golden
+
+# JSON: the coverage subset with range and confidence, unknown types and
+# nodes with dependents, and the unresolved inputs as gaps.
+exec exitctl coverage --format json
+stdout '"status": "ok"'
+stdout '"confidence": "withheld"'
+stdout '"lower": 18'
+stdout '"upper": 80'
+stdout '"weighted": 0.3796'
+stdout '"unknown_types": 2'
+stdout '"type": "acme_widget",\s*$'
+stdout '"dependents": 5,'
+stdout '"dependents_count": 6,'
+stdout '"kind": "unresolved_module"'
+stdout '"subject": "terraform-aws-modules/vpc/aws"'
+stdout '"kind": "remote_kustomize"'
+stdout '"kind": "unresolved_reference"'
+stdout '"subject": "github.com/example-org/platform-base//deploy/base\?ref=v1.4.0"'
+stdout '"path": "infra/broken.tf",\s+"kind": "terraform",\s+"status": "failed"'
+stdout '"unverified_knowledge": \[\]'
+! stdout '"grade"'
+
+# Bad format and missing input.
+! exec exitctl coverage --format yaml
+stderr 'unknown --format "yaml"'
+! exec exitctl coverage --input missing.json
+stderr 'no result'
+
+-- coverage-text-order.golden --
+Coverage: 71% of types · 55% of resources · 37% weighted
+  Confidence: withheld - insufficient coverage for a grade  range 18-80
+
+Unknown types (2)
+  terraform             resources  dependents  example
+    acme_widget                 2           5  infra/widgets.tf:3
+    exoticcloud_bucket          2           2  infra/widgets.tf:13
+
+Unresolved inputs (3)
+  module not available offline          terraform-aws-modules/vpc/aws                                 infra/network.tf
+  remote kustomize base not fetched     github.com/example-org/platform-base//deploy/base?ref=v1.4.0  k8s/kustomization.yaml
+  reference outside the scanned inputs  aws_iam_role.worker                                           infra/app.tf
+
+Unverified knowledge (0 types, 0 resources)
+  none
+
+Parse failures (1)
+  infra/broken.tf (terraform): could not be parsed as HCL

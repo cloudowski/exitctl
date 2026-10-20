@@ -1,0 +1,90 @@
+schema: '1.0'
+kind: service
+id: oci.mysql-heatwave
+provider: oci
+name: MySQL HeatWave
+category: database.relational
+resource_types:
+  terraform:
+  - oci_mysql_mysql_db_system
+  - oci_mysql_heat_wave_cluster
+  - oci_mysql_mysql_backup
+  - oci_mysql_mysql_configuration
+  - oci_mysql_channel
+  - oci_mysql_replica
+  kubernetes:
+  - {group: oci.oracle.com, kind: MySqlDbSystem}
+traits:
+- {id: proprietary-api, level: low, reason: Applications use the standard MySQL protocol and SQL dialect.}
+- {id: managed-only-feature, level: medium, reason: 'HeatWave in-memory analytics, Lakehouse and AutoML exist only in the OCI service.'}
+- {id: data-gravity, level: medium, reason: Large databases need dump and reload or replication to move.}
+rules:
+- id: oci.mysql-heatwave.heatwave-cluster
+  match: {resource_type: [oci_mysql_heat_wave_cluster]}
+  then: {add_trait: proprietary-query-language, level: medium, evidence: oci_mysql_heat_wave_cluster}
+- id: oci.mysql-heatwave.lakehouse
+  match: {resource_type: [oci_mysql_heat_wave_cluster]}
+  when: {attr: is_lakehouse_enabled, equals: true}
+  then: {set_level: {trait: managed-only-feature, level: high}, evidence: is_lakehouse_enabled}
+sdk:
+- ecosystem: npm
+  packages: [oci-mysql]
+  imports: ['[''"]oci-mysql[''"]']
+  usage: ['\bmysql\.(DbSystemClient|WorkRequestsClient|DbBackupsClient)\b']
+  gate: [oci-sdk]
+- ecosystem: pypi
+  imports: ['^\s*from\s+oci\.mysql\b', '^\s*from\s+oci\s+import\s+.*\bmysql\b']
+  usage: ['\boci\.mysql\.\w+Client\b']
+  gate: [oci]
+- ecosystem: go
+  packages: [github.com/oracle/oci-go-sdk/v65/mysql]
+  imports: ['"github\.com/oracle/oci-go-sdk/v[0-9]+/mysql(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.oracle.oci.sdk:oci-java-sdk-mysql']
+  imports: ['^\s*import\s+com\.oracle\.bmc\.mysql\.']
+- ecosystem: nuget
+  packages: [OCI.DotNetSDK.Mysql]
+  imports: ['^\s*using\s+Oci\.MysqlService\b']
+edge_hints:
+- {resource_type: oci_mysql_mysql_db_system, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_mysql_mysql_db_system, attribute: subnet_id, edge_kind: containment}
+- {resource_type: oci_mysql_mysql_db_system, attribute: nsg_ids, edge_kind: binding}
+- {resource_type: oci_mysql_mysql_db_system, attribute: configuration_id, edge_kind: binding}
+- {resource_type: oci_mysql_heat_wave_cluster, attribute: db_system_id, edge_kind: containment}
+- {resource_type: oci_mysql_mysql_backup, attribute: db_system_id, edge_kind: containment}
+- {resource_type: oci_mysql_replica, attribute: db_system_id, edge_kind: containment}
+- {resource_type: oci_mysql_channel, attribute: target.db_system_id, edge_kind: binding}
+alternatives:
+- ref: mysql
+  difficulty: low
+  compatibility: api-compatible
+  notes: Same engine and protocol; HeatWave analytics queries need another engine or run slower on InnoDB.
+  residual_traits:
+  - {id: data-gravity, level: low, reason: Data still has to be dumped or replicated out once.}
+  approved_by: cloudowski
+- ref: mariadb
+  difficulty: medium
+  compatibility: protocol-compatible
+  notes: MySQL protocol compatible; check MySQL 8 specific features and JSON functions.
+  approved_by: cloudowski
+- ref: clickhouse
+  difficulty: medium
+  compatibility: conceptual
+  notes: Can replace HeatWave analytics on replicated MySQL data; queries need ClickHouse SQL review.
+  approved_by: cloudowski
+- ref: ovhcloud
+  difficulty: low
+  compatibility: api-compatible
+  notes: Managed MySQL on OVHcloud Public Cloud Databases; no HeatWave analytics layer.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.oracle.com/en-us/iaas/mysql-database/doc/overview-mysql-heatwave.html
+  - https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/mysql_mysql_db_system
+  - https://github.com/oracle/oci-service-operator
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

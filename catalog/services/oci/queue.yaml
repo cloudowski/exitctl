@@ -1,0 +1,59 @@
+schema: '1.0'
+kind: service
+id: oci.queue
+provider: oci
+name: OCI Queue
+category: messaging.queue
+resource_types:
+  terraform:
+  - oci_queue_queue
+traits:
+- {id: proprietary-api, level: medium, reason: Messages are sent and received through the OCI Queue REST API or SDKs; STOMP is the only open protocol offered.}
+sdk:
+- ecosystem: npm
+  packages: [oci-queue]
+  imports: ['[''"]oci-queue[''"]']
+  usage: ['\bqueue\.(QueueClient|QueueAdminClient)\b']
+  gate: [oci-sdk]
+- ecosystem: pypi
+  imports: ['^\s*from\s+oci\.queue\b', '^\s*from\s+oci\s+import\s+.*\bqueue\b']
+  usage: ['\boci\.queue\.(QueueClient|QueueAdminClient)\b']
+  gate: [oci]
+- ecosystem: go
+  packages: [github.com/oracle/oci-go-sdk/v65/queue]
+  imports: ['"github\.com/oracle/oci-go-sdk/v[0-9]+/queue(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.oracle.oci.sdk:oci-java-sdk-queue']
+  imports: ['^\s*import\s+com\.oracle\.bmc\.queue\.']
+- ecosystem: nuget
+  packages: [OCI.DotNetSDK.Queue]
+  imports: ['^\s*using\s+Oci\.QueueService\b']
+edge_hints:
+- {resource_type: oci_queue_queue, attribute: compartment_id, edge_kind: containment}
+- {resource_type: oci_queue_queue, attribute: custom_encryption_key_id, edge_kind: reference}
+alternatives:
+- ref: rabbitmq
+  difficulty: medium
+  compatibility: conceptual
+  notes: Queues with visibility-like acks and dead-lettering; producers and consumers move to AMQP or STOMP clients.
+  approved_by: cloudowski
+- ref: nats
+  difficulty: medium
+  compatibility: conceptual
+  notes: JetStream work-queue streams replace queues; client code is rewritten.
+  approved_by: cloudowski
+- ref: valkey
+  difficulty: medium
+  compatibility: conceptual
+  notes: Lists or streams can back simple queues; delivery guarantees must be rebuilt in code.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://docs.oracle.com/en-us/iaas/Content/queue/home.htm
+  - https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/queue_queue
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

@@ -1,0 +1,64 @@
+schema: '1.0'
+kind: service
+id: aws.batch
+provider: aws
+name: AWS Batch
+category: compute.container
+resource_types:
+  terraform: [aws_batch_compute_environment, aws_batch_job_definition, aws_batch_job_queue, aws_batch_scheduling_policy]
+  cloudformation: ['AWS::Batch::ComputeEnvironment', 'AWS::Batch::JobDefinition', 'AWS::Batch::JobQueue', 'AWS::Batch::SchedulingPolicy', 'AWS::Batch::ConsumableResource']
+traits:
+- {id: operational-tooling-coupling, level: medium, reason: 'Jobs run containers, but job definitions, queues and compute environments are Batch-specific.'}
+rules:
+- id: aws.batch.fargate
+  match:
+    resource_type: [aws_batch_compute_environment]
+  when: {attr: compute_resources.type, in: [FARGATE, FARGATE_SPOT]}
+  then: {add_trait: managed-only-feature, level: low, evidence: compute_resources.type}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-batch']
+  imports: ['[''"]@aws-sdk/client-batch[''"/]']
+  usage: ['\bAWS\.Batch\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["'']batch["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/batch]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/batch(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:batch']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.batch\.']
+- ecosystem: nuget
+  packages: [AWSSDK.Batch]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.Batch\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-batch]
+  imports: ['^\s*require\s+["'']aws-sdk-(batch)["'']']
+  usage: ['(?i)\bAws::(batch)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-batch]
+  imports: ['\baws_sdk_(batch)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(batch)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_batch_job_queue, attribute: compute_environment_order.compute_environment, edge_kind: binding}
+- {resource_type: aws_batch_job_queue, attribute: scheduling_policy_arn, edge_kind: reference}
+- {resource_type: aws_batch_compute_environment, attribute: compute_resources.subnets, edge_kind: containment}
+- {resource_type: aws_batch_compute_environment, attribute: compute_resources.security_group_ids, edge_kind: containment}
+- {resource_type: aws_batch_compute_environment, attribute: service_role, edge_kind: binding}
+- {resource_type: aws_batch_compute_environment, attribute: eks_configuration.eks_cluster_arn, edge_kind: reference}
+alternatives:
+- {ref: kubernetes, difficulty: medium, compatibility: conceptual, notes: 'Kubernetes Jobs with a queueing layer such as Kueue replace job queues and compute environments.', approved_by: cloudowski}
+- {ref: argo-workflows, difficulty: medium, compatibility: conceptual, notes: Argo Workflows runs containerised batch jobs and array-style fan-out on Kubernetes., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/batch/latest/userguide/what-is-batch.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/batch_job_definition']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

@@ -1,0 +1,55 @@
+schema: '1.0'
+kind: service
+id: gcp.bigquery
+provider: gcp
+name: BigQuery
+category: analytics
+resource_types:
+  terraform: [google_bigquery_dataset, google_bigquery_table, google_bigquery_job, google_bigquery_routine, google_bigquery_connection, google_bigquery_data_transfer_config, google_bigquery_reservation, google_bigquery_reservation_assignment, google_bigquery_capacity_commitment, google_bigquery_bi_reservation, google_bigquery_dataset_access, google_bigquery_dataset_iam_binding, google_bigquery_dataset_iam_member, google_bigquery_dataset_iam_policy, google_bigquery_table_iam_binding, google_bigquery_table_iam_member, google_bigquery_table_iam_policy, google_bigquery_connection_iam_binding, google_bigquery_connection_iam_member, google_bigquery_connection_iam_policy, google_bigquery_analytics_hub_data_exchange, google_bigquery_analytics_hub_listing, google_bigquery_datapolicy_data_policy]
+  kubernetes:
+  - {group: bigquery.cnrm.cloud.google.com, kind: BigQueryDataset}
+  - {group: bigquery.cnrm.cloud.google.com, kind: BigQueryTable}
+  - {group: bigquery.cnrm.cloud.google.com, kind: BigQueryJob}
+  - {group: bigquery.cnrm.cloud.google.com, kind: BigQueryRoutine}
+  - {group: bigqueryconnection.cnrm.cloud.google.com, kind: BigQueryConnectionConnection}
+  - {group: bigquerydatatransfer.cnrm.cloud.google.com, kind: BigQueryDataTransferConfig}
+  - {group: bigqueryreservation.cnrm.cloud.google.com, kind: BigQueryReservationReservation}
+traits:
+- {id: proprietary-query-language, level: high, reason: 'Queries, scripts and routines use the GoogleSQL dialect, including BigQuery-only functions and DDL.'}
+- {id: data-gravity, level: high, reason: Warehouses accumulate large datasets in managed storage; exit requires bulk export and reload.}
+- {id: managed-only-feature, level: medium, reason: 'BigQuery ML, BI Engine, Analytics Hub and slot reservations have no direct self-hosted counterpart.'}
+- {id: proprietary-sdk}
+sdk:
+- ecosystem: npm
+  packages: ['@google-cloud/bigquery', '@google-cloud/bigquery-storage', '@google-cloud/bigquery-data-transfer']
+  imports: ['[''"]@google-cloud/(bigquery[\w-]*)[''"/]']
+- ecosystem: pypi
+  packages: [google-cloud-bigquery, google-cloud-bigquery-storage, pandas-gbq, sqlalchemy-bigquery, google-cloud-bigquery-datatransfer]
+  imports: [^\s*from\s+google\.cloud\s+import\s+.*\b(bigquery\w*)\b, ^\s*(from|import)\s+google\.cloud\.(bigquery\w*)\b, ^\s*(from|import)\s+pandas_gbq\b]
+- ecosystem: go
+  packages: [cloud.google.com/go/bigquery]
+  imports: ['"cloud\.google\.com/go/(bigquery)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.google.cloud:google-cloud-bigquery', 'com.google.cloud:google-cloud-bigquerystorage', 'com.google.cloud:google-cloud-bigquerydatatransfer']
+  imports: ['^\s*import\s+(static\s+)?com\.google\.(cloud\.bigquery\w*)\b']
+- ecosystem: nuget
+  packages: [Google.Cloud.BigQuery.V2, Google.Cloud.BigQuery.Storage.V1, Google.Cloud.BigQuery.DataTransfer.V1]
+  imports: ['^\s*using\s+(static\s+)?Google\.Cloud\.(BigQuery\w*)\b']
+edge_hints:
+- {resource_type: google_bigquery_table, attribute: dataset_id, edge_kind: containment}
+- {resource_type: google_bigquery_routine, attribute: dataset_id, edge_kind: containment}
+- {resource_type: google_bigquery_dataset_access, attribute: dataset_id, edge_kind: containment}
+- {resource_type: google_bigquery_data_transfer_config, attribute: destination_dataset_id, edge_kind: data-flow}
+- {resource_type: google_bigquery_reservation_assignment, attribute: reservation, edge_kind: reference}
+alternatives:
+- {ref: clickhouse, difficulty: high, compatibility: conceptual, notes: 'Columnar SQL warehouse; schemas and GoogleSQL queries need translation, data export via Parquet or Avro.', approved_by: cloudowski}
+- {ref: trino, difficulty: high, compatibility: conceptual, notes: Federated SQL over open table formats in object storage; queries need translation to Trino SQL., approved_by: cloudowski}
+- {ref: apache-spark, difficulty: high, compatibility: conceptual, notes: Spark SQL over Parquet or Iceberg tables replaces batch analytics; SQL and scheduling need rework., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/bigquery/docs/introduction', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/bigquery_table', 'https://cloud.google.com/bigquery/docs/reference/standard-sql/introduction']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

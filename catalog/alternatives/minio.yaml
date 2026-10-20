@@ -1,0 +1,16 @@
+schema: '1.0'
+kind: alternative
+id: minio
+name: MinIO
+alternative_kind: oss-self-hosted
+license: AGPL-3.0-only
+homepage: https://min.io/
+vendor_contributed: false
+provenance:
+  origin: llm
+  author: claude
+  status: deprecated
+  sources:
+  - https://min.io/
+  - https://github.com/minio/minio
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: false}

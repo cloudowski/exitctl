@@ -1,0 +1,15 @@
+schema: "1.0"
+kind: trait
+id: proprietary-api
+name: Proprietary API
+level: high
+dimensions: [technical]
+explanation: The service is used through a provider-specific API with no standard equivalent.
+exit_hint: Wrap access behind an internal interface, then move to an engine with an open API.
+provenance:
+  origin: maintainer
+  author: cloudowski
+  status: verified
+  reviewed_by: cloudowski
+  reviewed_on: 2026-10-06
+  sources: []

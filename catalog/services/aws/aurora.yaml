@@ -1,0 +1,102 @@
+schema: '1.0'
+kind: service
+id: aws.aurora
+provider: aws
+name: Amazon Aurora
+category: database.relational
+resource_types:
+  terraform: [aws_rds_cluster, aws_rds_cluster_instance, aws_rds_cluster_endpoint, aws_rds_cluster_parameter_group, aws_rds_cluster_role_association, aws_rds_cluster_activity_stream, aws_rds_cluster_snapshot_copy, aws_db_cluster_snapshot, aws_rds_global_cluster, aws_rds_shard_group, aws_rds_integration]
+  cloudformation: ['AWS::RDS::DBCluster', 'AWS::RDS::DBClusterParameterGroup', 'AWS::RDS::GlobalCluster', 'AWS::RDS::DBShardGroup', 'AWS::RDS::Integration']
+  kubernetes:
+  - {group: rds.services.k8s.aws, kind: DBCluster}
+  - {group: rds.services.k8s.aws, kind: DBClusterParameterGroup}
+  - {group: rds.services.k8s.aws, kind: GlobalCluster}
+  - {group: rds.services.k8s.aws, kind: DBClusterSnapshot}
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'Aurora is PostgreSQL or MySQL compatible at the wire and SQL level; the storage layer and cluster tooling are AWS-specific.'}
+- {id: managed-only-feature, level: medium, reason: 'Fast cloning, backtrack and the shared storage volume have no direct equivalent in upstream engines.'}
+- {id: data-gravity, level: medium, reason: 'Data leaves through dumps or logical replication with a planned cutover; Aurora snapshots and the cluster volume restore only on AWS.'}
+rules:
+- id: aws.aurora.serverless
+  match:
+    resource_type: [aws_rds_cluster]
+  when:
+    any:
+    - {attr: engine_mode, equals: serverless}
+    - {attr: serverlessv2_scaling_configuration, exists: true}
+  then: {add_trait: managed-only-feature, level: medium, evidence: engine_mode}
+- id: aws.aurora.data-api
+  match:
+    resource_type: [aws_rds_cluster]
+  when: {attr: enable_http_endpoint, equals: true}
+  then: {add_trait: proprietary-api, level: medium, evidence: enable_http_endpoint}
+- id: aws.aurora.global-database
+  match:
+    resource_type: [aws_rds_global_cluster]
+  then: {add_trait: data-gravity, level: high, evidence: global_cluster_identifier}
+- id: aws.aurora.limitless
+  match:
+    resource_type: [aws_rds_shard_group]
+  then: {add_trait: managed-only-feature, level: high, evidence: db_cluster_identifier}
+- id: aws.aurora.zero-etl
+  match:
+    resource_type: [aws_rds_integration]
+  then: {add_trait: managed-change-stream, level: medium, evidence: target_arn}
+- id: aws.aurora.backtrack
+  match:
+    resource_type: [aws_rds_cluster]
+  when: {attr: backtrack_window, gte: 1}
+  then: {add_trait: managed-only-feature, level: medium, evidence: backtrack_window}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-rds-data', 'data-api-client']
+  imports: ['[''"]@aws-sdk/client-rds-data[''"/]', '[''"]data-api-client[''"]']
+  usage: ['\bAWS\.RDSDataService\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["'']rds-data["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/rdsdata]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/rdsdata(service)?(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:rdsdata', 'com.amazonaws:aws-java-sdk-rdsdata']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.rdsdata\.', '^\s*import\s+(static\s+)?com\.amazonaws\.services\.rdsdata\.']
+- ecosystem: nuget
+  packages: [AWSSDK.RDSDataService]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.RDSDataService\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-rdsdata]
+  imports: ['^\s*require\s+["'']aws-sdk-(rdsdata)["'']']
+  usage: ['(?i)\bAws::(rdsdata)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-rdsdata]
+  imports: ['\baws_sdk_(rdsdata)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(rdsdata)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_rds_cluster_instance, attribute: cluster_identifier, edge_kind: containment}
+- {resource_type: aws_rds_cluster_endpoint, attribute: cluster_identifier, edge_kind: containment}
+- {resource_type: aws_rds_cluster, attribute: db_subnet_group_name, edge_kind: containment}
+- {resource_type: aws_rds_cluster, attribute: vpc_security_group_ids, edge_kind: containment}
+- {resource_type: aws_rds_cluster, attribute: db_cluster_parameter_group_name, edge_kind: reference}
+- {resource_type: aws_rds_cluster, attribute: global_cluster_identifier, edge_kind: containment}
+- {resource_type: aws_rds_cluster, attribute: kms_key_id, edge_kind: reference}
+- {resource_type: aws_rds_cluster_role_association, attribute: db_cluster_identifier, edge_kind: binding}
+- {resource_type: aws_rds_integration, attribute: source_arn, edge_kind: data-flow}
+- {resource_type: aws_rds_integration, attribute: target_arn, edge_kind: data-flow}
+alternatives:
+- {ref: postgresql, difficulty: low, compatibility: api-compatible, notes: 'Aurora PostgreSQL apps run on upstream PostgreSQL; aurora_* functions, Data API and fast cloning need replacement.', approved_by: cloudowski, recommended: true}
+- {ref: mysql, difficulty: low, compatibility: api-compatible, notes: Aurora MySQL apps run on upstream MySQL; backtrack and parallel query have no equivalent., approved_by: cloudowski}
+- {ref: yugabytedb, difficulty: medium, compatibility: api-compatible, notes: Distributed PostgreSQL-compatible database for multi-region needs similar to Aurora Global Database., approved_by: cloudowski}
+- {ref: scaleway, difficulty: low, compatibility: api-compatible, notes: Scaleway Managed Databases offer PostgreSQL and MySQL with read replicas., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/CHAP_AuroraOverview.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/rds_cluster']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

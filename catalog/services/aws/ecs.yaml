@@ -1,0 +1,81 @@
+schema: '1.0'
+kind: service
+id: aws.ecs
+provider: aws
+name: Amazon Elastic Container Service (ECS)
+category: compute.container
+resource_types:
+  terraform: [aws_ecs_cluster, aws_ecs_cluster_capacity_providers, aws_ecs_capacity_provider, aws_ecs_service, aws_ecs_task_definition, aws_ecs_task_set, aws_ecs_account_setting_default, aws_ecs_tag]
+  cloudformation: ['AWS::ECS::Cluster', 'AWS::ECS::ClusterCapacityProviderAssociations', 'AWS::ECS::CapacityProvider', 'AWS::ECS::Service', 'AWS::ECS::TaskDefinition', 'AWS::ECS::TaskSet', 'AWS::ECS::PrimaryTaskSet']
+  kubernetes:
+  - {group: ecs.services.k8s.aws, kind: Cluster}
+  - {group: ecs.services.k8s.aws, kind: Service}
+  - {group: ecs.services.k8s.aws, kind: TaskDefinition}
+  ci_action: [aws-actions/amazon-ecs-deploy-task-definition, aws-actions/amazon-ecs-render-task-definition]
+traits:
+- {id: proprietary-api, level: medium, reason: 'Containers are portable, but task definitions, services and capacity providers are ECS-specific orchestration objects.'}
+- {id: operational-tooling-coupling, level: medium, reason: 'Deployments, service discovery and scaling rely on ECS, Cloud Map and Application Auto Scaling.'}
+rules:
+- id: aws.ecs.fargate
+  match:
+    resource_type: [aws_ecs_service]
+  when: {attr: launch_type, equals: FARGATE}
+  then: {add_trait: managed-only-feature, level: low, evidence: launch_type}
+- id: aws.ecs.service-connect
+  match:
+    resource_type: [aws_ecs_service]
+  when: {attr: service_connect_configuration.enabled, equals: true}
+  then: {add_trait: provider-network-construct, level: low, evidence: service_connect_configuration}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-ecs']
+  imports: ['[''"]@aws-sdk/client-ecs[''"/]']
+  usage: ['\bAWS\.ECS\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["'']ecs["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/ecs]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/ecs(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:ecs', 'com.amazonaws:aws-java-sdk-ecs']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.ecs\.', '^\s*import\s+(static\s+)?com\.amazonaws\.services\.ecs\.']
+- ecosystem: nuget
+  packages: [AWSSDK.ECS]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.ECS\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-ecs]
+  imports: ['^\s*require\s+["'']aws-sdk-(ecs)["'']']
+  usage: ['(?i)\bAws::(ecs)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-ecs]
+  imports: ['\baws_sdk_(ecs)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(ecs)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_ecs_service, attribute: cluster, edge_kind: containment}
+- {resource_type: aws_ecs_service, attribute: task_definition, edge_kind: reference}
+- {resource_type: aws_ecs_service, attribute: load_balancer.target_group_arn, edge_kind: binding}
+- {resource_type: aws_ecs_service, attribute: network_configuration.subnets, edge_kind: containment}
+- {resource_type: aws_ecs_service, attribute: network_configuration.security_groups, edge_kind: containment}
+- {resource_type: aws_ecs_service, attribute: service_registries.registry_arn, edge_kind: binding}
+- {resource_type: aws_ecs_task_definition, attribute: execution_role_arn, edge_kind: binding}
+- {resource_type: aws_ecs_task_definition, attribute: task_role_arn, edge_kind: binding}
+- {resource_type: aws_ecs_task_definition, attribute: volume.efs_volume_configuration.file_system_id, edge_kind: binding}
+- {resource_type: aws_ecs_capacity_provider, attribute: auto_scaling_group_provider.auto_scaling_group_arn, edge_kind: reference}
+- {resource_type: aws_ecs_cluster_capacity_providers, attribute: cluster_name, edge_kind: containment}
+alternatives:
+- {ref: kubernetes, difficulty: medium, compatibility: conceptual, notes: 'Images run unchanged; task definitions become Deployments and Services, IAM task roles need another identity mechanism.', approved_by: cloudowski}
+- {ref: knative, difficulty: medium, compatibility: conceptual, notes: Knative Serving fits HTTP services with autoscaling; workers and scheduled tasks need other objects., approved_by: cloudowski}
+- {ref: scaleway, difficulty: medium, compatibility: conceptual, notes: Scaleway Serverless Containers run container images without managing nodes., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html', 'https://github.com/aws-actions/amazon-ecs-deploy-task-definition', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_service']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

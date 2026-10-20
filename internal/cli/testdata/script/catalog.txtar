@@ -1,0 +1,70 @@
+# Catalog as data (US8, SC-007, quickstart V10).
+
+# The built-in catalog is valid and prints counts per kind and status.
+exec exitctl catalog validate
+stdout '^kind +verified +draft +deprecated +total$'
+stdout '^services +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+$'
+stdout '^traits +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+$'
+stdout '^alternatives +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+$'
+stdout '^LLM-generated awaiting review: [0-9]+$'
+stdout 'built-in catalog is valid'
+! stderr .
+
+# plus-one adds a provider purely as data: one verified and one draft LLM service.
+exec exitctl catalog validate $CATALOGS/plus-one
+stdout '^services +1 +1 +0 +2$'
+stdout '^LLM-generated awaiting review: 1$'
+stdout 'plus-one is valid'
+
+# --catalog applies to validate too.
+exec exitctl --catalog $CATALOGS/plus-one catalog validate
+stdout 'plus-one is valid'
+
+# acme_widget is recognized and scored without any code change; the draft
+# acme.gadget is unverified knowledge: not scored, counted as unknown.
+exec exitctl scan $FIXTURES/acme --catalog $CATALOGS/plus-one --no-store --as-of 2026-10-06 --no-color --emoji never
+stdout '1\. acme_widget\.orders'
+stdout 'OpenWidget'
+! stdout 'acme_gadget'
+
+exec exitctl scan $FIXTURES/acme --catalog $CATALOGS/plus-one --no-store --as-of 2026-10-06 --format json
+stdout '"service": "acme.widget",\n\s+"class": "service"'
+stdout '"native_address": "acme_gadget\.notifier",\n\s+"class": "unverified"'
+stdout '"unverified_match:acme\.gadget"'
+stdout '"unverified_matches": \[\n\s+"acme//#acme_gadget\.notifier"\n\s+\]'
+stdout '"unknown_types": 1'
+stdout '"index": [0-9]+'
+
+# coverage labels the draft match as unverified knowledge (T093).
+exec exitctl scan $FIXTURES/acme --catalog $CATALOGS/plus-one --as-of 2026-10-06 --no-color --emoji never
+exec exitctl coverage --catalog $CATALOGS/plus-one --no-color
+stdout 'Unverified knowledge \(1 type'
+stdout 'acme_gadget'
+stdout 'acme\.gadget'
+
+# With the hidden development flag, drafts are scored.
+exec exitctl scan $FIXTURES/acme --catalog $CATALOGS/plus-one --include-drafts --no-store --as-of 2026-10-06 --format json
+stdout '"service": "acme.gadget"'
+! stdout '"unverified_matches"'
+
+# Without the catalog the acme types are unknown: nothing to score.
+! exec exitctl scan $FIXTURES/acme --no-store --as-of 2026-10-06 --format json
+! stdout '"service": "acme.widget"'
+stderr 'nothing scored'
+
+# broken has exactly five problems, each with file:line and entry ID; exit 3.
+! exec exitctl catalog validate $CATALOGS/broken
+stdout '^services/aws/sqs-copy\.yaml:[0-9]+  aws\.sqs  duplicate service id "aws\.sqs"'
+stdout '^services/aws/unknown-trait\.yaml:[0-9]+  aws\.unknown-trait  traits references unknown trait "no-such-trait"'
+stdout '^services/aws/bad-usage\.yaml:[0-9]+  aws\.bad-usage  sdk pypi usage pattern .* is not valid RE2'
+stdout '^services/aws/self-recommended\.yaml:[0-9]+  aws\.self-recommended  alternative "rabbitmq" is recommended but approved_by "some-contributor" is not a catalog maintainer'
+stdout '^services/aws/no-reason\.yaml:[0-9]+  aws\.no-reason  .*reason'
+stderr 'broken is invalid: 5 problems'
+
+# An invalid catalog is never used by other commands.
+! exec exitctl scan $FIXTURES/acme --catalog $CATALOGS/broken --no-store
+stderr 'broken is invalid \(5 problems\)'
+
+# A missing directory is invalid input.
+! exec exitctl catalog validate $WORK/nope
+stderr 'catalog directory .* not found'

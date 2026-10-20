@@ -1,0 +1,15 @@
+schema: '1.0'
+kind: neutral
+id: generic-terraform-state
+provider: generic
+resource_types:
+  terraform: [terraform_remote_state, modtm_module_source, modtm_telemetry]
+scored: false
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-08'
+  status: verified
+  sources: ['https://developer.hashicorp.com/terraform/language/state/remote-state-data']
+  llm: {batch: 2026-10-08-coverage, model: claude-sonnet-5-5, prompt_version: catalog-coverage-v1, eval_passed: true}

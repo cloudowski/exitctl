@@ -1,0 +1,51 @@
+schema: '1.0'
+kind: service
+id: gcp.filestore
+provider: gcp
+name: Filestore
+category: storage.file
+resource_types:
+  terraform: [google_filestore_instance, google_filestore_backup, google_filestore_snapshot]
+  kubernetes:
+  - {group: filestore.cnrm.cloud.google.com, kind: FilestoreInstance}
+  - {group: filestore.cnrm.cloud.google.com, kind: FilestoreBackup}
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'Clients mount standard NFSv3/NFSv4.1 shares; provisioning, tiers and backups are Google-specific.'}
+- {id: data-gravity, level: medium, reason: 'Shared file data is copied out with rsync or similar tools while clients keep writing; large shares need staged syncs.'}
+sdk:
+- ecosystem: npm
+  packages: ['@google-cloud/filestore']
+  imports: ['[''"]@google-cloud/(filestore)[''"/]']
+- ecosystem: pypi
+  packages: [google-cloud-filestore]
+  imports: [^\s*from\s+google\.cloud\s+import\s+.*\b(filestore\w*)\b, ^\s*(from|import)\s+google\.cloud\.(filestore\w*)\b]
+- ecosystem: go
+  packages: [cloud.google.com/go/filestore]
+  imports: ['"cloud\.google\.com/go/(filestore)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.google.cloud:google-cloud-filestore']
+  imports: ['^\s*import\s+(static\s+)?com\.google\.(cloud\.filestore)\b']
+- ecosystem: nuget
+  packages: [Google.Cloud.Filestore.V1]
+  imports: ['^\s*using\s+(static\s+)?Google\.Cloud\.(Filestore)\b']
+kubernetes_bindings:
+- match:
+    kind: StorageClass
+    field: provisioner
+    in: [filestore.csi.storage.gke.io]
+edge_hints:
+- {resource_type: google_filestore_instance, attribute: networks.network, edge_kind: containment}
+- {resource_type: google_filestore_backup, attribute: source_instance, edge_kind: reference}
+- {resource_type: google_filestore_snapshot, attribute: instance, edge_kind: containment}
+alternatives:
+- {ref: ceph, difficulty: medium, compatibility: protocol-compatible, notes: CephFS or NFS-Ganesha on Ceph provides shared file storage; data copied with rsync., approved_by: cloudowski}
+- {ref: ovhcloud, difficulty: low, compatibility: protocol-compatible, notes: OVHcloud File Storage (NFS) and NAS-HA provide managed NFS shares., approved_by: cloudowski}
+- {ref: kubernetes, difficulty: medium, compatibility: conceptual, notes: An NFS or CephFS CSI driver provides ReadWriteMany volumes; StorageClass names change., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/filestore/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/filestore_instance', 'https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/filestore-csi-driver']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

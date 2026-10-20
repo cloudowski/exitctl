@@ -1,0 +1,46 @@
+schema: '1.0'
+kind: service
+id: gcp.eventarc
+provider: gcp
+name: Eventarc
+category: messaging
+resource_types:
+  terraform: [google_eventarc_trigger, google_eventarc_channel, google_eventarc_google_channel_config, google_eventarc_message_bus, google_eventarc_pipeline, google_eventarc_enrollment, google_eventarc_google_api_source]
+  kubernetes:
+  - {group: eventarc.cnrm.cloud.google.com, kind: EventarcTrigger}
+traits:
+- {id: proprietary-event-model, level: medium, reason: 'Events use the CloudEvents format, but trigger filters, event types and routing are Google-specific.'}
+- {id: managed-only-feature, level: medium, reason: Direct triggers from Google services and audit logs exist only inside Google Cloud.}
+sdk:
+- ecosystem: npm
+  packages: ['@google-cloud/eventarc', '@google-cloud/eventarc-publishing']
+  imports: ['[''"]@google-cloud/(eventarc|eventarc-publishing)[''"/]']
+- ecosystem: pypi
+  packages: [google-cloud-eventarc, google-cloud-eventarc-publishing]
+  imports: [^\s*from\s+google\.cloud\s+import\s+.*\b(eventarc\w*)\b, ^\s*(from|import)\s+google\.cloud\.(eventarc\w*)\b]
+- ecosystem: go
+  packages: [cloud.google.com/go/eventarc]
+  imports: ['"cloud\.google\.com/go/(eventarc)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.google.cloud:google-cloud-eventarc', 'com.google.cloud:google-cloud-eventarc-publishing']
+  imports: ['^\s*import\s+(static\s+)?com\.google\.(cloud\.eventarc)\b']
+- ecosystem: nuget
+  packages: [Google.Cloud.Eventarc.V1, Google.Cloud.Eventarc.Publishing.V1]
+  imports: ['^\s*using\s+(static\s+)?Google\.Cloud\.(Eventarc)\b']
+edge_hints:
+- {resource_type: google_eventarc_trigger, attribute: destination.cloud_run_service.service, edge_kind: data-flow}
+- {resource_type: google_eventarc_trigger, attribute: destination.workflow, edge_kind: data-flow}
+- {resource_type: google_eventarc_trigger, attribute: transport.pubsub.topic, edge_kind: data-flow}
+- {resource_type: google_eventarc_trigger, attribute: channel, edge_kind: reference}
+alternatives:
+- {ref: knative, difficulty: medium, compatibility: protocol-compatible, notes: Knative Eventing brokers and triggers deliver CloudEvents; Google event sources need replacement., approved_by: cloudowski}
+- {ref: nats, difficulty: medium, compatibility: conceptual, notes: Subjects and consumers can route events; filtering and delivery to HTTP targets need custom glue., approved_by: cloudowski}
+- {ref: apache-kafka, difficulty: high, compatibility: conceptual, notes: Kafka topics with connectors can carry events; routing and HTTP delivery need extra components., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/eventarc/docs/overview', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/eventarc_trigger']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

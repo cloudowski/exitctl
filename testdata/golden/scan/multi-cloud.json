@@ -1,0 +1,2649 @@
+{
+  "format": "exitctl.result/v1",
+  "kind": "result",
+  "versions": {
+    "tool": "0.1.0-dev",
+    "catalog": "2026.10.1",
+    "catalog_schema": "1.0",
+    "rules": "1.1.0",
+    "config_fingerprint": "8d36fc36",
+    "custom_scoring": false,
+    "catalog_drafts_included": true
+  },
+  "inputs": [
+    {
+      "repo": "multi-cloud",
+      "as_of": "2026-10-06",
+      "versions": {
+        "tool": "0.1.0-dev",
+        "catalog": "2026.10.1",
+        "catalog_schema": "1.0",
+        "rules": "1.1.0",
+        "config_fingerprint": "8d36fc36",
+        "custom_scoring": false,
+        "catalog_drafts_included": true
+      }
+    }
+  ],
+  "facts": {
+    "sources": [
+      {
+        "repo": "multi-cloud",
+        "path": "cfn/stack.yaml",
+        "kind": "cloudformation",
+        "status": "parsed"
+      },
+      {
+        "repo": "multi-cloud",
+        "path": "charts/app/Chart.yaml",
+        "kind": "helm",
+        "status": "parsed"
+      },
+      {
+        "repo": "multi-cloud",
+        "path": "terraform/azure.tf",
+        "kind": "terraform",
+        "status": "parsed"
+      },
+      {
+        "repo": "multi-cloud",
+        "path": "terraform/gcp.tf",
+        "kind": "terraform",
+        "status": "parsed"
+      },
+      {
+        "repo": "multi-cloud",
+        "path": "terraform/oci.tf",
+        "kind": "terraform",
+        "status": "parsed"
+      },
+      {
+        "repo": "multi-cloud",
+        "path": "terraform/providers.tf",
+        "kind": "terraform",
+        "status": "parsed"
+      }
+    ],
+    "raw_nodes": [
+      {
+        "id": "multi-cloud//#apps/Deployment/default/exitctl-app",
+        "node_kind": "resource",
+        "source_kind": "helm",
+        "type": "apps/Deployment",
+        "native_address": "apps/Deployment/default/exitctl-app",
+        "attributes": {
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/instance": "exitctl",
+              "app.kubernetes.io/name": "app"
+            },
+            "name": "exitctl-app"
+          },
+          "spec": {
+            "replicas": 2,
+            "selector": {
+              "matchLabels": {
+                "app.kubernetes.io/instance": "exitctl",
+                "app.kubernetes.io/name": "app"
+              }
+            },
+            "template": {
+              "metadata": {
+                "labels": {
+                  "app.kubernetes.io/instance": "exitctl",
+                  "app.kubernetes.io/name": "app"
+                }
+              },
+              "spec": {
+                "containers": [
+                  {
+                    "env": [
+                      {
+                        "name": "BUCKET_NAME",
+                        "value": "shop-assets"
+                      }
+                    ],
+                    "image": "registry.example.com/shop/app:1.0.0",
+                    "name": "app"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "charts/app/templates/deployment.yaml",
+            "line": 2,
+            "excerpt": "kind: Deployment",
+            "source_kind": "helm"
+          }
+        ]
+      },
+      {
+        "id": "multi-cloud//#storage.cnrm.cloud.google.com/StorageBucket/default/shop-assets",
+        "node_kind": "resource",
+        "source_kind": "helm",
+        "type": "storage.cnrm.cloud.google.com/StorageBucket",
+        "native_address": "storage.cnrm.cloud.google.com/StorageBucket/default/shop-assets",
+        "attributes": {
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/instance": "exitctl",
+              "app.kubernetes.io/name": "app"
+            },
+            "name": "shop-assets"
+          },
+          "spec": {
+            "location": "EU",
+            "uniformBucketLevelAccess": true
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "charts/app/templates/bucket.yaml",
+            "line": 2,
+            "excerpt": "kind: StorageBucket",
+            "source_kind": "helm"
+          }
+        ]
+      },
+      {
+        "id": "multi-cloud//cfn/stack.yaml#OrdersQueue",
+        "node_kind": "resource",
+        "source_kind": "cloudformation",
+        "type": "AWS::SQS::Queue",
+        "native_address": "OrdersQueue",
+        "provider_identity": "aws:AWS::SQS::Queue/orders-notifications",
+        "attributes": {
+          "QueueName": "orders-notifications"
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "cfn/stack.yaml",
+            "line": 5,
+            "excerpt": "OrdersQueue:",
+            "source_kind": "cloudformation"
+          }
+        ]
+      },
+      {
+        "id": "multi-cloud//cfn/stack.yaml#OrdersSubscription",
+        "node_kind": "resource",
+        "source_kind": "cloudformation",
+        "type": "AWS::SNS::Subscription",
+        "native_address": "OrdersSubscription",
+        "attributes": {
+          "Endpoint": {
+            "$unknown": true
+          },
+          "Protocol": "sqs",
+          "TopicArn": {
+            "$unknown": true
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "cfn/stack.yaml",
+            "line": 15,
+            "excerpt": "OrdersSubscription:",
+            "source_kind": "cloudformation"
+          }
+        ]
+      },
+      {
+        "id": "multi-cloud//cfn/stack.yaml#OrdersTopic",
+        "node_kind": "resource",
+        "source_kind": "cloudformation",
+        "type": "AWS::SNS::Topic",
+        "native_address": "OrdersTopic",
+        "provider_identity": "aws:AWS::SNS::Topic/orders",
+        "attributes": {
+          "TopicName": "orders"
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "cfn/stack.yaml",
+            "line": 10,
+            "excerpt": "OrdersTopic:",
+            "source_kind": "cloudformation"
+          }
+        ]
+      },
+      {
+        "id": "multi-cloud//terraform#azurerm_cosmosdb_account.acc",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "azurerm_cosmosdb_account",
+        "native_address": "azurerm_cosmosdb_account.acc",
+        "provider_identity": "azurerm:azurerm_cosmosdb_account/shop-cosmos",
+        "attributes": {
+          "consistency_policy": {
+            "consistency_level": "Session"
+          },
+          "geo_location": {
+            "failover_priority": 0,
+            "location": {
+              "$unknown": true
+            }
+          },
+          "kind": "GlobalDocumentDB",
+          "location": {
+            "$unknown": true
+          },
+          "name": "shop-cosmos",
+          "offer_type": "Standard",
+          "resource_group_name": {
+            "$unknown": true
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/azure.tf",
+            "line": 6,
+            "excerpt": "resource \"azurerm_cosmosdb_account\" \"acc\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "multi-cloud//terraform#azurerm_resource_group.rg",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "azurerm_resource_group",
+        "native_address": "azurerm_resource_group.rg",
+        "provider_identity": "azurerm:azurerm_resource_group/shop",
+        "attributes": {
+          "location": "westeurope",
+          "name": "shop"
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/azure.tf",
+            "line": 1,
+            "excerpt": "resource \"azurerm_resource_group\" \"rg\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "multi-cloud//terraform#azurerm_servicebus_namespace.bus",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "azurerm_servicebus_namespace",
+        "native_address": "azurerm_servicebus_namespace.bus",
+        "provider_identity": "azurerm:azurerm_servicebus_namespace/shop-bus",
+        "attributes": {
+          "location": {
+            "$unknown": true
+          },
+          "name": "shop-bus",
+          "resource_group_name": {
+            "$unknown": true
+          },
+          "sku": "Standard"
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/azure.tf",
+            "line": 23,
+            "excerpt": "resource \"azurerm_servicebus_namespace\" \"bus\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "multi-cloud//terraform#azurerm_servicebus_queue.q",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "azurerm_servicebus_queue",
+        "native_address": "azurerm_servicebus_queue.q",
+        "provider_identity": "azurerm:azurerm_servicebus_queue/orders",
+        "attributes": {
+          "name": "orders",
+          "namespace_id": {
+            "$unknown": true
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/azure.tf",
+            "line": 30,
+            "excerpt": "resource \"azurerm_servicebus_queue\" \"q\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "multi-cloud//terraform#google_pubsub_subscription.orders",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "google_pubsub_subscription",
+        "native_address": "google_pubsub_subscription.orders",
+        "provider_identity": "google:google_pubsub_subscription/orders-worker",
+        "attributes": {
+          "ack_deadline_seconds": 30,
+          "name": "orders-worker",
+          "topic": {
+            "$unknown": true
+          }
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/gcp.tf",
+            "line": 5,
+            "excerpt": "resource \"google_pubsub_subscription\" \"orders\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "multi-cloud//terraform#google_pubsub_topic.orders",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "google_pubsub_topic",
+        "native_address": "google_pubsub_topic.orders",
+        "provider_identity": "google:google_pubsub_topic/orders",
+        "attributes": {
+          "name": "orders"
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/gcp.tf",
+            "line": 1,
+            "excerpt": "resource \"google_pubsub_topic\" \"orders\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "multi-cloud//terraform#google_spanner_database.db",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "google_spanner_database",
+        "native_address": "google_spanner_database.db",
+        "provider_identity": "google:google_spanner_database/orders",
+        "attributes": {
+          "instance": {
+            "$unknown": true
+          },
+          "name": "orders"
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/gcp.tf",
+            "line": 19,
+            "excerpt": "resource \"google_spanner_database\" \"db\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "multi-cloud//terraform#google_spanner_instance.main",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "google_spanner_instance",
+        "native_address": "google_spanner_instance.main",
+        "provider_identity": "google:google_spanner_instance/shop",
+        "attributes": {
+          "config": "regional-europe-west1",
+          "display_name": "shop",
+          "name": "shop",
+          "num_nodes": 1
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/gcp.tf",
+            "line": 12,
+            "excerpt": "resource \"google_spanner_instance\" \"main\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "id": "multi-cloud//terraform#oci_database_autonomous_database.adb",
+        "node_kind": "resource",
+        "source_kind": "terraform",
+        "type": "oci_database_autonomous_database",
+        "native_address": "oci_database_autonomous_database.adb",
+        "attributes": {
+          "compartment_id": {
+            "$unknown": true
+          },
+          "compute_count": 2,
+          "compute_model": "ECPU",
+          "data_storage_size_in_tbs": 1,
+          "db_name": "shopadb",
+          "db_workload": "OLTP",
+          "display_name": "shop-adb"
+        },
+        "multiplicity": "one",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/oci.tf",
+            "line": 5,
+            "excerpt": "resource \"oci_database_autonomous_database\" \"adb\" {",
+            "source_kind": "terraform"
+          }
+        ]
+      }
+    ],
+    "raw_edges": [
+      {
+        "from": "multi-cloud//cfn/stack.yaml#OrdersSubscription",
+        "to": "multi-cloud//cfn/stack.yaml#OrdersQueue",
+        "attribute": "Endpoint",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "cfn/stack.yaml",
+            "line": 20,
+            "excerpt": "Endpoint: !GetAtt OrdersQueue.Arn",
+            "source_kind": "cloudformation"
+          }
+        ]
+      },
+      {
+        "from": "multi-cloud//cfn/stack.yaml#OrdersSubscription",
+        "to": "multi-cloud//cfn/stack.yaml#OrdersTopic",
+        "attribute": "TopicArn",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "cfn/stack.yaml",
+            "line": 18,
+            "excerpt": "TopicArn: !Ref OrdersTopic",
+            "source_kind": "cloudformation"
+          }
+        ]
+      },
+      {
+        "from": "multi-cloud//terraform#azurerm_cosmosdb_account.acc",
+        "to": "multi-cloud//terraform#azurerm_resource_group.rg",
+        "attribute": "geo_location.location",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/azure.tf",
+            "line": 18,
+            "excerpt": "location          = azurerm_resource_group.rg.location",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "multi-cloud//terraform#azurerm_cosmosdb_account.acc",
+        "to": "multi-cloud//terraform#azurerm_resource_group.rg",
+        "attribute": "location",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/azure.tf",
+            "line": 8,
+            "excerpt": "location            = azurerm_resource_group.rg.location",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "multi-cloud//terraform#azurerm_cosmosdb_account.acc",
+        "to": "multi-cloud//terraform#azurerm_resource_group.rg",
+        "attribute": "resource_group_name",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/azure.tf",
+            "line": 9,
+            "excerpt": "resource_group_name = azurerm_resource_group.rg.name",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "multi-cloud//terraform#azurerm_servicebus_namespace.bus",
+        "to": "multi-cloud//terraform#azurerm_resource_group.rg",
+        "attribute": "location",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/azure.tf",
+            "line": 25,
+            "excerpt": "location            = azurerm_resource_group.rg.location",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "multi-cloud//terraform#azurerm_servicebus_namespace.bus",
+        "to": "multi-cloud//terraform#azurerm_resource_group.rg",
+        "attribute": "resource_group_name",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/azure.tf",
+            "line": 26,
+            "excerpt": "resource_group_name = azurerm_resource_group.rg.name",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "multi-cloud//terraform#azurerm_servicebus_queue.q",
+        "to": "multi-cloud//terraform#azurerm_servicebus_namespace.bus",
+        "attribute": "namespace_id",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/azure.tf",
+            "line": 32,
+            "excerpt": "namespace_id = azurerm_servicebus_namespace.bus.id",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "multi-cloud//terraform#google_pubsub_subscription.orders",
+        "to": "multi-cloud//terraform#google_pubsub_topic.orders",
+        "attribute": "topic",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/gcp.tf",
+            "line": 7,
+            "excerpt": "topic = google_pubsub_topic.orders.id",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "multi-cloud//terraform#google_spanner_database.db",
+        "to": "multi-cloud//terraform#google_spanner_instance.main",
+        "attribute": "instance",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/gcp.tf",
+            "line": 20,
+            "excerpt": "instance = google_spanner_instance.main.name",
+            "source_kind": "terraform"
+          }
+        ]
+      }
+    ],
+    "package_uses": [],
+    "code_uses": [],
+    "gaps": []
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "multi-cloud//#apps/Deployment/default/exitctl-app",
+        "kind": "resource",
+        "type": "apps/Deployment",
+        "native_address": "apps/Deployment/default/exitctl-app",
+        "class": "neutral",
+        "sources": [
+          "multi-cloud//charts/app/templates/deployment.yaml"
+        ],
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "charts/app/templates/deployment.yaml",
+            "line": 2,
+            "excerpt": "kind: Deployment",
+            "source_kind": "helm"
+          }
+        ],
+        "findings": [],
+        "risk": 0,
+        "weight": 1,
+        "dependents_count": 0,
+        "wave": 1
+      },
+      {
+        "id": "multi-cloud//#storage.cnrm.cloud.google.com/StorageBucket/default/shop-assets",
+        "kind": "resource",
+        "type": "storage.cnrm.cloud.google.com/StorageBucket",
+        "native_address": "storage.cnrm.cloud.google.com/StorageBucket/default/shop-assets",
+        "service": "gcp.gcs",
+        "class": "service",
+        "sources": [
+          "multi-cloud//charts/app/templates/bucket.yaml"
+        ],
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "charts/app/templates/bucket.yaml",
+            "line": 2,
+            "excerpt": "kind: StorageBucket",
+            "source_kind": "helm"
+          }
+        ],
+        "findings": [
+          {
+            "id": "multi-cloud//#storage.cnrm.cloud.google.com/StorageBucket/default/shop-assets::data-gravity",
+            "trait": "data-gravity",
+            "level": "medium",
+            "dimensions": [
+              "data"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "charts/app/templates/bucket.yaml",
+                "line": 2,
+                "excerpt": "kind: StorageBucket",
+                "source_kind": "helm"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//#storage.cnrm.cloud.google.com/StorageBucket/default/shop-assets::proprietary-api",
+            "trait": "proprietary-api",
+            "level": "low",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "charts/app/templates/bucket.yaml",
+                "line": 2,
+                "excerpt": "kind: StorageBucket",
+                "source_kind": "helm"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//#storage.cnrm.cloud.google.com/StorageBucket/default/shop-assets::proprietary-sdk",
+            "trait": "proprietary-sdk",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "charts/app/templates/bucket.yaml",
+                "line": 2,
+                "excerpt": "kind: StorageBucket",
+                "source_kind": "helm"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.5,
+        "risk_by_dimension": {
+          "data": 0.5,
+          "technical": 0.5
+        },
+        "weight": 1,
+        "contribution": 0.5,
+        "dependents_count": 0,
+        "wave": 1
+      },
+      {
+        "id": "multi-cloud//cfn/stack.yaml#OrdersQueue",
+        "kind": "resource",
+        "type": "AWS::SQS::Queue",
+        "native_address": "OrdersQueue",
+        "service": "aws.sqs",
+        "class": "service",
+        "sources": [
+          "multi-cloud//cfn/stack.yaml"
+        ],
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "cfn/stack.yaml",
+            "line": 5,
+            "excerpt": "OrdersQueue:",
+            "source_kind": "cloudformation"
+          }
+        ],
+        "findings": [
+          {
+            "id": "multi-cloud//cfn/stack.yaml#OrdersQueue::proprietary-api",
+            "trait": "proprietary-api",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "cfn/stack.yaml",
+                "line": 5,
+                "excerpt": "OrdersQueue:",
+                "source_kind": "cloudformation"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//cfn/stack.yaml#OrdersQueue::proprietary-sdk",
+            "trait": "proprietary-sdk",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "cfn/stack.yaml",
+                "line": 5,
+                "excerpt": "OrdersQueue:",
+                "source_kind": "cloudformation"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.45,
+        "risk_by_dimension": {
+          "technical": 0.5
+        },
+        "weight": 2,
+        "contribution": 0.9,
+        "dependents_count": 1,
+        "dependents": [
+          "multi-cloud//cfn/stack.yaml#OrdersSubscription"
+        ],
+        "wave": 1
+      },
+      {
+        "id": "multi-cloud//cfn/stack.yaml#OrdersSubscription",
+        "kind": "resource",
+        "type": "AWS::SNS::Subscription",
+        "native_address": "OrdersSubscription",
+        "service": "aws.sns",
+        "class": "service",
+        "sources": [
+          "multi-cloud//cfn/stack.yaml"
+        ],
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "cfn/stack.yaml",
+            "line": 15,
+            "excerpt": "OrdersSubscription:",
+            "source_kind": "cloudformation"
+          }
+        ],
+        "findings": [
+          {
+            "id": "multi-cloud//cfn/stack.yaml#OrdersSubscription::proprietary-api",
+            "trait": "proprietary-api",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "cfn/stack.yaml",
+                "line": 15,
+                "excerpt": "OrdersSubscription:",
+                "source_kind": "cloudformation"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//cfn/stack.yaml#OrdersSubscription::proprietary-event-model",
+            "trait": "proprietary-event-model",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "cfn/stack.yaml",
+                "line": 15,
+                "excerpt": "OrdersSubscription:",
+                "source_kind": "cloudformation"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//cfn/stack.yaml#OrdersSubscription::proprietary-sdk",
+            "trait": "proprietary-sdk",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "cfn/stack.yaml",
+                "line": 15,
+                "excerpt": "OrdersSubscription:",
+                "source_kind": "cloudformation"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.45,
+        "risk_by_dimension": {
+          "technical": 0.5
+        },
+        "weight": 1,
+        "contribution": 0.45,
+        "dependents_count": 0,
+        "wave": 2
+      },
+      {
+        "id": "multi-cloud//cfn/stack.yaml#OrdersTopic",
+        "kind": "resource",
+        "type": "AWS::SNS::Topic",
+        "native_address": "OrdersTopic",
+        "service": "aws.sns",
+        "class": "service",
+        "sources": [
+          "multi-cloud//cfn/stack.yaml"
+        ],
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "cfn/stack.yaml",
+            "line": 10,
+            "excerpt": "OrdersTopic:",
+            "source_kind": "cloudformation"
+          }
+        ],
+        "findings": [
+          {
+            "id": "multi-cloud//cfn/stack.yaml#OrdersTopic::proprietary-api",
+            "trait": "proprietary-api",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "cfn/stack.yaml",
+                "line": 10,
+                "excerpt": "OrdersTopic:",
+                "source_kind": "cloudformation"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//cfn/stack.yaml#OrdersTopic::proprietary-event-model",
+            "trait": "proprietary-event-model",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "cfn/stack.yaml",
+                "line": 10,
+                "excerpt": "OrdersTopic:",
+                "source_kind": "cloudformation"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//cfn/stack.yaml#OrdersTopic::proprietary-sdk",
+            "trait": "proprietary-sdk",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "cfn/stack.yaml",
+                "line": 10,
+                "excerpt": "OrdersTopic:",
+                "source_kind": "cloudformation"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.45,
+        "risk_by_dimension": {
+          "technical": 0.5
+        },
+        "weight": 2,
+        "contribution": 0.9,
+        "dependents_count": 1,
+        "dependents": [
+          "multi-cloud//cfn/stack.yaml#OrdersSubscription"
+        ],
+        "wave": 1
+      },
+      {
+        "id": "multi-cloud//terraform#azurerm_cosmosdb_account.acc",
+        "kind": "resource",
+        "type": "azurerm_cosmosdb_account",
+        "native_address": "azurerm_cosmosdb_account.acc",
+        "service": "azure.cosmos-db",
+        "class": "service",
+        "sources": [
+          "multi-cloud//terraform/azure.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/azure.tf",
+            "line": 6,
+            "excerpt": "resource \"azurerm_cosmosdb_account\" \"acc\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "multi-cloud//terraform#azurerm_cosmosdb_account.acc::data-gravity",
+            "trait": "data-gravity",
+            "level": "medium",
+            "dimensions": [
+              "data"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/azure.tf",
+                "line": 6,
+                "excerpt": "resource \"azurerm_cosmosdb_account\" \"acc\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//terraform#azurerm_cosmosdb_account.acc::proprietary-api",
+            "trait": "proprietary-api",
+            "level": "high",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/azure.tf",
+                "line": 6,
+                "excerpt": "resource \"azurerm_cosmosdb_account\" \"acc\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//terraform#azurerm_cosmosdb_account.acc::proprietary-data-model",
+            "trait": "proprietary-data-model",
+            "level": "high",
+            "dimensions": [
+              "technical",
+              "data"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/azure.tf",
+                "line": 6,
+                "excerpt": "resource \"azurerm_cosmosdb_account\" \"acc\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//terraform#azurerm_cosmosdb_account.acc::proprietary-query-language",
+            "trait": "proprietary-query-language",
+            "level": "high",
+            "dimensions": [
+              "technical",
+              "skills"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/azure.tf",
+                "line": 6,
+                "excerpt": "resource \"azurerm_cosmosdb_account\" \"acc\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//terraform#azurerm_cosmosdb_account.acc::proprietary-sdk",
+            "trait": "proprietary-sdk",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/azure.tf",
+                "line": 6,
+                "excerpt": "resource \"azurerm_cosmosdb_account\" \"acc\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.8,
+        "risk_by_dimension": {
+          "data": 0.8,
+          "skills": 0.8,
+          "technical": 0.8
+        },
+        "weight": 1,
+        "contribution": 0.8,
+        "dependents_count": 0,
+        "wave": 2
+      },
+      {
+        "id": "multi-cloud//terraform#azurerm_resource_group.rg",
+        "kind": "resource",
+        "type": "azurerm_resource_group",
+        "native_address": "azurerm_resource_group.rg",
+        "service": "azure.resource-manager",
+        "class": "service",
+        "sources": [
+          "multi-cloud//terraform/azure.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/azure.tf",
+            "line": 1,
+            "excerpt": "resource \"azurerm_resource_group\" \"rg\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "multi-cloud//terraform#azurerm_resource_group.rg::operational-tooling-coupling",
+            "trait": "operational-tooling-coupling",
+            "level": "low",
+            "dimensions": [
+              "operational"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/azure.tf",
+                "line": 1,
+                "excerpt": "resource \"azurerm_resource_group\" \"rg\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//terraform#azurerm_resource_group.rg::provider-network-construct",
+            "trait": "provider-network-construct",
+            "level": "low",
+            "dimensions": [
+              "technical",
+              "operational"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/azure.tf",
+                "line": 1,
+                "excerpt": "resource \"azurerm_resource_group\" \"rg\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.225,
+        "risk_by_dimension": {
+          "operational": 0.25,
+          "technical": 0.25
+        },
+        "weight": 3,
+        "contribution": 0.675,
+        "dependents_count": 3,
+        "dependents": [
+          "multi-cloud//terraform#azurerm_cosmosdb_account.acc",
+          "multi-cloud//terraform#azurerm_servicebus_namespace.bus",
+          "multi-cloud//terraform#azurerm_servicebus_queue.q"
+        ],
+        "wave": 1
+      },
+      {
+        "id": "multi-cloud//terraform#azurerm_servicebus_namespace.bus",
+        "kind": "resource",
+        "type": "azurerm_servicebus_namespace",
+        "native_address": "azurerm_servicebus_namespace.bus",
+        "service": "azure.service-bus",
+        "class": "service",
+        "sources": [
+          "multi-cloud//terraform/azure.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/azure.tf",
+            "line": 23,
+            "excerpt": "resource \"azurerm_servicebus_namespace\" \"bus\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "multi-cloud//terraform#azurerm_servicebus_namespace.bus::proprietary-api",
+            "trait": "proprietary-api",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/azure.tf",
+                "line": 23,
+                "excerpt": "resource \"azurerm_servicebus_namespace\" \"bus\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//terraform#azurerm_servicebus_namespace.bus::proprietary-sdk",
+            "trait": "proprietary-sdk",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/azure.tf",
+                "line": 23,
+                "excerpt": "resource \"azurerm_servicebus_namespace\" \"bus\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.45,
+        "risk_by_dimension": {
+          "technical": 0.5
+        },
+        "weight": 2,
+        "contribution": 0.9,
+        "dependents_count": 1,
+        "dependents": [
+          "multi-cloud//terraform#azurerm_servicebus_queue.q"
+        ],
+        "wave": 2
+      },
+      {
+        "id": "multi-cloud//terraform#azurerm_servicebus_queue.q",
+        "kind": "resource",
+        "type": "azurerm_servicebus_queue",
+        "native_address": "azurerm_servicebus_queue.q",
+        "service": "azure.service-bus",
+        "class": "service",
+        "sources": [
+          "multi-cloud//terraform/azure.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/azure.tf",
+            "line": 30,
+            "excerpt": "resource \"azurerm_servicebus_queue\" \"q\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "multi-cloud//terraform#azurerm_servicebus_queue.q::proprietary-api",
+            "trait": "proprietary-api",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/azure.tf",
+                "line": 30,
+                "excerpt": "resource \"azurerm_servicebus_queue\" \"q\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//terraform#azurerm_servicebus_queue.q::proprietary-sdk",
+            "trait": "proprietary-sdk",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/azure.tf",
+                "line": 30,
+                "excerpt": "resource \"azurerm_servicebus_queue\" \"q\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.45,
+        "risk_by_dimension": {
+          "technical": 0.5
+        },
+        "weight": 1,
+        "contribution": 0.45,
+        "dependents_count": 0,
+        "wave": 3
+      },
+      {
+        "id": "multi-cloud//terraform#google_pubsub_subscription.orders",
+        "kind": "resource",
+        "type": "google_pubsub_subscription",
+        "native_address": "google_pubsub_subscription.orders",
+        "service": "gcp.pubsub",
+        "class": "service",
+        "sources": [
+          "multi-cloud//terraform/gcp.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/gcp.tf",
+            "line": 5,
+            "excerpt": "resource \"google_pubsub_subscription\" \"orders\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "multi-cloud//terraform#google_pubsub_subscription.orders::proprietary-api",
+            "trait": "proprietary-api",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/gcp.tf",
+                "line": 5,
+                "excerpt": "resource \"google_pubsub_subscription\" \"orders\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//terraform#google_pubsub_subscription.orders::proprietary-event-model",
+            "trait": "proprietary-event-model",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/gcp.tf",
+                "line": 5,
+                "excerpt": "resource \"google_pubsub_subscription\" \"orders\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//terraform#google_pubsub_subscription.orders::proprietary-sdk",
+            "trait": "proprietary-sdk",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/gcp.tf",
+                "line": 5,
+                "excerpt": "resource \"google_pubsub_subscription\" \"orders\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.45,
+        "risk_by_dimension": {
+          "technical": 0.5
+        },
+        "weight": 1,
+        "contribution": 0.45,
+        "dependents_count": 0,
+        "wave": 2
+      },
+      {
+        "id": "multi-cloud//terraform#google_pubsub_topic.orders",
+        "kind": "resource",
+        "type": "google_pubsub_topic",
+        "native_address": "google_pubsub_topic.orders",
+        "service": "gcp.pubsub",
+        "class": "service",
+        "sources": [
+          "multi-cloud//terraform/gcp.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/gcp.tf",
+            "line": 1,
+            "excerpt": "resource \"google_pubsub_topic\" \"orders\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "multi-cloud//terraform#google_pubsub_topic.orders::proprietary-api",
+            "trait": "proprietary-api",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/gcp.tf",
+                "line": 1,
+                "excerpt": "resource \"google_pubsub_topic\" \"orders\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//terraform#google_pubsub_topic.orders::proprietary-event-model",
+            "trait": "proprietary-event-model",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/gcp.tf",
+                "line": 1,
+                "excerpt": "resource \"google_pubsub_topic\" \"orders\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//terraform#google_pubsub_topic.orders::proprietary-sdk",
+            "trait": "proprietary-sdk",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/gcp.tf",
+                "line": 1,
+                "excerpt": "resource \"google_pubsub_topic\" \"orders\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.45,
+        "risk_by_dimension": {
+          "technical": 0.5
+        },
+        "weight": 2,
+        "contribution": 0.9,
+        "dependents_count": 1,
+        "dependents": [
+          "multi-cloud//terraform#google_pubsub_subscription.orders"
+        ],
+        "wave": 1
+      },
+      {
+        "id": "multi-cloud//terraform#google_spanner_database.db",
+        "kind": "resource",
+        "type": "google_spanner_database",
+        "native_address": "google_spanner_database.db",
+        "service": "gcp.spanner",
+        "class": "service",
+        "sources": [
+          "multi-cloud//terraform/gcp.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/gcp.tf",
+            "line": 19,
+            "excerpt": "resource \"google_spanner_database\" \"db\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "multi-cloud//terraform#google_spanner_database.db::data-gravity",
+            "trait": "data-gravity",
+            "level": "high",
+            "dimensions": [
+              "data"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/gcp.tf",
+                "line": 19,
+                "excerpt": "resource \"google_spanner_database\" \"db\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//terraform#google_spanner_database.db::managed-only-feature",
+            "trait": "managed-only-feature",
+            "level": "medium",
+            "dimensions": [
+              "technical",
+              "operational"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/gcp.tf",
+                "line": 19,
+                "excerpt": "resource \"google_spanner_database\" \"db\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//terraform#google_spanner_database.db::proprietary-data-model",
+            "trait": "proprietary-data-model",
+            "level": "high",
+            "dimensions": [
+              "technical",
+              "data"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/gcp.tf",
+                "line": 19,
+                "excerpt": "resource \"google_spanner_database\" \"db\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//terraform#google_spanner_database.db::proprietary-query-language",
+            "trait": "proprietary-query-language",
+            "level": "high",
+            "dimensions": [
+              "technical",
+              "skills"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/gcp.tf",
+                "line": 19,
+                "excerpt": "resource \"google_spanner_database\" \"db\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//terraform#google_spanner_database.db::proprietary-sdk",
+            "trait": "proprietary-sdk",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/gcp.tf",
+                "line": 19,
+                "excerpt": "resource \"google_spanner_database\" \"db\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.8,
+        "risk_by_dimension": {
+          "data": 0.8,
+          "operational": 0.5,
+          "skills": 0.8,
+          "technical": 0.8
+        },
+        "weight": 1,
+        "contribution": 0.8,
+        "dependents_count": 0,
+        "wave": 2
+      },
+      {
+        "id": "multi-cloud//terraform#google_spanner_instance.main",
+        "kind": "resource",
+        "type": "google_spanner_instance",
+        "native_address": "google_spanner_instance.main",
+        "service": "gcp.spanner",
+        "class": "service",
+        "sources": [
+          "multi-cloud//terraform/gcp.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/gcp.tf",
+            "line": 12,
+            "excerpt": "resource \"google_spanner_instance\" \"main\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "multi-cloud//terraform#google_spanner_instance.main::data-gravity",
+            "trait": "data-gravity",
+            "level": "high",
+            "dimensions": [
+              "data"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/gcp.tf",
+                "line": 12,
+                "excerpt": "resource \"google_spanner_instance\" \"main\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//terraform#google_spanner_instance.main::managed-only-feature",
+            "trait": "managed-only-feature",
+            "level": "medium",
+            "dimensions": [
+              "technical",
+              "operational"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/gcp.tf",
+                "line": 12,
+                "excerpt": "resource \"google_spanner_instance\" \"main\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//terraform#google_spanner_instance.main::proprietary-data-model",
+            "trait": "proprietary-data-model",
+            "level": "high",
+            "dimensions": [
+              "technical",
+              "data"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/gcp.tf",
+                "line": 12,
+                "excerpt": "resource \"google_spanner_instance\" \"main\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//terraform#google_spanner_instance.main::proprietary-query-language",
+            "trait": "proprietary-query-language",
+            "level": "high",
+            "dimensions": [
+              "technical",
+              "skills"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/gcp.tf",
+                "line": 12,
+                "excerpt": "resource \"google_spanner_instance\" \"main\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//terraform#google_spanner_instance.main::proprietary-sdk",
+            "trait": "proprietary-sdk",
+            "level": "medium",
+            "dimensions": [
+              "technical"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/gcp.tf",
+                "line": 12,
+                "excerpt": "resource \"google_spanner_instance\" \"main\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.8,
+        "risk_by_dimension": {
+          "data": 0.8,
+          "operational": 0.5,
+          "skills": 0.8,
+          "technical": 0.8
+        },
+        "weight": 2,
+        "contribution": 1.6,
+        "dependents_count": 1,
+        "dependents": [
+          "multi-cloud//terraform#google_spanner_database.db"
+        ],
+        "wave": 1
+      },
+      {
+        "id": "multi-cloud//terraform#oci_database_autonomous_database.adb",
+        "kind": "resource",
+        "type": "oci_database_autonomous_database",
+        "native_address": "oci_database_autonomous_database.adb",
+        "service": "oci.autonomous-database",
+        "class": "service",
+        "sources": [
+          "multi-cloud//terraform/oci.tf"
+        ],
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/oci.tf",
+            "line": 5,
+            "excerpt": "resource \"oci_database_autonomous_database\" \"adb\" {",
+            "source_kind": "terraform"
+          }
+        ],
+        "findings": [
+          {
+            "id": "multi-cloud//terraform#oci_database_autonomous_database.adb::data-gravity",
+            "trait": "data-gravity",
+            "level": "high",
+            "dimensions": [
+              "data"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/oci.tf",
+                "line": 5,
+                "excerpt": "resource \"oci_database_autonomous_database\" \"adb\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//terraform#oci_database_autonomous_database.adb::managed-only-feature",
+            "trait": "managed-only-feature",
+            "level": "high",
+            "dimensions": [
+              "technical",
+              "operational"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/oci.tf",
+                "line": 5,
+                "excerpt": "resource \"oci_database_autonomous_database\" \"adb\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//terraform#oci_database_autonomous_database.adb::proprietary-data-model",
+            "trait": "proprietary-data-model",
+            "level": "high",
+            "dimensions": [
+              "technical",
+              "data"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/oci.tf",
+                "line": 5,
+                "excerpt": "resource \"oci_database_autonomous_database\" \"adb\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//terraform#oci_database_autonomous_database.adb::proprietary-query-language",
+            "trait": "proprietary-query-language",
+            "level": "high",
+            "dimensions": [
+              "technical",
+              "skills"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/oci.tf",
+                "line": 5,
+                "excerpt": "resource \"oci_database_autonomous_database\" \"adb\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          },
+          {
+            "id": "multi-cloud//terraform#oci_database_autonomous_database.adb::skills-specialization",
+            "trait": "skills-specialization",
+            "level": "medium",
+            "dimensions": [
+              "skills"
+            ],
+            "origin": "service",
+            "evidence": [
+              {
+                "repo": "multi-cloud",
+                "path": "terraform/oci.tf",
+                "line": 5,
+                "excerpt": "resource \"oci_database_autonomous_database\" \"adb\" {",
+                "source_kind": "terraform"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "risk": 0.8,
+        "risk_by_dimension": {
+          "data": 0.8,
+          "operational": 0.8,
+          "skills": 0.8,
+          "technical": 0.8
+        },
+        "weight": 1,
+        "contribution": 0.8,
+        "dependents_count": 0,
+        "wave": 1
+      }
+    ],
+    "edges": [
+      {
+        "from": "multi-cloud//cfn/stack.yaml#OrdersSubscription",
+        "to": "multi-cloud//cfn/stack.yaml#OrdersQueue",
+        "kind": "reference",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "cfn/stack.yaml",
+            "line": 20,
+            "excerpt": "Endpoint: !GetAtt OrdersQueue.Arn",
+            "source_kind": "cloudformation"
+          }
+        ]
+      },
+      {
+        "from": "multi-cloud//cfn/stack.yaml#OrdersSubscription",
+        "to": "multi-cloud//cfn/stack.yaml#OrdersTopic",
+        "kind": "reference",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "cfn/stack.yaml",
+            "line": 18,
+            "excerpt": "TopicArn: !Ref OrdersTopic",
+            "source_kind": "cloudformation"
+          }
+        ]
+      },
+      {
+        "from": "multi-cloud//terraform#azurerm_cosmosdb_account.acc",
+        "to": "multi-cloud//terraform#azurerm_resource_group.rg",
+        "kind": "containment",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/azure.tf",
+            "line": 9,
+            "excerpt": "resource_group_name = azurerm_resource_group.rg.name",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "multi-cloud//terraform#azurerm_cosmosdb_account.acc",
+        "to": "multi-cloud//terraform#azurerm_resource_group.rg",
+        "kind": "reference",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/azure.tf",
+            "line": 8,
+            "excerpt": "location            = azurerm_resource_group.rg.location",
+            "source_kind": "terraform"
+          },
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/azure.tf",
+            "line": 18,
+            "excerpt": "location          = azurerm_resource_group.rg.location",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "multi-cloud//terraform#azurerm_servicebus_namespace.bus",
+        "to": "multi-cloud//terraform#azurerm_resource_group.rg",
+        "kind": "containment",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/azure.tf",
+            "line": 26,
+            "excerpt": "resource_group_name = azurerm_resource_group.rg.name",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "multi-cloud//terraform#azurerm_servicebus_namespace.bus",
+        "to": "multi-cloud//terraform#azurerm_resource_group.rg",
+        "kind": "reference",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/azure.tf",
+            "line": 25,
+            "excerpt": "location            = azurerm_resource_group.rg.location",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "multi-cloud//terraform#azurerm_servicebus_queue.q",
+        "to": "multi-cloud//terraform#azurerm_servicebus_namespace.bus",
+        "kind": "containment",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/azure.tf",
+            "line": 32,
+            "excerpt": "namespace_id = azurerm_servicebus_namespace.bus.id",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "multi-cloud//terraform#google_pubsub_subscription.orders",
+        "to": "multi-cloud//terraform#google_pubsub_topic.orders",
+        "kind": "data-flow",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/gcp.tf",
+            "line": 7,
+            "excerpt": "topic = google_pubsub_topic.orders.id",
+            "source_kind": "terraform"
+          }
+        ]
+      },
+      {
+        "from": "multi-cloud//terraform#google_spanner_database.db",
+        "to": "multi-cloud//terraform#google_spanner_instance.main",
+        "kind": "containment",
+        "confidence": "exact",
+        "evidence": [
+          {
+            "repo": "multi-cloud",
+            "path": "terraform/gcp.tf",
+            "line": 20,
+            "excerpt": "instance = google_spanner_instance.main.name",
+            "source_kind": "terraform"
+          }
+        ]
+      }
+    ],
+    "groups": [],
+    "sccs": []
+  },
+  "analysis": {
+    "status": "ok",
+    "index": 48,
+    "index_without_exceptions": 48,
+    "grade": "D",
+    "confidence": "normal",
+    "dimensions": {
+      "data": 21,
+      "economic": null,
+      "operational": 15,
+      "skills": 19,
+      "technical": 51
+    },
+    "anchors": [
+      {
+        "rank": 1,
+        "node": "multi-cloud//terraform#google_spanner_instance.main",
+        "contribution": 1.6,
+        "dependents_count": 1,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "cockroachdb",
+            "name": "CockroachDB",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Distributed SQL with serializable transactions; schema, interleaving and GoogleSQL queries need conversion."
+          },
+          {
+            "id": "postgresql",
+            "name": "PostgreSQL",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Fits when horizontal write scale is not required; GoogleSQL queries and schema need rewriting."
+          },
+          {
+            "id": "yugabytedb",
+            "name": "YugabyteDB",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Distributed PostgreSQL-compatible SQL; closest fit for databases using the Spanner PostgreSQL dialect."
+          }
+        ],
+        "reason": "Data gravity + Proprietary data model + 1 dependent resource"
+      },
+      {
+        "rank": 2,
+        "node": "multi-cloud//cfn/stack.yaml#OrdersQueue",
+        "contribution": 0.9,
+        "dependents_count": 1,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "apache-kafka",
+            "name": "Apache Kafka",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Fits when queues carry event streams; per-message visibility and delays have no direct equivalent."
+          },
+          {
+            "id": "nats",
+            "name": "NATS",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "JetStream work-queue streams with ack and redelivery replace SQS queues; producers and consumers are rewritten."
+          },
+          {
+            "id": "rabbitmq",
+            "name": "RabbitMQ",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Queues, acknowledgements and dead-letter exchanges cover SQS patterns; client code changes to AMQP."
+          }
+        ],
+        "reason": "Proprietary API + Proprietary SDK + 1 dependent resource"
+      },
+      {
+        "rank": 3,
+        "node": "multi-cloud//cfn/stack.yaml#OrdersTopic",
+        "contribution": 0.9,
+        "dependents_count": 1,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "apache-kafka",
+            "name": "Apache Kafka",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Topics with consumer groups replace fan-out; push endpoints need connectors or bridges."
+          },
+          {
+            "id": "nats",
+            "name": "NATS",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "NATS subjects provide fan-out; HTTP push and SMS delivery need separate components."
+          },
+          {
+            "id": "rabbitmq",
+            "name": "RabbitMQ",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Fanout and topic exchanges model SNS to SQS fan-out; message filtering moves to bindings."
+          }
+        ],
+        "reason": "Proprietary API + Proprietary SDK + 1 dependent resource"
+      },
+      {
+        "rank": 4,
+        "node": "multi-cloud//terraform#azurerm_servicebus_namespace.bus",
+        "contribution": 0.9,
+        "dependents_count": 1,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "nats",
+            "name": "NATS",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "JetStream streams and consumers cover queues and pub/sub; no AMQP, clients must change."
+          },
+          {
+            "id": "rabbitmq",
+            "name": "RabbitMQ",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Queues, topics via exchanges and dead-lettering map over; RabbitMQ 4 speaks AMQP 1.0 but Service Bus entity APIs differ."
+          },
+          {
+            "id": "apache-kafka",
+            "name": "Apache Kafka",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Topics and consumer groups replace subscriptions; per-message settlement and sessions need redesign."
+          }
+        ],
+        "reason": "Proprietary API + Proprietary SDK + 1 dependent resource"
+      },
+      {
+        "rank": 5,
+        "node": "multi-cloud//terraform#google_pubsub_topic.orders",
+        "contribution": 0.9,
+        "dependents_count": 1,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "apache-kafka",
+            "name": "Apache Kafka",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Topics and subscriptions map to topics and consumer groups; ack deadlines, push delivery and filters need redesign."
+          },
+          {
+            "id": "apache-pulsar",
+            "name": "Apache Pulsar",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Pulsar topics with shared or key-shared subscriptions are close to the Pub/Sub model; client code must change."
+          },
+          {
+            "id": "nats",
+            "name": "NATS",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "NATS JetStream streams and durable consumers cover pull and fan-out; producer and consumer code must be rewritten."
+          },
+          {
+            "id": "rabbitmq",
+            "name": "RabbitMQ",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Fanout exchanges and queues model topics and subscriptions; ordering keys and replay work differently."
+          }
+        ],
+        "reason": "Proprietary API + Proprietary SDK + 1 dependent resource"
+      },
+      {
+        "rank": 6,
+        "node": "multi-cloud//terraform#azurerm_cosmosdb_account.acc",
+        "contribution": 0.8,
+        "dependents_count": 0,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "cassandra",
+            "name": "Apache Cassandra",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "protocol-compatible",
+            "recommended": false,
+            "notes": "Accounts using the Cassandra API speak CQL; NoSQL API accounts need remodelling for wide-column tables."
+          },
+          {
+            "id": "ferretdb",
+            "name": "FerretDB",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "protocol-compatible",
+            "recommended": false,
+            "notes": "Mongo wire protocol on PostgreSQL; fits MongoDB API accounts, check unsupported operators."
+          },
+          {
+            "id": "mongodb",
+            "name": "MongoDB Community Server",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "protocol-compatible",
+            "recommended": false,
+            "notes": "Accounts using the MongoDB API (or vCore) speak the Mongo wire protocol; NoSQL API accounts need a data and query rewrite."
+          },
+          {
+            "id": "scylladb",
+            "name": "ScyllaDB",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "protocol-compatible",
+            "recommended": false,
+            "notes": "CQL-compatible target for Cassandra API accounts; conceptual only for NoSQL API accounts."
+          },
+          {
+            "id": "postgresql",
+            "name": "PostgreSQL",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "JSONB documents in PostgreSQL can replace NoSQL API containers; queries and partitioning must be redesigned."
+          }
+        ],
+        "reason": "Proprietary API + Proprietary data model"
+      },
+      {
+        "rank": 7,
+        "node": "multi-cloud//terraform#google_spanner_database.db",
+        "contribution": 0.8,
+        "dependents_count": 0,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "cockroachdb",
+            "name": "CockroachDB",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Distributed SQL with serializable transactions; schema, interleaving and GoogleSQL queries need conversion."
+          },
+          {
+            "id": "postgresql",
+            "name": "PostgreSQL",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Fits when horizontal write scale is not required; GoogleSQL queries and schema need rewriting."
+          },
+          {
+            "id": "yugabytedb",
+            "name": "YugabyteDB",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Distributed PostgreSQL-compatible SQL; closest fit for databases using the Spanner PostgreSQL dialect."
+          }
+        ],
+        "reason": "Data gravity + Proprietary data model"
+      },
+      {
+        "rank": 8,
+        "node": "multi-cloud//terraform#oci_database_autonomous_database.adb",
+        "contribution": 0.8,
+        "dependents_count": 0,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "mariadb",
+            "name": "MariaDB Server",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "sql_mode=ORACLE accepts parts of PL/SQL syntax; packages, types and many built-ins still need rework."
+          },
+          {
+            "id": "postgresql",
+            "name": "PostgreSQL",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Schemas and data migrate with tools such as ora2pg; PL/SQL code and Oracle-specific SQL need rewriting."
+          },
+          {
+            "id": "yugabytedb",
+            "name": "YugabyteDB",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "PostgreSQL-compatible distributed SQL; same PL/SQL rewrite effort as PostgreSQL plus distribution design."
+          }
+        ],
+        "reason": "Data gravity + Managed-only feature"
+      },
+      {
+        "rank": 9,
+        "node": "multi-cloud//terraform#azurerm_resource_group.rg",
+        "contribution": 0.675,
+        "dependents_count": 3,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "kubernetes",
+            "name": "Kubernetes",
+            "kind": "oss-self-hosted",
+            "difficulty": "low",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Namespaces and labels take over grouping and scoping for workloads moved to clusters."
+          },
+          {
+            "id": "scaleway",
+            "name": "Scaleway",
+            "kind": "european-provider",
+            "difficulty": "low",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Organizations and Projects provide a similar grouping and access boundary."
+          }
+        ],
+        "reason": "Operational tooling coupling + Provider network construct + 3 dependent resources"
+      },
+      {
+        "rank": 10,
+        "node": "multi-cloud//#storage.cnrm.cloud.google.com/StorageBucket/default/shop-assets",
+        "contribution": 0.5,
+        "dependents_count": 0,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "garage",
+            "name": "Garage",
+            "kind": "oss-self-hosted",
+            "difficulty": "low",
+            "compatibility": "protocol-compatible",
+            "recommended": false,
+            "notes": "Lightweight S3-compatible store; GCS SDK calls must move to an S3 client."
+          },
+          {
+            "id": "scaleway",
+            "name": "Scaleway",
+            "kind": "european-provider",
+            "difficulty": "low",
+            "compatibility": "protocol-compatible",
+            "recommended": false,
+            "notes": "Scaleway Object Storage is S3-compatible; replace GCS SDK calls with an S3 client."
+          },
+          {
+            "id": "ceph",
+            "name": "Ceph",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "protocol-compatible",
+            "recommended": false,
+            "notes": "Ceph RGW exposes the S3 API; GCS SDK calls must move to an S3 client."
+          }
+        ],
+        "reason": "Data gravity + Proprietary SDK"
+      },
+      {
+        "rank": 11,
+        "node": "multi-cloud//cfn/stack.yaml#OrdersSubscription",
+        "contribution": 0.45,
+        "dependents_count": 0,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "apache-kafka",
+            "name": "Apache Kafka",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Topics with consumer groups replace fan-out; push endpoints need connectors or bridges."
+          },
+          {
+            "id": "nats",
+            "name": "NATS",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "NATS subjects provide fan-out; HTTP push and SMS delivery need separate components."
+          },
+          {
+            "id": "rabbitmq",
+            "name": "RabbitMQ",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Fanout and topic exchanges model SNS to SQS fan-out; message filtering moves to bindings."
+          }
+        ],
+        "reason": "Proprietary API + Proprietary SDK"
+      },
+      {
+        "rank": 12,
+        "node": "multi-cloud//terraform#azurerm_servicebus_queue.q",
+        "contribution": 0.45,
+        "dependents_count": 0,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "nats",
+            "name": "NATS",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "JetStream streams and consumers cover queues and pub/sub; no AMQP, clients must change."
+          },
+          {
+            "id": "rabbitmq",
+            "name": "RabbitMQ",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Queues, topics via exchanges and dead-lettering map over; RabbitMQ 4 speaks AMQP 1.0 but Service Bus entity APIs differ."
+          },
+          {
+            "id": "apache-kafka",
+            "name": "Apache Kafka",
+            "kind": "oss-self-hosted",
+            "difficulty": "high",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Topics and consumer groups replace subscriptions; per-message settlement and sessions need redesign."
+          }
+        ],
+        "reason": "Proprietary API + Proprietary SDK"
+      },
+      {
+        "rank": 13,
+        "node": "multi-cloud//terraform#google_pubsub_subscription.orders",
+        "contribution": 0.45,
+        "dependents_count": 0,
+        "components_using": 0,
+        "sdk_files": 0,
+        "alternatives": [
+          {
+            "id": "apache-kafka",
+            "name": "Apache Kafka",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Topics and subscriptions map to topics and consumer groups; ack deadlines, push delivery and filters need redesign."
+          },
+          {
+            "id": "apache-pulsar",
+            "name": "Apache Pulsar",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Pulsar topics with shared or key-shared subscriptions are close to the Pub/Sub model; client code must change."
+          },
+          {
+            "id": "nats",
+            "name": "NATS",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "NATS JetStream streams and durable consumers cover pull and fan-out; producer and consumer code must be rewritten."
+          },
+          {
+            "id": "rabbitmq",
+            "name": "RabbitMQ",
+            "kind": "oss-self-hosted",
+            "difficulty": "medium",
+            "compatibility": "conceptual",
+            "recommended": false,
+            "notes": "Fanout exchanges and queues model topics and subscriptions; ordering keys and replay work differently."
+          }
+        ],
+        "reason": "Proprietary API + Proprietary SDK"
+      }
+    ],
+    "lever": {
+      "service": "gcp.spanner",
+      "alternative": "cockroachdb",
+      "delta": 11
+    },
+    "coverage": {
+      "types": 1,
+      "resources": 1,
+      "weighted": 1,
+      "unknown_types": 0
+    },
+    "waves": [
+      {
+        "wave": 1,
+        "units": [
+          [
+            "multi-cloud//#apps/Deployment/default/exitctl-app"
+          ],
+          [
+            "multi-cloud//#storage.cnrm.cloud.google.com/StorageBucket/default/shop-assets"
+          ],
+          [
+            "multi-cloud//cfn/stack.yaml#OrdersQueue"
+          ],
+          [
+            "multi-cloud//cfn/stack.yaml#OrdersTopic"
+          ],
+          [
+            "multi-cloud//terraform#azurerm_resource_group.rg"
+          ],
+          [
+            "multi-cloud//terraform#google_pubsub_topic.orders"
+          ],
+          [
+            "multi-cloud//terraform#google_spanner_instance.main"
+          ],
+          [
+            "multi-cloud//terraform#oci_database_autonomous_database.adb"
+          ]
+        ]
+      },
+      {
+        "wave": 2,
+        "units": [
+          [
+            "multi-cloud//cfn/stack.yaml#OrdersSubscription"
+          ],
+          [
+            "multi-cloud//terraform#azurerm_cosmosdb_account.acc"
+          ],
+          [
+            "multi-cloud//terraform#azurerm_servicebus_namespace.bus"
+          ],
+          [
+            "multi-cloud//terraform#google_pubsub_subscription.orders"
+          ],
+          [
+            "multi-cloud//terraform#google_spanner_database.db"
+          ]
+        ]
+      },
+      {
+        "wave": 3,
+        "units": [
+          [
+            "multi-cloud//terraform#azurerm_servicebus_queue.q"
+          ]
+        ]
+      }
+    ],
+    "chains": [
+      {
+        "nodes": [
+          "multi-cloud//terraform#google_spanner_database.db",
+          "multi-cloud//terraform#google_spanner_instance.main"
+        ]
+      }
+    ],
+    "exceptions": [],
+    "notes": [
+      "draft catalog entries were scored (development mode); results are unverified"
+    ]
+  }
+}

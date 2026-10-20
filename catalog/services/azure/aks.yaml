@@ -1,0 +1,86 @@
+schema: '1.0'
+kind: service
+id: azure.aks
+provider: azure
+name: Azure Kubernetes Service (AKS)
+category: compute.container
+resource_types:
+  terraform:
+  - azurerm_kubernetes_cluster
+  - azurerm_kubernetes_cluster_node_pool
+  - azurerm_kubernetes_cluster_extension
+  - azurerm_kubernetes_flux_configuration
+  - azurerm_kubernetes_cluster_trusted_access_role_binding
+  - azurerm_kubernetes_fleet_manager
+  - azurerm_kubernetes_fleet_member
+  - azurerm_kubernetes_fleet_update_run
+  - azurerm_kubernetes_fleet_update_strategy
+  kubernetes:
+  - {group: containerservice.azure.com, kind: ManagedCluster}
+  - {group: containerservice.azure.com, kind: ManagedClustersAgentPool}
+  - {group: containerservice.azure.com, kind: TrustedAccessRoleBinding}
+  - {group: containerservice.azure.com, kind: Fleet}
+  - {group: containerservice.azure.com, kind: FleetsMember}
+  - {group: containerservice.azure.com, kind: FleetsUpdateRun}
+  - {group: containerservice.azure.com, kind: MaintenanceConfiguration}
+  ci_action:
+  - azure/k8s-deploy
+  - azure/aks-set-context
+  - azure/k8s-bake
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'Upstream Kubernetes API; node pools, upgrades and add-ons are managed through AKS.'}
+- {id: skills-specialization, level: low, reason: AKS-specific networking and identity options need Azure knowledge.}
+rules:
+- id: azure.aks.workload-identity
+  match: {resource_type: [azurerm_kubernetes_cluster]}
+  when: {attr: workload_identity_enabled, equals: true}
+  then: {add_trait: proprietary-iam-model, level: medium, evidence: workload_identity_enabled}
+- id: azure.aks.agic-addon
+  match: {resource_type: [azurerm_kubernetes_cluster]}
+  when: {attr: ingress_application_gateway, exists: true}
+  then: {add_trait: provider-specific-annotations, level: medium, evidence: ingress_application_gateway}
+- id: azure.aks.azure-cni
+  match: {resource_type: [azurerm_kubernetes_cluster]}
+  when: {attr: network_profile.network_plugin, equals: azure}
+  then: {add_trait: provider-network-construct, level: low, evidence: network_profile.network_plugin}
+kubernetes_bindings:
+- match: {kind: Ingress, field: spec.ingressClassName, equals: webapprouting.kubernetes.azure.com}
+edge_hints:
+- {resource_type: azurerm_kubernetes_cluster, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_kubernetes_cluster_node_pool, attribute: kubernetes_cluster_id, edge_kind: containment}
+- {resource_type: azurerm_kubernetes_cluster_node_pool, attribute: vnet_subnet_id, edge_kind: containment}
+- {resource_type: azurerm_kubernetes_cluster, attribute: default_node_pool.vnet_subnet_id, edge_kind: containment}
+- {resource_type: azurerm_kubernetes_cluster_extension, attribute: cluster_id, edge_kind: containment}
+- {resource_type: azurerm_kubernetes_flux_configuration, attribute: cluster_id, edge_kind: containment}
+alternatives:
+- ref: kubernetes
+  difficulty: low
+  compatibility: api-compatible
+  notes: Conformant Kubernetes; workloads move with manifests. Replace Azure CSI, LB annotations and workload identity.
+  approved_by: cloudowski
+- ref: ovhcloud
+  difficulty: low
+  compatibility: api-compatible
+  notes: Managed Kubernetes in the EU; replace Azure-specific storage classes and annotations.
+  approved_by: cloudowski
+- ref: scaleway
+  difficulty: low
+  compatibility: api-compatible
+  notes: Kapsule managed Kubernetes in the EU; replace Azure-specific storage classes and annotations.
+  approved_by: cloudowski
+- ref: stackit
+  difficulty: low
+  compatibility: api-compatible
+  notes: SKE managed Kubernetes in the EU; replace Azure-specific storage classes and annotations.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/aks/what-is-aks
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster
+  - https://github.com/Azure/k8s-deploy
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

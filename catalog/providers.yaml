@@ -1,0 +1,9 @@
+schema: "1.0"
+kind: providers
+providers:
+  - { id: aws, name: Amazon Web Services, kind: hyperscaler }
+  - { id: gcp, name: Google Cloud, kind: hyperscaler }
+  - { id: azure, name: Microsoft Azure, kind: hyperscaler }
+  - { id: oci, name: Oracle Cloud Infrastructure, kind: hyperscaler }
+  - { id: kubernetes, name: Kubernetes, kind: platform }
+  - { id: generic, name: Generic, kind: generic }

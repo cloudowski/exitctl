@@ -1,0 +1,19 @@
+schema: '1.0'
+kind: alternative
+id: opentofu
+name: OpenTofu
+alternative_kind: oss-self-hosted
+license: MPL-2.0
+homepage: https://opentofu.org/
+vendor_contributed: false
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://opentofu.org/
+  - https://github.com/opentofu/opentofu
+  - https://opentofu.org/docs/language/import/
+  llm: {batch: 2026-10-07-eks-workshop, model: claude-opus-5-5, prompt_version: catalog-coverage-v1, eval_passed: true}

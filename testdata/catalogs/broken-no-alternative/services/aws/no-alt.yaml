@@ -1,0 +1,11 @@
+schema: "1.0"
+kind: service
+id: aws.noalt
+provider: aws
+name: aws.noalt
+category: messaging.queue
+resource_types:
+  terraform: [aws_noalt]
+traits:
+  - id: proprietary-api
+provenance: { origin: maintainer, author: cloudowski, status: verified, reviewed_by: cloudowski, reviewed_on: 2026-10-06 }

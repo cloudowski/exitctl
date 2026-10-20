@@ -1,0 +1,15 @@
+schema: '1.0'
+kind: neutral
+id: aws-account-context
+provider: aws
+resource_types:
+  terraform: [aws_iam_roles, aws_iam_session_context, aws_organizations_organization]
+scored: false
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-08'
+  status: verified
+  sources: ['https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_roles', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_session_context']
+  llm: {batch: 2026-10-08-coverage, model: claude-sonnet-5-5, prompt_version: catalog-coverage-v1, eval_passed: true}

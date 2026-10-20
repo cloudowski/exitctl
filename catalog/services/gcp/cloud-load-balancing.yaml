@@ -1,0 +1,103 @@
+schema: '1.0'
+kind: service
+id: gcp.cloud-load-balancing
+provider: gcp
+name: Cloud Load Balancing
+category: network.load-balancer
+resource_types:
+  terraform: [google_compute_forwarding_rule, google_compute_global_forwarding_rule, google_compute_backend_service, google_compute_region_backend_service, google_compute_backend_service_iam_binding, google_compute_backend_service_iam_member, google_compute_backend_service_iam_policy, google_compute_region_backend_service_iam_binding, google_compute_region_backend_service_iam_member, google_compute_region_backend_service_iam_policy, google_compute_url_map, google_compute_region_url_map, google_compute_target_http_proxy, google_compute_target_https_proxy, google_compute_region_target_http_proxy, google_compute_region_target_https_proxy, google_compute_target_tcp_proxy, google_compute_region_target_tcp_proxy, google_compute_target_ssl_proxy, google_compute_target_grpc_proxy, google_compute_target_pool, google_compute_target_instance, google_compute_health_check, google_compute_region_health_check, google_compute_http_health_check, google_compute_https_health_check, google_compute_network_endpoint_group, google_compute_region_network_endpoint_group, google_compute_global_network_endpoint_group, google_compute_network_endpoint, google_compute_network_endpoints, google_compute_global_network_endpoint, google_compute_ssl_certificate, google_compute_region_ssl_certificate, google_compute_managed_ssl_certificate, google_compute_ssl_policy, google_compute_region_ssl_policy, google_certificate_manager_certificate, google_certificate_manager_certificate_map, google_certificate_manager_certificate_map_entry, google_certificate_manager_dns_authorization, google_certificate_manager_trust_config]
+  kubernetes:
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeForwardingRule}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeBackendService}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeURLMap}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeTargetHTTPProxy}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeTargetHTTPSProxy}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeTargetTCPProxy}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeTargetSSLProxy}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeTargetGRPCProxy}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeTargetPool}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeTargetInstance}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeHealthCheck}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeHTTPHealthCheck}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeHTTPSHealthCheck}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeNetworkEndpointGroup}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeSSLCertificate}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeManagedSSLCertificate}
+  - {group: compute.cnrm.cloud.google.com, kind: ComputeSSLPolicy}
+  - {group: certificatemanager.cnrm.cloud.google.com, kind: CertificateManagerCertificate}
+  - {group: certificatemanager.cnrm.cloud.google.com, kind: CertificateManagerCertificateMap}
+  - {group: certificatemanager.cnrm.cloud.google.com, kind: CertificateManagerCertificateMapEntry}
+  - {group: certificatemanager.cnrm.cloud.google.com, kind: CertificateManagerDNSAuthorization}
+  - {group: cloud.google.com, kind: BackendConfig}
+  - {group: networking.gke.io, kind: FrontendConfig}
+  - {group: networking.gke.io, kind: ManagedCertificate}
+  - {group: networking.gke.io, kind: GCPBackendPolicy}
+  - {group: networking.gke.io, kind: GCPGatewayPolicy}
+  - {group: networking.gke.io, kind: HealthCheckPolicy}
+  - {group: networking.gke.io, kind: ServiceNetworkEndpointGroup}
+traits:
+- {id: provider-specific-annotations, level: medium, reason: 'GKE Ingress and Services rely on gce ingress classes, BackendConfig, FrontendConfig and cloud.google.com annotations.'}
+- {id: proprietary-api, level: low, reason: 'Load balancers are composed from Google-specific forwarding rules, backend services and URL maps.'}
+- {id: managed-only-feature, level: low, reason: Global anycast IPs and Google-managed certificates have no direct self-hosted equivalent.}
+rules:
+- id: gcp.cloud-load-balancing.cdn-enabled
+  match:
+    resource_type: [google_compute_backend_service]
+  when: {attr: enable_cdn, equals: true}
+  then: {add_trait: managed-only-feature, level: low, evidence: enable_cdn}
+- id: gcp.cloud-load-balancing.iap
+  match:
+    resource_type: [google_compute_backend_service, google_compute_region_backend_service]
+  when: {attr: iap.enabled, equals: true}
+  then: {add_trait: proprietary-iam-model, level: medium, evidence: iap}
+kubernetes_bindings:
+- match: {kind: Ingress, annotation: kubernetes.io/ingress.class, equals: gce}
+- match: {kind: Ingress, annotation: kubernetes.io/ingress.class, equals: gce-internal}
+- match: {kind: Ingress, field: spec.ingressClassName, equals: gce}
+- match: {kind: Ingress, field: spec.ingressClassName, equals: gce-internal}
+- match: {kind: Ingress, annotation: networking.gke.io/managed-certificates, exists: true}
+- match: {kind: Ingress, annotation: networking.gke.io/v1beta1.FrontendConfig, exists: true}
+- match: {kind: Ingress, annotation: kubernetes.io/ingress.global-static-ip-name, exists: true}
+- match: {kind: Ingress, annotation: ingress.gcp.kubernetes.io/pre-shared-cert, exists: true}
+- match: {kind: Service, annotation: cloud.google.com/backend-config, exists: true}
+- match: {kind: Service, annotation: cloud.google.com/neg, exists: true}
+- match: {kind: Service, annotation: cloud.google.com/load-balancer-type, exists: true}
+- match: {kind: Service, annotation: networking.gke.io/load-balancer-type, exists: true}
+- match: {kind: Service, annotation: networking.gke.io/internal-load-balancer-*, exists: true}
+- match:
+    kind: Gateway
+    group: gateway.networking.k8s.io
+    field: spec.gatewayClassName
+    in: [gke-l7-global-external-managed, gke-l7-regional-external-managed, gke-l7-rilb, gke-l7-gxlb, gke-l7-cross-regional-internal-managed-mc, gke-l7-global-external-managed-mc, gke-l7-regional-external-managed-mc, gke-l7-rilb-mc, gke-l7-gxlb-mc]
+edge_hints:
+- {resource_type: google_compute_forwarding_rule, attribute: target, edge_kind: reference}
+- {resource_type: google_compute_forwarding_rule, attribute: backend_service, edge_kind: reference}
+- {resource_type: google_compute_forwarding_rule, attribute: network, edge_kind: containment}
+- {resource_type: google_compute_forwarding_rule, attribute: subnetwork, edge_kind: containment}
+- {resource_type: google_compute_global_forwarding_rule, attribute: target, edge_kind: reference}
+- {resource_type: google_compute_backend_service, attribute: backend.group, edge_kind: reference}
+- {resource_type: google_compute_backend_service, attribute: health_checks, edge_kind: reference}
+- {resource_type: google_compute_backend_service, attribute: security_policy, edge_kind: reference}
+- {resource_type: google_compute_region_backend_service, attribute: backend.group, edge_kind: reference}
+- {resource_type: google_compute_url_map, attribute: default_service, edge_kind: reference}
+- {resource_type: google_compute_target_http_proxy, attribute: url_map, edge_kind: reference}
+- {resource_type: google_compute_target_https_proxy, attribute: url_map, edge_kind: reference}
+- {resource_type: google_compute_target_https_proxy, attribute: certificate_map, edge_kind: reference}
+- {resource_type: google_compute_network_endpoint_group, attribute: network, edge_kind: containment}
+- {resource_type: google_compute_network_endpoint_group, attribute: subnetwork, edge_kind: containment}
+- {resource_type: google_compute_region_network_endpoint_group, attribute: cloud_run.service, edge_kind: reference}
+- {resource_type: google_certificate_manager_certificate_map_entry, attribute: map, edge_kind: containment}
+alternatives:
+- {ref: nginx, difficulty: low, compatibility: conceptual, notes: ingress-nginx serves standard Ingress resources; GKE annotations and BackendConfig settings must be translated., approved_by: cloudowski}
+- {ref: traefik, difficulty: low, compatibility: conceptual, notes: Traefik serves Ingress and Gateway API resources; GKE-specific annotations need translation., approved_by: cloudowski}
+- {ref: envoy, difficulty: medium, compatibility: conceptual, notes: Envoy Gateway implements the Gateway API; GKE gateway classes and policies need replacement., approved_by: cloudowski}
+- {ref: haproxy, difficulty: medium, compatibility: conceptual, notes: HAProxy or its ingress controller replaces L4/L7 load balancing; config is rewritten., approved_by: cloudowski}
+- {ref: cert-manager, difficulty: low, compatibility: conceptual, notes: 'cert-manager issues certificates for Ingress and Gateway, replacing Google-managed certificates.', approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/load-balancing/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_backend_service', 'https://cloud.google.com/kubernetes-engine/docs/how-to/ingress-configuration']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

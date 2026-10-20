@@ -1,0 +1,24 @@
+schema: '1.0'
+kind: neutral
+id: aws-context
+provider: aws
+# Terraform data sources that only look up account, region, partition, or
+# zone context, or render IAM policy JSON locally, plus Crossplane AWS
+# provider configuration. They deploy nothing; any lock-in is counted on the
+# resources that use their output.
+resource_types:
+  terraform: [aws_caller_identity, aws_partition, aws_region, aws_regions, aws_availability_zones, aws_availability_zone, aws_arn, aws_default_tags, aws_ec2_instance_type, aws_ec2_instance_types, aws_iam_policy_document, aws_service_principal, aws_billing_service_account]
+  # Crossplane AWS provider credentials and configuration.
+  kubernetes:
+  - {group: aws.upbound.io, kind: '*'}
+scored: false
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity
+  - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document
+  llm: {batch: 2026-10-07-coverage, model: claude-opus-5-5, prompt_version: catalog-coverage-v1, eval_passed: true}

@@ -1,0 +1,152 @@
+schema: '1.0'
+kind: service
+id: azure.cosmos-db
+provider: azure
+name: Azure Cosmos DB
+category: database.nosql.document
+resource_types:
+  terraform:
+  - azurerm_cosmosdb_account
+  - azurerm_cosmosdb_sql_database
+  - azurerm_cosmosdb_sql_container
+  - azurerm_cosmosdb_sql_stored_procedure
+  - azurerm_cosmosdb_sql_trigger
+  - azurerm_cosmosdb_sql_function
+  - azurerm_cosmosdb_sql_role_definition
+  - azurerm_cosmosdb_sql_role_assignment
+  - azurerm_cosmosdb_sql_dedicated_gateway
+  - azurerm_cosmosdb_mongo_database
+  - azurerm_cosmosdb_mongo_collection
+  - azurerm_cosmosdb_mongo_role_definition
+  - azurerm_cosmosdb_mongo_user_definition
+  - azurerm_cosmosdb_cassandra_keyspace
+  - azurerm_cosmosdb_cassandra_table
+  - azurerm_cosmosdb_cassandra_cluster
+  - azurerm_cosmosdb_cassandra_datacenter
+  - azurerm_cosmosdb_gremlin_database
+  - azurerm_cosmosdb_gremlin_graph
+  - azurerm_cosmosdb_table
+  - azurerm_cosmosdb_notebook_workspace
+  - azurerm_mongo_cluster
+  kubernetes:
+  - {group: documentdb.azure.com, kind: DatabaseAccount}
+  - {group: documentdb.azure.com, kind: SqlDatabase}
+  - {group: documentdb.azure.com, kind: SqlDatabaseContainer}
+  - {group: documentdb.azure.com, kind: SqlDatabaseContainerStoredProcedure}
+  - {group: documentdb.azure.com, kind: SqlDatabaseContainerTrigger}
+  - {group: documentdb.azure.com, kind: SqlDatabaseContainerUserDefinedFunction}
+  - {group: documentdb.azure.com, kind: SqlDatabaseThroughputSetting}
+  - {group: documentdb.azure.com, kind: SqlDatabaseContainerThroughputSetting}
+  - {group: documentdb.azure.com, kind: SqlRoleAssignment}
+  - {group: documentdb.azure.com, kind: MongodbDatabase}
+  - {group: documentdb.azure.com, kind: MongodbDatabaseCollection}
+  - {group: documentdb.azure.com, kind: MongodbDatabaseThroughputSetting}
+  - {group: documentdb.azure.com, kind: MongodbDatabaseCollectionThroughputSetting}
+  - {group: documentdb.azure.com, kind: MongoCluster}
+  - {group: documentdb.azure.com, kind: MongoClustersFirewallRule}
+traits:
+- {id: proprietary-api, level: high, reason: 'The NoSQL (Core) API, request units and SDK semantics exist only in Cosmos DB.'}
+- {id: proprietary-data-model, level: high, reason: 'Partition keys, RU throughput and consistency levels shape the data model.'}
+- {id: proprietary-query-language, level: high, reason: The NoSQL API uses a Cosmos-specific SQL dialect over JSON documents.}
+- {id: data-gravity, level: medium, reason: Large document stores need bulk export and reimport to move.}
+- {id: proprietary-sdk}
+rules:
+- id: azure.cosmos-db.mongo-api
+  match: {resource_type: [azurerm_cosmosdb_account]}
+  when: {attr: kind, equals: MongoDB}
+  then: {set_level: {trait: proprietary-query-language, level: low}, evidence: kind}
+- id: azure.cosmos-db.mongo-api-surface
+  match: {resource_type: [azurerm_cosmosdb_account]}
+  when: {attr: kind, equals: MongoDB}
+  then: {set_level: {trait: proprietary-api, level: medium}, evidence: kind}
+- id: azure.cosmos-db.cassandra-api
+  match: {resource_type: [azurerm_cosmosdb_account]}
+  when: {attr: capabilities.name, equals: EnableCassandra}
+  then: {set_level: {trait: proprietary-query-language, level: low}, evidence: capabilities.name}
+- id: azure.cosmos-db.analytical-store
+  match: {resource_type: [azurerm_cosmosdb_account]}
+  when: {attr: analytical_storage_enabled, equals: true}
+  then: {add_trait: managed-only-feature, level: medium, evidence: analytical_storage_enabled}
+sdk:
+- ecosystem: npm
+  packages:
+  - '@azure/cosmos'
+  imports:
+  - '[''"]@azure/cosmos(/[^''"]*)?[''"]'
+- ecosystem: pypi
+  packages:
+  - azure-cosmos
+  imports:
+  - ^\s*(from|import)\s+azure\.cosmos\b
+- ecosystem: go
+  packages:
+  - github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos
+  imports:
+  - '"github\.com/Azure/azure-sdk-for-go/sdk/data/azcosmos(/[^"]*)?"'
+- ecosystem: maven
+  packages:
+  - com.azure:azure-cosmos
+  - com.azure:azure-cosmos-encryption
+  - com.azure.cosmos.spark:*
+  imports:
+  - ^\s*import\s+(static\s+)?com\.azure\.cosmos\.
+- ecosystem: nuget
+  packages:
+  - Microsoft.Azure.Cosmos
+  - Microsoft.Azure.DocumentDB*
+  - Microsoft.Azure.Cosmos.*
+  imports:
+  - ^\s*using\s+(static\s+)?Microsoft\.Azure\.Cosmos\b
+  - ^\s*using\s+(static\s+)?Microsoft\.Azure\.Documents\b
+edge_hints:
+- {resource_type: azurerm_cosmosdb_account, attribute: resource_group_name, edge_kind: containment}
+- {resource_type: azurerm_cosmosdb_sql_database, attribute: account_name, edge_kind: containment}
+- {resource_type: azurerm_cosmosdb_sql_container, attribute: database_name, edge_kind: containment}
+- {resource_type: azurerm_cosmosdb_sql_container, attribute: account_name, edge_kind: containment}
+- {resource_type: azurerm_cosmosdb_mongo_database, attribute: account_name, edge_kind: containment}
+- {resource_type: azurerm_cosmosdb_mongo_collection, attribute: database_name, edge_kind: containment}
+- {resource_type: azurerm_cosmosdb_cassandra_keyspace, attribute: account_name, edge_kind: containment}
+- {resource_type: azurerm_cosmosdb_cassandra_table, attribute: cassandra_keyspace_id, edge_kind: containment}
+- {resource_type: azurerm_cosmosdb_gremlin_database, attribute: account_name, edge_kind: containment}
+- {resource_type: azurerm_cosmosdb_gremlin_graph, attribute: database_name, edge_kind: containment}
+- {resource_type: azurerm_cosmosdb_table, attribute: account_name, edge_kind: containment}
+- {resource_type: azurerm_cosmosdb_sql_stored_procedure, attribute: container_name, edge_kind: containment}
+- {resource_type: azurerm_cosmosdb_sql_trigger, attribute: container_id, edge_kind: containment}
+- {resource_type: azurerm_cosmosdb_sql_function, attribute: container_id, edge_kind: containment}
+alternatives:
+- ref: mongodb
+  difficulty: medium
+  compatibility: protocol-compatible
+  notes: Accounts using the MongoDB API (or vCore) speak the Mongo wire protocol; NoSQL API accounts need a data and query rewrite.
+  approved_by: cloudowski
+- ref: cassandra
+  difficulty: medium
+  compatibility: protocol-compatible
+  notes: Accounts using the Cassandra API speak CQL; NoSQL API accounts need remodelling for wide-column tables.
+  approved_by: cloudowski
+- ref: scylladb
+  difficulty: medium
+  compatibility: protocol-compatible
+  notes: CQL-compatible target for Cassandra API accounts; conceptual only for NoSQL API accounts.
+  approved_by: cloudowski
+- ref: postgresql
+  difficulty: high
+  compatibility: conceptual
+  notes: JSONB documents in PostgreSQL can replace NoSQL API containers; queries and partitioning must be redesigned.
+  approved_by: cloudowski
+- ref: ferretdb
+  difficulty: medium
+  compatibility: protocol-compatible
+  notes: Mongo wire protocol on PostgreSQL; fits MongoDB API accounts, check unsupported operators.
+  approved_by: cloudowski
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources:
+  - https://learn.microsoft.com/en-us/azure/cosmos-db/introduction
+  - https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/introduction
+  - https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_account
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

@@ -1,0 +1,70 @@
+schema: '1.0'
+kind: service
+id: aws.neptune
+provider: aws
+name: Amazon Neptune
+category: database.nosql
+resource_types:
+  terraform: [aws_neptune_cluster, aws_neptune_cluster_instance, aws_neptune_cluster_parameter_group, aws_neptune_parameter_group, aws_neptune_subnet_group, aws_neptune_cluster_endpoint, aws_neptune_cluster_snapshot, aws_neptune_event_subscription, aws_neptune_global_cluster, aws_neptunegraph_graph]
+  cloudformation: ['AWS::Neptune::DBCluster', 'AWS::Neptune::DBInstance', 'AWS::Neptune::DBClusterParameterGroup', 'AWS::Neptune::DBParameterGroup', 'AWS::Neptune::DBSubnetGroup', 'AWS::Neptune::EventSubscription', 'AWS::NeptuneGraph::Graph', 'AWS::NeptuneGraph::PrivateGraphEndpoint']
+traits:
+- {id: data-gravity, level: high, reason: 'Graph data leaves only through export tooling and reload; large graphs with edges and properties take long to move.'}
+- {id: proprietary-api, level: medium, reason: 'Queries use open Gremlin, openCypher or SPARQL, but bulk loader, streams, Neptune ML and IAM auth are Neptune-only.'}
+- {id: skills-specialization, level: medium, reason: Graph modelling and Neptune-specific query tuning require specialised skills.}
+rules:
+- id: aws.neptune.analytics
+  match:
+    resource_type: [aws_neptunegraph_graph]
+  then: {add_trait: managed-only-feature, level: medium, evidence: provisioned_memory}
+- id: aws.neptune.iam-auth
+  match:
+    resource_type: [aws_neptune_cluster]
+  when: {attr: iam_database_authentication_enabled, equals: true}
+  then: {add_trait: proprietary-iam-model, level: low, evidence: iam_database_authentication_enabled}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-neptune', '@aws-sdk/client-neptunedata', '@aws-sdk/client-neptune-graph']
+  imports: ['[''"]@aws-sdk/client-(neptune|neptunedata|neptune-graph)[''"/]']
+  usage: ['\bAWS\.Neptune\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["''](neptune|neptunedata|neptune-graph)["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/neptune, github.com/aws/aws-sdk-go-v2/service/neptunedata, github.com/aws/aws-sdk-go-v2/service/neptunegraph]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/(neptune|neptunedata|neptunegraph)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:neptune', 'software.amazon.awssdk:neptunedata', 'software.amazon.awssdk:neptunegraph', 'software.amazon.neptune:amazon-neptune-sigv4-signer']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.(neptune|neptunedata|neptunegraph)\.', '^\s*import\s+(static\s+)?com\.amazonaws\.neptune\.']
+- ecosystem: nuget
+  packages: [AWSSDK.Neptune, AWSSDK.Neptunedata, AWSSDK.NeptuneGraph]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.(Neptune|Neptunedata|NeptuneGraph)\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-neptune, aws-sdk-neptunedata, aws-sdk-neptunegraph]
+  imports: ['^\s*require\s+["'']aws-sdk-(neptune|neptunedata|neptunegraph)["'']']
+  usage: ['(?i)\bAws::(neptune|neptunedata|neptunegraph)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-neptune, aws-sdk-neptunedata, aws-sdk-neptunegraph]
+  imports: ['\baws_sdk_(neptune|neptunedata|neptunegraph)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(neptune|neptunedata|neptunegraph)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_neptune_cluster_instance, attribute: cluster_identifier, edge_kind: containment}
+- {resource_type: aws_neptune_cluster_endpoint, attribute: cluster_identifier, edge_kind: containment}
+- {resource_type: aws_neptune_cluster, attribute: neptune_subnet_group_name, edge_kind: containment}
+- {resource_type: aws_neptune_cluster, attribute: vpc_security_group_ids, edge_kind: containment}
+- {resource_type: aws_neptune_cluster, attribute: iam_roles, edge_kind: binding}
+- {resource_type: aws_neptune_subnet_group, attribute: subnet_ids, edge_kind: containment}
+alternatives:
+- {ref: janusgraph, difficulty: medium, compatibility: protocol-compatible, notes: 'JanusGraph serves Gremlin via TinkerPop Server; Gremlin queries port, openCypher and SPARQL do not.', approved_by: cloudowski}
+- {ref: postgresql, difficulty: high, compatibility: conceptual, notes: The Apache AGE extension adds openCypher graphs to PostgreSQL; data and Gremlin queries must be converted., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/neptune/latest/userguide/intro.html', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/neptune_cluster']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

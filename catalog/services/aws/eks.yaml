@@ -1,0 +1,100 @@
+schema: '1.0'
+kind: service
+id: aws.eks
+provider: aws
+name: Amazon Elastic Kubernetes Service (EKS)
+category: compute.container
+resource_types:
+  terraform: [aws_eks_cluster, aws_eks_node_group, aws_eks_addon, aws_eks_fargate_profile, aws_eks_pod_identity_association, aws_eks_access_entry, aws_eks_access_policy_association, aws_eks_identity_provider_config, aws_eks_capability, aws_eks_clusters, aws_eks_node_groups, aws_eks_cluster_auth, aws_eks_addon_version]
+  cloudformation: ['AWS::EKS::Cluster', 'AWS::EKS::Nodegroup', 'AWS::EKS::Addon', 'AWS::EKS::FargateProfile', 'AWS::EKS::PodIdentityAssociation', 'AWS::EKS::AccessEntry', 'AWS::EKS::IdentityProviderConfig', 'AWS::EKS::Capability']
+  kubernetes:
+  - {group: eks.services.k8s.aws, kind: Cluster}
+  - {group: eks.services.k8s.aws, kind: Nodegroup}
+  - {group: eks.services.k8s.aws, kind: Addon}
+  - {group: eks.services.k8s.aws, kind: FargateProfile}
+  - {group: eks.services.k8s.aws, kind: PodIdentityAssociation}
+  - {group: eks.services.k8s.aws, kind: AccessEntry}
+  - {group: karpenter.k8s.aws, kind: EC2NodeClass}
+  - {group: eks.amazonaws.com, kind: NodeClass}
+  - {group: eksctl.io, kind: ClusterConfig}
+  - {group: crd.k8s.amazonaws.com, kind: ENIConfig}
+  - {group: vpcresources.k8s.aws, kind: SecurityGroupPolicy}
+traits:
+- {id: operational-tooling-coupling, level: low, reason: 'Conformant Kubernetes; node groups, add-ons, access entries and upgrades use EKS tooling.'}
+- {id: provider-network-construct, level: low, reason: The VPC CNI assigns VPC IPs to pods and load balancing relies on AWS controllers.}
+rules:
+- id: aws.eks.fargate
+  match:
+    resource_type: [aws_eks_fargate_profile]
+  then: {add_trait: managed-only-feature, level: low, evidence: selector}
+- id: aws.eks.auto-mode
+  match:
+    resource_type: [aws_eks_cluster]
+  when: {attr: compute_config.enabled, equals: true}
+  then: {add_trait: managed-only-feature, level: low, evidence: compute_config}
+- id: aws.eks.pod-identity
+  match:
+    resource_type: [aws_eks_pod_identity_association]
+  then: {add_trait: proprietary-iam-model, level: low, evidence: role_arn}
+- id: aws.eks.neuron-node-group
+  match:
+    resource_type: [aws_eks_node_group]
+  when: {attr: instance_types, matches: '^(inf|trn)[0-9]'}
+  then: {add_trait: provider-accelerator, level: medium, evidence: instance_types}
+sdk:
+- ecosystem: npm
+  packages: ['@aws-sdk/client-eks']
+  imports: ['[''"]@aws-sdk/client-eks[''"/]']
+  usage: ['\bAWS\.EKS\b']
+  gate: [aws-sdk]
+- ecosystem: pypi
+  usage: ['\.(client|resource)\(\s*(service_name\s*=\s*)?["'']eks["'']']
+  gate: [boto3, aioboto3]
+- ecosystem: go
+  packages: [github.com/aws/aws-sdk-go-v2/service/eks]
+  imports: ['"github\.com/aws/aws-sdk-go(-v2)?/service/eks(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['software.amazon.awssdk:eks', 'com.amazonaws:aws-java-sdk-eks']
+  imports: ['^\s*import\s+(static\s+)?software\.amazon\.awssdk\.services\.eks\.', '^\s*import\s+(static\s+)?com\.amazonaws\.services\.eks\.']
+- ecosystem: nuget
+  packages: [AWSSDK.EKS]
+  imports: ['^\s*using\s+(static\s+)?Amazon\.EKS\b']
+- ecosystem: rubygems
+  packages: [aws-sdk-eks]
+  imports: ['^\s*require\s+["'']aws-sdk-(eks)["'']']
+  usage: ['(?i)\bAws::(eks)::']
+  gate: [aws-sdk, aws-sdk-resources]
+- ecosystem: cargo
+  packages: [aws-sdk-eks]
+  imports: ['\baws_sdk_(eks)\b']
+- ecosystem: composer
+  usage: ['(?i)\bAws\\(eks)\\']
+  gate: [aws/aws-sdk-php]
+edge_hints:
+- {resource_type: aws_eks_node_group, attribute: cluster_name, edge_kind: containment}
+- {resource_type: aws_eks_node_group, attribute: subnet_ids, edge_kind: containment}
+- {resource_type: aws_eks_node_group, attribute: node_role_arn, edge_kind: binding}
+- {resource_type: aws_eks_node_group, attribute: launch_template.id, edge_kind: reference}
+- {resource_type: aws_eks_cluster, attribute: role_arn, edge_kind: binding}
+- {resource_type: aws_eks_cluster, attribute: vpc_config.security_group_ids, edge_kind: containment}
+- {resource_type: aws_eks_addon, attribute: cluster_name, edge_kind: containment}
+- {resource_type: aws_eks_addon, attribute: service_account_role_arn, edge_kind: binding}
+- {resource_type: aws_eks_fargate_profile, attribute: cluster_name, edge_kind: containment}
+- {resource_type: aws_eks_fargate_profile, attribute: subnet_ids, edge_kind: containment}
+- {resource_type: aws_eks_pod_identity_association, attribute: cluster_name, edge_kind: containment}
+- {resource_type: aws_eks_pod_identity_association, attribute: role_arn, edge_kind: binding}
+- {resource_type: aws_eks_access_entry, attribute: principal_arn, edge_kind: binding}
+- {resource_type: aws_eks_access_policy_association, attribute: principal_arn, edge_kind: binding}
+alternatives:
+- {ref: kubernetes, difficulty: low, compatibility: api-compatible, notes: 'Workloads use the standard Kubernetes API; AWS annotations, IRSA, storage classes and load balancer controllers need replacement.', approved_by: cloudowski}
+- {ref: ovhcloud, difficulty: low, compatibility: api-compatible, notes: OVHcloud Managed Kubernetes Service is CNCF conformant., approved_by: cloudowski}
+- {ref: scaleway, difficulty: low, compatibility: api-compatible, notes: Scaleway Kubernetes Kapsule is CNCF conformant., approved_by: cloudowski}
+- {ref: stackit, difficulty: low, compatibility: api-compatible, notes: 'STACKIT Kubernetes Engine (SKE) is a managed, CNCF conformant Kubernetes service.', approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://docs.aws.amazon.com/eks/latest/userguide/what-is-eks.html', 'https://karpenter.sh/docs/concepts/nodeclasses/', 'https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_cluster']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}

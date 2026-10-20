@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:exitctl:schema:config:v1",
+  "title": "exitctl repository configuration (.exitctl.yaml)",
+  "type": "object",
+  "required": ["version"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": 1 },
+    "repo_name": { "type": "string", "minLength": 1 },
+    "ignore": { "type": "array", "items": { "type": "string" } },
+    "helm": {
+      "type": "object",
+      "properties": {
+        "values_files": {
+          "type": "object",
+          "description": "Chart directory (repo-relative) -> list of values files.",
+          "additionalProperties": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "additionalProperties": false
+    },
+    "scoring": {
+      "type": "object",
+      "description": "Overrides of default scoring configuration. Any override marks results as custom scoring.",
+      "additionalProperties": false,
+      "properties": {
+        "level_weights": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "none": { "$ref": "#/$defs/unit" }, "low": { "$ref": "#/$defs/unit" },
+            "medium": { "$ref": "#/$defs/unit" }, "high": { "$ref": "#/$defs/unit" },
+            "critical": { "$ref": "#/$defs/unit" }
+          }
+        },
+        "dimension_weights": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "technical": { "$ref": "#/$defs/unit" }, "data": { "$ref": "#/$defs/unit" },
+            "operational": { "$ref": "#/$defs/unit" }, "skills": { "$ref": "#/$defs/unit" },
+            "economic": { "const": 0 }
+          }
+        },
+        "grade_bands": {
+          "type": "array", "minItems": 2,
+          "items": { "type": "object", "required": ["grade", "min", "max"], "properties": {
+            "grade": { "enum": ["A", "B", "C", "D", "E"] },
+            "min": { "type": "integer", "minimum": 0, "maximum": 100 },
+            "max": { "type": "integer", "minimum": 0, "maximum": 100 } } }
+        },
+        "coverage_thresholds": {
+          "type": "object", "additionalProperties": false,
+          "properties": { "normal": { "$ref": "#/$defs/unit" }, "provisional": { "$ref": "#/$defs/unit" } }
+        },
+        "top_anchors": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "group_threshold": { "type": "integer", "minimum": 10 }
+      }
+    },
+    "exceptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "select"],
+        "description": "reason and owner are required by data-model.md 4.6, but a missing or empty value makes the exception invalid (reported and ignored) instead of failing the configuration.",
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "select": {
+            "type": "object",
+            "additionalProperties": false,
+            "minProperties": 1,
+            "properties": {
+              "finding": { "type": "string" },
+              "resource": { "type": "string" },
+              "service": { "type": "string" },
+              "trait": { "type": "string" }
+            },
+            "oneOf": [
+              { "required": ["finding"], "maxProperties": 1 },
+              { "required": ["resource"], "not": { "anyOf": [{ "required": ["finding"] }, { "required": ["service"] }] } },
+              { "required": ["service"], "maxProperties": 1 },
+              { "required": ["trait"], "maxProperties": 1 }
+            ]
+          },
+          "reason": { "type": "string" },
+          "owner": { "type": "string" },
+          "expires": { "type": "string", "format": "date" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "unit": { "type": "number", "minimum": 0, "maximum": 1 }
+  }
+}

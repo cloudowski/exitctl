@@ -1,0 +1,25 @@
+# explain by rank, by address, with --all, and a typo (US2).
+exec exitctl scan $FIXTURES/shop-aws --include-drafts --as-of 2026-10-06 --repo-name shop-aws --emoji never --no-color
+exec exitctl explain 1 --include-drafts --emoji never --no-color
+stdout '^aws_dynamodb_table\.orders +level: high'
+stdout 'Evidence'
+stdout 'infra/db\.tf:[0-9]+ +resource "aws_dynamodb_table" "orders"'
+stdout 'Managed change stream'
+stdout 'Dependents \([0-9]+\)'
+stdout 'Lock-in chains'
+stdout 'Migration wave: [0-9]+'
+stdout 'Alternatives'
+stdout 'ScyllaDB'
+stdout 'Why this is an anchor:'
+
+exec exitctl explain aws_dynamodb_table.orders --all --no-color
+stdout '^aws_dynamodb_table\.orders'
+
+exec exitctl explain aws_dynamodb_table.orders --format json
+stdout '"wave": [0-9]+'
+
+! exec exitctl explain aws_dynamodb_table.ordrs
+stderr 'did you mean: aws_dynamodb_table\.orders'
+
+! exec exitctl explain 99
+stderr 'no anchor with rank 99'

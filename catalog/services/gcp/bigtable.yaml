@@ -1,0 +1,56 @@
+schema: '1.0'
+kind: service
+id: gcp.bigtable
+provider: gcp
+name: Cloud Bigtable
+category: database.nosql
+resource_types:
+  terraform: [google_bigtable_instance, google_bigtable_table, google_bigtable_app_profile, google_bigtable_gc_policy, google_bigtable_authorized_view, google_bigtable_instance_iam_binding, google_bigtable_instance_iam_member, google_bigtable_instance_iam_policy, google_bigtable_table_iam_binding, google_bigtable_table_iam_member, google_bigtable_table_iam_policy]
+  kubernetes:
+  - {group: bigtable.cnrm.cloud.google.com, kind: BigtableInstance}
+  - {group: bigtable.cnrm.cloud.google.com, kind: BigtableTable}
+  - {group: bigtable.cnrm.cloud.google.com, kind: BigtableAppProfile}
+  - {group: bigtable.cnrm.cloud.google.com, kind: BigtableGCPolicy}
+traits:
+- {id: proprietary-data-model, level: high, reason: 'Wide-column model with row-key design, column families and GC policies tuned to Bigtable; HBase API is a partial bridge.'}
+- {id: data-gravity, level: high, reason: Bigtable is used for very large datasets; moving them needs export pipelines and dual writes.}
+- {id: proprietary-sdk}
+rules:
+- id: gcp.bigtable.change-stream
+  match:
+    resource_type: [google_bigtable_table]
+  when: {attr: change_stream_retention, exists: true}
+  then: {add_trait: managed-change-stream, level: high, evidence: change_stream_retention}
+sdk:
+- ecosystem: npm
+  packages: ['@google-cloud/bigtable']
+  imports: ['[''"]@google-cloud/(bigtable)[''"/]']
+- ecosystem: pypi
+  packages: [google-cloud-bigtable]
+  imports: [^\s*from\s+google\.cloud\s+import\s+.*\b(bigtable\w*)\b, ^\s*(from|import)\s+google\.cloud\.(bigtable\w*)\b]
+- ecosystem: go
+  packages: [cloud.google.com/go/bigtable]
+  imports: ['"cloud\.google\.com/go/(bigtable)(/[^"]*)?"']
+- ecosystem: maven
+  packages: ['com.google.cloud:google-cloud-bigtable', 'com.google.cloud.bigtable:bigtable-hbase-*']
+  imports: ['^\s*import\s+(static\s+)?com\.google\.(cloud\.bigtable)\b']
+- ecosystem: nuget
+  packages: [Google.Cloud.Bigtable.V2, Google.Cloud.Bigtable.Admin.V2]
+  imports: ['^\s*using\s+(static\s+)?Google\.Cloud\.(Bigtable)\b']
+edge_hints:
+- {resource_type: google_bigtable_table, attribute: instance_name, edge_kind: containment}
+- {resource_type: google_bigtable_app_profile, attribute: instance, edge_kind: containment}
+- {resource_type: google_bigtable_gc_policy, attribute: table, edge_kind: containment}
+- {resource_type: google_bigtable_authorized_view, attribute: table_name, edge_kind: containment}
+alternatives:
+- {ref: cassandra, difficulty: high, compatibility: conceptual, notes: Wide-column store; row keys and column families must be remodeled as partition and clustering keys., approved_by: cloudowski}
+- {ref: scylladb, difficulty: high, compatibility: conceptual, notes: 'Cassandra-compatible wide-column store; same remodeling as Cassandra, lower operational footprint.', approved_by: cloudowski}
+- {ref: clickhouse, difficulty: high, compatibility: conceptual, notes: Fits analytical or time-series uses of Bigtable; point lookups and row-key scans work differently., approved_by: cloudowski}
+provenance:
+  origin: llm
+  author: claude
+  reviewed_by: cloudowski
+  reviewed_on: '2026-10-07'
+  status: verified
+  sources: ['https://cloud.google.com/bigtable/docs', 'https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/bigtable_instance', 'https://cloud.google.com/bigtable/docs/hbase-bigtable']
+  llm: {batch: 2026-10-06-v01, model: claude-opus-5-5, prompt_version: catalog-draft-v1, eval_passed: true}
