@@ -110,8 +110,7 @@ homebrew_casks:
     # The binaries are not notarized by Apple; drop the quarantine flag on install.
     hooks:
       post:
-        install: |
-          if OS.mac?
-            system_command "/usr/bin/xattr",
-                           args: ["-dr", "com.apple.quarantine", "#{staged_path}/exitctl"]
+        install_steps: |
+          on_macos do
+            run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{ .StagedPath }}/exitctl"]
           end
