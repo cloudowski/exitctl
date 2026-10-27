@@ -1,0 +1,96 @@
+# Sample exitctl configuration.
+#
+# Copy this file to the root of the repository you scan and keep the name ".exitctl.yaml":
+# exitctl looks for it in the scan root first, then in the current directory. Pass another file
+# with --config. Every key except "version" is optional, and a file with only "version: 1"
+# gives the default behavior. The values below are examples: adjust them to your repository.
+#
+# Check that it is accepted:   exitctl scan . --config .exitctl.yaml
+# JSON Schema (for editors):   schemas/config.schema.json
+
+version: 1
+
+# Name used for this repository in results and merged reports. Default: taken from the git
+# remote "origin" when there is one, otherwise the name of the scan directory.
+repo_name: shop
+
+# Extra paths to skip, as globs relative to the scan root. Well-known dependency, cache and
+# VCS directories (node_modules, .git, vendor, ...) are always skipped.
+# The same can be given on the command line: --ignore 'docs/**'
+ignore:
+  - "docs/**"
+  - "**/testdata/**"
+  - "infra/legacy/**"
+
+# Helm charts are rendered offline with their default values. To render a chart with other
+# values files, map the chart directory (relative to the scan root) to a list of files.
+# The same can be given on the command line: --values charts/app=charts/app/values-prod.yaml
+helm:
+  values_files:
+    charts/app:
+      - charts/app/values-prod.yaml
+
+# Accepted lock-in: findings you have decided to live with. An accepted finding stays visible
+# in every report, but it is excluded from the score and listed under "Exceptions".
+#
+# Each exception needs a reason and an owner, and should have an expiry date. An exception
+# with a missing or empty reason or owner, or a selector that matches nothing, is invalid: it
+# is ignored and a notice names it. It stays active through its expiry day; after that the
+# findings count again and a notice names the exception.
+#
+# "select" takes exactly one of:
+#   service: a catalog service, for example aws.cognito (all its findings)
+#   resource: a resource address or canonical ID, for example aws_sqs_queue.events
+#             (may be combined with "trait" to accept one trait of that resource)
+#   trait: a lock-in trait, for example proprietary-api
+#   finding: one finding ID of the form <node-id>::<trait-id>, as listed in the JSON result
+exceptions:
+  - id: keep-cognito
+    select:
+      service: aws.cognito
+    reason: Identity is shared with other products; replacement is planned for 2027.
+    owner: platform-team
+    expires: 2027-06-30
+
+  - id: events-queue
+    select:
+      resource: aws_sqs_queue.events
+    reason: Throughput and cost were reviewed; moving to a portable broker is not worth it yet.
+    owner: orders-team
+    expires: 2027-01-31
+
+# Scoring overrides. The defaults below are what exitctl uses when this section is absent.
+# Changing any value marks the result as "custom scoring", so results are not comparable with
+# runs that use the defaults. Leave this section out unless you have a reason to change it.
+#
+# scoring:
+#   # Weight of a finding level, 0..1.
+#   level_weights:
+#     none: 0
+#     low: 0.25
+#     medium: 0.5
+#     high: 0.8
+#     critical: 1.0
+#   # Weight of a dimension, 0..1. "economic" is always 0 in the open source tool.
+#   dimension_weights:
+#     data: 1.0
+#     technical: 0.9
+#     operational: 0.7
+#     skills: 0.5
+#   # Index ranges (0-100) of the grades A to E. Together they must cover 0 to 100.
+#   grade_bands:
+#     - { grade: A, min: 0, max: 9 }
+#     - { grade: B, min: 10, max: 24 }
+#     - { grade: C, min: 25, max: 39 }
+#     - { grade: D, min: 40, max: 54 }
+#     - { grade: E, min: 55, max: 100 }
+#   # Share of resources (by weight) that must be recognized for a normal grade, and for a
+#   # provisional one. Below the second value the grade is withheld and only a range is shown.
+#   coverage_thresholds:
+#     normal: 0.90
+#     provisional: 0.70
+#   # Number of anchors in the summary (1-20).
+#   top_anchors: 5
+#   # Graphs with more nodes than this group resources of the same type and dependencies
+#   # (minimum 10).
+#   group_threshold: 50

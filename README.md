@@ -2,7 +2,7 @@
 
 **Estimate how locked in you are to your cloud provider, from your repositories alone.**
 
-`exitctl` (working name) is a command-line tool that reads the infrastructure and application code of one or many repositories and shows how tightly the system is tied to a cloud vendor, which resources hold you there, and what could replace them.
+`exitctl` is a command-line tool that reads the infrastructure and application code of one or many repositories and shows how tightly the system is tied to a cloud vendor, which resources hold you there, and what could replace them.
 
 > **It is an estimate.** Use it to assess lock-in in one repository or many, and to decide where to look first. It is not an audit, a migration plan, or a cost figure.
 
@@ -179,8 +179,6 @@ A score is only useful if it matches what an engineer would say about the same r
 
 The developer tool `go run ./tools/calibrate --corpus calibration/corpus.yaml` clones the corpus, scans every repository with the built-in catalog and default scoring, and compares the grade with the expected band. A release has to pass a gate: at least 90% of repositories within their band, none more than one grade off, and median weighted coverage of at least 90%. Expected bands come from the repository's contents, never from the tool's output.
 
-**Status:** the grade scale changed from A-F to A-E on 2026-10-11, so all 33 expected bands were converted and are marked *unconfirmed* until a maintainer reviews each one. Treat the calibration as work in progress, not as a measured accuracy figure.
-
 ## Supported resources
 
 exitctl reads **what is in the repository**. It does not talk to any cloud.
@@ -235,7 +233,7 @@ Treat a clean result as "no lock-in found in the code you scanned", not "no lock
 
 ## Configuration
 
-Put an optional `.exitctl.yaml` in the scan root to set the repository name, ignore paths, Helm values files, scoring weights, and **exceptions** (accepted findings with an owner and a reason, excluded from the score). The schema is in [schemas/config.schema.json](schemas/config.schema.json). Any scoring override is marked in the result as custom scoring.
+Put an optional `.exitctl.yaml` in the scan root to set the repository name, ignore paths, Helm values files, scoring weights, and **exceptions** (accepted findings with an owner and a reason, excluded from the score). A fully commented sample with every option is in [examples/.exitctl.yaml](examples/.exitctl.yaml): copy it to the root of your repository and adjust it. Any scoring override is marked in the result as custom scoring.
 
 ## Support
 
