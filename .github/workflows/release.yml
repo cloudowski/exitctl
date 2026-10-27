@@ -32,7 +32,8 @@ jobs:
       - uses: goreleaser/goreleaser-action@v7
         with:
           distribution: goreleaser
-          version: "~> v2"
+          # install_steps for the Homebrew cask hook (see .goreleaser.yaml) needs GoReleaser 2.19+.
+          version: "~> v2.19"
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
